@@ -1,0 +1,710 @@
+# depslib dependency file v1.0
+1622877513 source:d:\code\cbprojects\geo2\src\main.cpp
+	"geo2/test.h"
+	"geo2/master_instance.h"
+	"kx/gfx/gfx.h"
+	"kx/time.h"
+
+1600675812 source:d:\code\cbprojects\geo2\src\debug.cpp
+
+1599257671 source:d:\code\cbprojects\geo2\src\sdl_deleter.cpp
+	<SDL2/SDL_net.h>
+	<SDL2/SDL_ttf.h>
+	<type_traits>
+
+1618260403 source:d:\code\cbprojects\geo2\src\gfx\gl_renderer.cpp
+	"gfx/renderer.h"
+
+1618260403 source:d:\code\cbprojects\geo2\src\gfx\sdl2_renderer.cpp
+	"gfx/renderer.h"
+	<SDL2/SDL_ttf.h>
+	<algorithm>
+	<cmath>
+	<climits>
+	"kx/debug.h"
+
+1618260403 source:d:\code\cbprojects\geo2\src\gfx\vk_renderer.cpp
+	"gfx/renderer.h"
+
+1600675812 source:d:\code\cbprojects\geo2\src\kx\debug.cpp
+
+1612482077 source:d:\code\cbprojects\geo2\src\kx\fin\data_types.cpp
+	"kx/fin/data_types.h"
+	"kx/util.h"
+	"kx/debug.h"
+	<algorithm>
+	<vector>
+	<string>
+	<fstream>
+
+1610075250 source:d:\code\cbprojects\geo2\src\kx\fin\fidelity.cpp
+	"kx/time.h"
+	"kx/net/kcurl.h"
+	"kx/debug.h"
+	"kx/multithread/shared_lock_set.h"
+	"kx/io.h"
+	<vector>
+	<string>
+	<map>
+	<fstream>
+
+1614710851 source:d:\code\cbprojects\geo2\src\kx\fin\holidays.cpp
+	"kx/fin/holidays.h"
+	"kx/debug.h"
+	"kx/time.h"
+	<fstream>
+	<algorithm>
+	<atomic>
+	<mutex>
+	<string>
+	<vector>
+
+1613419987 source:d:\code\cbprojects\geo2\src\kx\fin\iqfeed.cpp
+	"kx/fin/iqfeed.h"
+	"kx/net/client.h"
+	"kx/util.h"
+	"kx/io.h"
+	"kx/fin/yahoo.h"
+	"kx/log.h"
+	"kx/debug.h"
+	"kx/rand.h"
+	"kx/time.h"
+	"kx/multithread/shared_lock_set.h"
+	<cstdlib>
+	<fstream>
+	<cstdint>
+	<vector>
+	<cmath>
+	<atomic>
+	<mutex>
+	<set>
+	<map>
+	<queue>
+	<deque>
+	<atomic>
+	<thread>
+
+1612455176 source:d:\code\cbprojects\geo2\src\kx\fin\strategies\strat1.cpp
+	"kx/fin/strategies/strat1.h"
+	"kx/debug.h"
+	"kx/fin/iqfeed.h"
+	"kx/fin/holidays.h"
+	"kx/stats.h"
+	<vector>
+	<cmath>
+	<limits>
+
+1613418982 source:d:\code\cbprojects\geo2\src\kx\fin\yahoo.cpp
+	"kx/fin/yahoo.h"
+	"kx/time.h"
+	"kx/log.h"
+	"kx/util.h"
+	"kx/io.h"
+	"kx/debug.h"
+	"kx/net/kcurl.h"
+	"kx/multithread/shared_lock_set.h"
+	<curl/curl.h>
+	<vector>
+	<cstdlib>
+	<fstream>
+	<string>
+	<cstring>
+	<cmath>
+	<optional>
+
+1616372065 source:d:\code\cbprojects\geo2\src\kx\gfx\sdl2_renderer.cpp
+	"kx/gfx/renderer.h"
+	<SDL2/SDL_ttf.h>
+	<algorithm>
+	<cmath>
+	<climits>
+	"kx/debug.h"
+
+1605849521 source:d:\code\cbprojects\geo2\src\kx\io.cpp
+	"kx/log.h"
+	<sys/types.h>
+	<sys/stat.h>
+	<fstream>
+	<mutex>
+	<iostream>
+	<optional>
+
+1600057205 source:d:\code\cbprojects\geo2\src\kx\log.cpp
+	"kx/log.h"
+	"kx/io.h"
+	"kx/time.h"
+	"kx/util.h"
+	<string>
+	<deque>
+	<mutex>
+	<atomic>
+
+1603744775 source:d:\code\cbprojects\geo2\src\kx\net\client.cpp
+	"kx/net/client.h"
+	"kx/util.h"
+	"kx/debug.h"
+	"kx/net/net.h"
+	<SDL2/SDL_net.h>
+	<string>
+	<cstring>
+	<cstdint>
+	<future>
+	<atomic>
+	<climits>
+
+1608833856 source:d:\code\cbprojects\geo2\src\kx\net\kcurl.cpp
+	"kx/net/kcurl.h"
+	"kx/debug.h"
+	<curl/curl.h>
+	<thread>
+
+1599412363 source:d:\code\cbprojects\geo2\src\kx\net\net.cpp
+	"kx/log.h"
+	"kx/net/kcurl.h"
+	"kx/util.h"
+
+1608529826 source:d:\code\cbprojects\geo2\src\kx\net\server.cpp
+	"kx/net/server.h"
+	"kx/sdl_deleter.h"
+	"kx/debug.h"
+	"kx/log.h"
+	"kx/util.h"
+	"kx/net/net.h"
+	<SDL2/SDL_net.h>
+	<vector>
+	<string>
+
+1600659570 source:d:\code\cbprojects\geo2\src\kx\rand.cpp
+	"kx/rand.h"
+	"kx/util.h"
+	"kx/debug.h"
+	"kx/time.h"
+	<random>
+	<ctime>
+
+1599257671 source:d:\code\cbprojects\geo2\src\kx\sdl_deleter.cpp
+	<SDL2/SDL_net.h>
+	<SDL2/SDL_ttf.h>
+	<type_traits>
+
+1622410797 source:d:\code\cbprojects\geo2\src\kx\sh\kshell.cpp
+	"kx/sh/kshell.h"
+	"kx/sh/kterm_input_comm.h"
+	"kx/sh/kterm.h"
+	"kx/sh/program_db.h"
+	"kx/io.h"
+	<SDL2/SDL_clipboard.h>
+	<SDL2/SDL_version.h>
+	<cstdlib>
+	<cstdint>
+	<cstring>
+	<sstream>
+	<climits>
+	<cmath>
+	<map>
+	<mutex>
+
+1614371959 source:d:\code\cbprojects\geo2\src\kx\stats.cpp
+	"kx/debug.h"
+	<cmath>
+
+1615772142 source:d:\code\cbprojects\geo2\src\kx\time.cpp
+	"kx/time.h"
+	"kx/util.h"
+	"kx/io.h"
+	"kx/debug.h"
+	<chrono>
+	<thread>
+	<ctime>
+	<sstream>
+	<iomanip>
+	<mutex>
+
+1608447621 source:d:\code\cbprojects\geo2\src\kx\util.cpp
+	"kx/io.h"
+	"kx/debug.h"
+	<string>
+	<vector>
+	<cmath>
+
+1623542884 source:d:\code\cbprojects\geo2\src\kx\gfx\gfx.cpp
+	"kx/gfx/gfx.h"
+	"kx/gfx/renderer.h"
+	"kx/util.h"
+	"kx/debug.h"
+	<SDL2/SDL_image.h>
+	<SDL2/SDL_ttf.h>
+	<SDL2/SDL.h>
+	<map>
+	<memory>
+	<vector>
+	<cmath>
+	<utility>
+
+1622865223 source:d:\code\cbprojects\geo2\src\kx\gfx\kwindow.cpp
+	"kx/gfx/kwindow.h"
+	"kx/gfx/renderer.h"
+	"kx/util.h"
+	"kx/io.h"
+	"kx/log.h"
+	"kx/debug.h"
+	<SDL2/SDL_events.h>
+	<vector>
+	<algorithm>
+	<functional>
+
+1622492550 source:d:\code\cbprojects\geo2\src\kx\plot\line_graph.cpp
+	"kx/plot/line_graph.h"
+	"kx/plot/numeric_graph_render.h"
+	"kx/gfx/gfx.h"
+	"kx/gfx/renderer.h"
+	"kx/debug.h"
+	<algorithm>
+	<cmath>
+
+1600659870 source:d:\code\cbprojects\geo2\src\kx\plot\numeric_graph.cpp
+	"kx/plot/numeric_graph.h"
+	"kx/util.h"
+	"kx/gfx/gfx.h"
+	"kx/debug.h"
+	<SDL2/SDL.h>
+	<algorithm>
+	<cmath>
+
+1622492561 source:d:\code\cbprojects\geo2\src\kx\plot\numeric_graph_render.cpp
+	"kx/plot/numeric_graph_render.h"
+	"kx/util.h"
+	"kx/gfx/gfx.h"
+	"kx/gfx/renderer.h"
+	"kx/debug.h"
+	<algorithm>
+	<cmath>
+	<iomanip>
+
+1602826156 source:d:\code\cbprojects\geo2\src\kx\plot\ohlc_graph.cpp
+	"kx/plot/ohlc_graph.h"
+	"kx/plot/numeric_graph_render.h"
+	"kx/gfx/gfx.h"
+	"kx/gfx/renderer.h"
+	"kx/debug.h"
+	"kx/fin/data_types.h"
+	"kx/io.h"
+	<algorithm>
+	<cmath>
+
+1622492547 source:d:\code\cbprojects\geo2\src\kx\plot\scatter_graph.cpp
+	"kx/plot/scatter_graph.h"
+	"kx/plot/numeric_graph_render.h"
+	"kx/gfx/renderer.h"
+	"kx/debug.h"
+	<cmath>
+
+1622492566 source:d:\code\cbprojects\geo2\src\kx\sh\kterm.cpp
+	"kx/sh/kterm.h"
+	"kx/sh/kshell.h"
+	"kx/sh/kterm_input_comm.h"
+	"kx/gfx/renderer.h"
+	<cstring>
+	<climits>
+
+1615316599 source:d:\code\cbprojects\geo2\src\kx\gfx\font.cpp
+	"kx/gfx/font.h"
+	"renderer.h"
+	"kx/debug.h"
+	<SDL2/SDL_ttf.h>
+	<limits>
+	<type_traits>
+	<map>
+	<memory>
+	<string>
+
+1598920917 d:\code\cbprojects\geo2\src\kx\gfx\renderer.h
+	"kx/gfx/sdl2_renderer.h"
+	"kx/gfx/gl_renderer.h"
+	"kx/gfx/vk_renderer.h"
+
+1623545071 source:d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.cpp
+	"kx/gfx/renderer.h"
+	"kx/gfx/renderer.h"
+	"kx/io.h"
+	<SDL2/SDL_ttf.h>
+	<SDL2/SDL_image.h>
+	<algorithm>
+	<cmath>
+	<climits>
+	"kx/debug.h"
+
+1622408736 source:d:\code\cbprojects\geo2\src\glad\glad.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"glad.h"
+	<windows.h>
+	<winapifamily.h>
+	<dlfcn.h>
+
+1596776090 d:\code\cbprojects\geo2\src\glad\glad.h
+	"khrplatform.h"
+
+1596776090 d:\code\cbprojects\geo2\src\glad\khrplatform.h
+	<stdint.h>
+	<inttypes.h>
+	<stdint.h>
+
+1622411681 d:\code\cbprojects\geo2\src\geo2\test.h
+
+1623388636 d:\code\cbprojects\geo2\src\kx\gfx\gfx.h
+	"kx/util.h"
+	"kx/sdl_deleter.h"
+	"kx/gfx/renderer_types.h"
+	<SDL2/SDL_events.h>
+	<memory>
+	<string>
+	<queue>
+	<vector>
+
+1613419223 d:\code\cbprojects\geo2\src\kx\time.h
+	<ctime>
+	<cstdint>
+	<string>
+
+1622708162 source:d:\code\cbprojects\geo2\src\geo2\test.cpp
+	"geo2/test.h"
+	"kx/io.h"
+	"kx/gfx/gfx.h"
+	"kx/gfx/renderer.h"
+	<cmath>
+
+1605849520 d:\code\cbprojects\geo2\src\kx\io.h
+	<iostream>
+	<string>
+	<utility>
+	<mutex>
+	<optional>
+
+1603068833 d:\code\cbprojects\geo2\src\kx\util.h
+	"kx/debug.h"
+	<string>
+	<sstream>
+	<vector>
+	<algorithm>
+	<functional>
+
+1622753159 d:\code\cbprojects\geo2\src\kx\debug.h
+	"kx/util.h"
+	"kx/log.h"
+
+1599838716 d:\code\cbprojects\geo2\src\kx\log.h
+	<string>
+
+1602827240 d:\code\cbprojects\geo2\src\kx\sdl_deleter.h
+	<memory>
+
+1623038947 d:\code\cbprojects\geo2\src\kx\gfx\renderer_types.h
+	"kx/sdl_deleter.h"
+	<SDL2/SDL_rect.h>
+	"glad/glad.h"
+	<SDL2/SDL_pixels.h>
+
+1623543518 d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.h
+	"kx/gfx/font.h"
+	"kx/gfx/renderer_types.h"
+	"kx/sdl_deleter.h"
+	"kx/util.h"
+	"kx/time.h"
+	<SDL2/SDL.h>
+	"glad/glad.h"
+	"span_lite.h"
+	<string>
+	<map>
+	<memory>
+	<set>
+	<queue>
+
+1622478670 d:\code\cbprojects\geo2\src\kx\gfx\font.h
+	"kx/sdl_deleter.h"
+	<memory>
+	<string>
+
+1622451836 d:\code\cbprojects\geo2\src\kx\gfx\kwindow.h
+	"kx/gfx/gfx.h"
+	<cstdint>
+	<deque>
+	<memory>
+	<functional>
+	<optional>
+
+1603744740 d:\code\cbprojects\geo2\src\kx\net\client.h
+	"kx/sdl_deleter.h"
+	<string>
+	<cstdint>
+	<memory>
+
+1608840230 d:\code\cbprojects\geo2\src\kx\net\net.h
+
+1608840215 d:\code\cbprojects\geo2\src\kx\net\kcurl.h
+	"kx/net/net.h"
+	<string>
+	<vector>
+	<memory>
+
+1608529586 d:\code\cbprojects\geo2\src\kx\net\server.h
+	<cstdint>
+	<memory>
+
+1602826109 d:\code\cbprojects\geo2\src\kx\plot\line_graph.h
+	"kx/plot/numeric_graph.h"
+	<vector>
+	<memory>
+
+1602826144 d:\code\cbprojects\geo2\src\kx\plot\numeric_graph.h
+	"kx/gfx/gfx.h"
+	"kx/gfx/kwindow.h"
+	<vector>
+	<memory>
+
+1612153746 d:\code\cbprojects\geo2\src\kx\plot\numeric_graph_render.h
+	"kx/gfx/kwindow.h"
+	"kx/plot/numeric_graph.h"
+	"kx/time.h"
+	<memory>
+	<string>
+	<deque>
+	<array>
+
+1602826105 d:\code\cbprojects\geo2\src\kx\plot\scatter_graph.h
+	"kx/plot/numeric_graph.h"
+	<vector>
+	<memory>
+
+1605142264 d:\code\cbprojects\geo2\src\kx\sh\kshell.h
+	"kx/atomic/queue.h"
+	"kx/util.h"
+	"kx/debug.h"
+	<memory>
+	<string>
+	<vector>
+	<future>
+	<atomic>
+
+1600658832 d:\code\cbprojects\geo2\src\kx\atomic\queue.h
+	"kx/util.h"
+	"kx/debug.h"
+	<condition_variable>
+	<queue>
+	<mutex>
+	<utility>
+
+1599241252 d:\code\cbprojects\geo2\src\kx\sh\kterm_input_comm.h
+	"kx/util.h"
+	"kx/time.h"
+	<cstdint>
+	<string>
+	<SDL2/SDL_events.h>
+
+1602826636 d:\code\cbprojects\geo2\src\kx\sh\kterm.h
+	"kx/gfx/kwindow.h"
+	"kx/gfx/renderer_types.h"
+	"kx/time.h"
+	<memory>
+	<string>
+	<atomic>
+	<mutex>
+	<deque>
+
+1602826766 d:\code\cbprojects\geo2\src\kx\sh\program_db.h
+	<memory>
+	<string>
+	<mutex>
+	<map>
+
+1623532237 d:\code\cbprojects\geo2\src\geo2\game.h
+	"geo2/map_objs/unit_type1/player_type1.h"
+	"kx/gfx/renderer.h"
+	"kx/gfx/kwindow.h"
+	<memory>
+	<vector>
+	<cstdint>
+
+1623549600 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
+	"geo2/map_objs/floor_type1/test_terrain1.h"
+	"geo2/game_render_op_list.h"
+	"geo2/game.h"
+	"geo2/map_objs/map_object.h"
+	"geo2/collision_engine1.h"
+	"geo2/level_gen/test2.h"
+	"kx/gfx/renderer.h"
+	"kx/log.h"
+	"kx/io.h"
+	"kx/stats.h"
+	<omp.h>
+	<cmath>
+
+1622742577 d:\code\cbprojects\geo2\src\geo2\master_instance.h
+	"geo2/game.h"
+	"kx/gfx/kwindow.h"
+
+1622788408 source:d:\code\cbprojects\geo2\src\geo2\master_instance.cpp
+	"geo2/master_instance.h"
+	"kx/gfx/renderer.h"
+
+1623384772 d:\code\cbprojects\geo2\src\geo2\map_object.h
+	"geo2/collision_engine1.h"
+	"geo2/game_render_op_list.h"
+	"kx/gfx/renderer.h"
+	"kx/fixed_size_array.h"
+
+1623515447 d:\code\cbprojects\geo2\src\kx\fixed_size_array.h
+	"kx/debug.h"
+	<memory>
+	<algorithm>
+
+1623384786 source:d:\code\cbprojects\geo2\src\geo2\map_object.cpp
+	"geo2/map_object.h"
+
+1623385077 source:d:\code\cbprojects\geo2\src\geo2\map_objs\terrain\test_terrain1.cpp
+	"geo2/map_objs/terrain/test_terrain1.h"
+	"geo2/game_render_op_list.h"
+	"kx/gfx/renderer.h"
+	<cmath>
+
+1623385069 d:\code\cbprojects\geo2\src\geo2\map_objs\terrain\test_terrain1.h
+	"geo2/map_objs/map_object.h"
+	"span_lite.h"
+
+1623384667 d:\code\cbprojects\geo2\src\kx\stats.h
+	"kx/debug.h"
+	<vector>
+	<cmath>
+
+1622877502 d:\code\cbprojects\geo2\src\span_lite.h
+	<nonstd/span.tweak.hpp>
+	<cstddef>
+	<span>
+	<algorithm>
+	<memory>
+	<array>
+	<cstddef>
+	<iterator>
+	<type_traits>
+	<vector>
+	<cstdio>
+	<stdexcept>
+	<tuple>
+	<tuple>
+
+1623384709 source:d:\code\cbprojects\geo2\src\geo2\render_op.cpp
+	"geo2/render_op.h"
+	"kx/gfx/renderer.h"
+	"kx/gfx/kwindow.h"
+	<execution>
+
+1623122880 d:\code\cbprojects\geo2\src\geo2\render_op.h
+	"kx/gfx/renderer_types.h"
+	"kx/fixed_size_array.h"
+	"span_lite.h"
+	<vector>
+	<cstdint>
+	<memory>
+	<string>
+	<variant>
+
+1623534730 source:d:\code\cbprojects\geo2\src\geo2\game_render_op_list.cpp
+	"geo2/game_render_op_list.h"
+	"kx/gfx/kwindow.h"
+	"kx/gfx/renderer.h"
+
+1623534669 d:\code\cbprojects\geo2\src\geo2\game_render_op_list.h
+	"geo2/render_op.h"
+
+1623518339 d:\code\cbprojects\geo2\src\geo2\collision_engine1.h
+	"geo2/geometry.h"
+	"kx/fixed_size_array.h"
+	"span_lite.h"
+	<type_traits>
+	<cstdint>
+	<memory>
+	<array>
+	<vector>
+
+1623533756 d:\code\cbprojects\geo2\src\geo2\geometry.h
+	"kx/fixed_size_array.h"
+	"span_lite.h"
+	<type_traits>
+	<algorithm>
+	<memory>
+	<optional>
+	<cmath>
+
+1623539801 source:d:\code\cbprojects\geo2\src\geo2\collision_engine1.cpp
+	"geo2/collision_engine1.h"
+	<cmath>
+	<algorithm>
+	<execution>
+
+1623536854 d:\code\cbprojects\geo2\src\geo2\map_objs\map_object.h
+	"geo2/collision_engine1.h"
+	"geo2/game_render_op_list.h"
+	"kx/gfx/renderer.h"
+	"kx/fixed_size_array.h"
+
+1623526955 source:d:\code\cbprojects\geo2\src\geo2\map_objs\map_object.cpp
+	"geo2/map_objs/map_object.h"
+	"kx/io.h"
+	<cmath>
+
+1623460593 d:\code\cbprojects\geo2\src\geo2\map_objs\floor_type1\test_terrain1.h
+	"geo2/map_objs/floor_type1/floor_type1.h"
+	"span_lite.h"
+
+1623528155 source:d:\code\cbprojects\geo2\src\geo2\map_objs\floor_type1\test_terrain1.cpp
+	"geo2/map_objs/floor_type1/test_terrain1.h"
+	"geo2/game_render_op_list.h"
+	"kx/gfx/renderer.h"
+	<cmath>
+
+1623536484 d:\code\cbprojects\geo2\src\geo2\map_objs\unit_type1\player_type1.h
+	"geo2/map_objs/unit_type1/unit_type1.h"
+
+1623460428 d:\code\cbprojects\geo2\src\geo2\map_objs\unit_type1\unit_type1.h
+	"geo2/map_objs/map_object.h"
+
+1623460601 d:\code\cbprojects\geo2\src\geo2\map_objs\floor_type1\floor_type1.h
+	"geo2/map_objs/map_object.h"
+
+1623569661 source:d:\code\cbprojects\geo2\src\geo2\map_objs\unit_type1\player_type1.cpp
+	"geo2/map_objs/unit_type1/player_type1.h"
+	<iostream>
+
+1623539579 source:d:\code\cbprojects\geo2\src\geo2\map_objs\unit_type1\unit_type1.cpp
+	"geo2/map_objs/unit_type1/unit_type1.h"
+
+1623460581 source:d:\code\cbprojects\geo2\src\geo2\map_objs\floor_type1\floor_type1.cpp
+	"geo2/map_objs/floor_type1/floor_type1.h"
+
+1623460908 source:d:\code\cbprojects\geo2\src\geo2\map_objs\projectile_type1\projectile_type1.cpp
+	"geo2/map_objs/projectile_type1/projectile_type1.h"
+
+1623460806 d:\code\cbprojects\geo2\src\geo2\map_objs\projectile_type1\projectile_type1.h
+	"geo2/map_objs/map_object.h"
+
+1623546987 source:d:\code\cbprojects\geo2\src\geo2\map_objs\wall_type1\wall_type1.cpp
+	"geo2/map_objs/wall_type1/wall_type1.h"
+
+1623532945 d:\code\cbprojects\geo2\src\geo2\map_objs\wall_type1\wall_type1.h
+	"geo2/map_objs/map_object.h"
+
+1623534878 source:d:\code\cbprojects\geo2\src\geo2\map_objs\wall_type1\monochromatic_wall1.cpp
+	"geo2/map_objs/wall_type1/monochromatic_wall1.h"
+
+1623527855 d:\code\cbprojects\geo2\src\geo2\map_objs\wall_type1\monochromatic_wall1.h
+	"geo2/map_objs/wall_type1/wall_type1.h"
+	"kx/gfx/renderer_types.h"
+
+1623532716 source:d:\code\cbprojects\geo2\src\geo2\level_gen\test2.cpp
+	"geo2/level_gen/test2.h"
+	"geo2/map_objs/wall_type1/monochromatic_wall1.h"
+
+1623531641 d:\code\cbprojects\geo2\src\geo2\level_gen\test2.h
+	"geo2/game.h"
+

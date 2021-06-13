@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="geo2" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/geo2" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/geo2" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-fexceptions" />
+			<Add option="-Isrc" />
+			<Add option="-DKX_RENDERER_GL" />
+			<Add directory="src" />
+		</Compiler>
+		<Unit filename="src/geo2/collision_engine1.cpp" />
+		<Unit filename="src/geo2/collision_engine1.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="src/geo2/game.cpp" />
+		<Unit filename="src/geo2/game.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="src/geo2/game_render_op_list.cpp" />
+		<Unit filename="src/geo2/game_render_op_list.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="src/geo2/geometry.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="src/geo2/map_objs/floor_type1/floor_type1.cpp" />
+		<Unit filename="src/geo2/map_objs/floor_type1/floor_type1.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="src/geo2/map_objs/floor_type1/test_terrain1.cpp" />
+		<Unit filename="src/geo2/map_objs/floor_type1/test_terrain1.h" />
+		<Unit filename="src/geo2/map_objs/map_object.cpp" />
+		<Unit filename="src/geo2/map_objs/map_object.h" />
+		<Unit filename="src/geo2/map_objs/projectile_type1/projectile_type1.cpp" />
+		<Unit filename="src/geo2/map_objs/projectile_type1/projectile_type1.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="src/geo2/map_objs/unit_type1/player_type1.cpp" />
+		<Unit filename="src/geo2/map_objs/unit_type1/player_type1.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="src/geo2/map_objs/unit_type1/unit_type1.cpp" />
+		<Unit filename="src/geo2/map_objs/unit_type1/unit_type1.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="src/geo2/map_objs/wall_type1/wall_type1.cpp" />
+		<Unit filename="src/geo2/map_objs/wall_type1/wall_type1.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="src/geo2/master_instance.cpp" />
+		<Unit filename="src/geo2/master_instance.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="src/geo2/render_op.cpp" />
+		<Unit filename="src/geo2/render_op.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="src/geo2/test.cpp" />
+		<Unit filename="src/geo2/test.h" />
+		<Unit filename="src/glad/glad.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/kx/atomic/queue.h" />
+		<Unit filename="src/kx/atomic/stack.h" />
+		<Unit filename="src/kx/atomic/string.h" />
+		<Unit filename="src/kx/debug.cpp" />
+		<Unit filename="src/kx/debug.h" />
+		<Unit filename="src/kx/fixed_size_array.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="src/kx/gfx/font.cpp" />
+		<Unit filename="src/kx/gfx/font.h" />
+		<Unit filename="src/kx/gfx/gfx.cpp" />
+		<Unit filename="src/kx/gfx/gfx.h" />
+		<Unit filename="src/kx/gfx/gl_renderer.cpp" />
+		<Unit filename="src/kx/gfx/gl_renderer.h" />
+		<Unit filename="src/kx/gfx/kwindow.cpp" />
+		<Unit filename="src/kx/gfx/kwindow.h" />
+		<Unit filename="src/kx/gfx/renderer.h" />
+		<Unit filename="src/kx/gfx/renderer_types.h" />
+		<Unit filename="src/kx/io.cpp" />
+		<Unit filename="src/kx/io.h" />
+		<Unit filename="src/kx/log.cpp" />
+		<Unit filename="src/kx/log.h" />
+		<Unit filename="src/kx/multithread/semaphore.h" />
+		<Unit filename="src/kx/multithread/shared_lock_set.h" />
+		<Unit filename="src/kx/multithread/shared_spinlock.h" />
+		<Unit filename="src/kx/net/client.cpp" />
+		<Unit filename="src/kx/net/client.h" />
+		<Unit filename="src/kx/net/kcurl.cpp" />
+		<Unit filename="src/kx/net/kcurl.h" />
+		<Unit filename="src/kx/net/net.cpp" />
+		<Unit filename="src/kx/net/net.h" />
+		<Unit filename="src/kx/net/server.cpp" />
+		<Unit filename="src/kx/net/server.h" />
+		<Unit filename="src/kx/plot/line_graph.cpp" />
+		<Unit filename="src/kx/plot/line_graph.h" />
+		<Unit filename="src/kx/plot/numeric_graph.cpp" />
+		<Unit filename="src/kx/plot/numeric_graph.h" />
+		<Unit filename="src/kx/plot/numeric_graph_render.cpp" />
+		<Unit filename="src/kx/plot/numeric_graph_render.h" />
+		<Unit filename="src/kx/plot/scatter_graph.cpp" />
+		<Unit filename="src/kx/plot/scatter_graph.h" />
+		<Unit filename="src/kx/sdl_deleter.cpp" />
+		<Unit filename="src/kx/sdl_deleter.h" />
+		<Unit filename="src/kx/sh/kshell.cpp" />
+		<Unit filename="src/kx/sh/kshell.h" />
+		<Unit filename="src/kx/sh/kterm.cpp" />
+		<Unit filename="src/kx/sh/kterm.h" />
+		<Unit filename="src/kx/sh/kterm_input_comm.h" />
+		<Unit filename="src/kx/sh/program_db.h" />
+		<Unit filename="src/kx/sort.h" />
+		<Unit filename="src/kx/stats.cpp" />
+		<Unit filename="src/kx/stats.h" />
+		<Unit filename="src/kx/time.cpp" />
+		<Unit filename="src/kx/time.h" />
+		<Unit filename="src/kx/util.cpp" />
+		<Unit filename="src/kx/util.h" />
+		<Unit filename="src/main.cpp" />
+		<Unit filename="src/span_lite.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Extensions>
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
