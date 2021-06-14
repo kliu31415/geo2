@@ -16,12 +16,12 @@ bool cmp_idx_int(const CollisionEng1Obj &a, int b)
 }
 int CollisionEngine1::x_to_grid_x(float x)
 {
-    int x_ = std::min((int)((x - global_AABB.x1) / grid_rect_w), Grid::LEN - 1);
+    int x_ = std::min((int)((x - global_AABB.x1) / grid_rect_w), GRID_LEN - 1);
     return x_;
 }
 int CollisionEngine1::y_to_grid_y(float y)
 {
-    int y_ = std::min((int)((y - global_AABB.y1) / grid_rect_h), Grid::LEN - 1);
+    int y_ = std::min((int)((y - global_AABB.y1) / grid_rect_h), GRID_LEN - 1);
     return y_;
 }
 void CollisionEngine1::remove_obj_from_grid(std::vector<CollisionEng1Obj> &obj_vec, int idx)
@@ -30,14 +30,15 @@ void CollisionEngine1::remove_obj_from_grid(std::vector<CollisionEng1Obj> &obj_v
     auto ptr = std::lower_bound(obj_vec.begin(), obj_vec.end(), idx, cmp_idx_int);
     k_expects(ptr->idx==idx); //there should be at least one shape
     while(ptr<obj_vec.end() && ptr->idx==idx) {
-        auto aabb = ptr->shape->get_AABB();
+        auto aabb = ptr->polygon->get_AABB();
         int x = x_to_grid_x(0.5f * (aabb.x1 + aabb.x2));
         int y = y_to_grid_y(0.5f * (aabb.y1 + aabb.y2));
         bool found = false;
-        for(size_t i=0; i<grid[x][y].size(); i++) {
-            if(grid[x][y][i].idx == idx) {
-                grid[x][y][i] = grid[x][y].back();
-                grid[x][y].pop_back();
+        auto &grid_xy = grid.get_ref(x, y);
+        for(size_t i=0; i<grid_xy.size(); i++) {
+            if(grid_xy[i].idx == idx) {
+                grid_xy[i] = grid_xy.back();
+                grid_xy.pop_back();
                 found = true;
                 break;
             }
@@ -54,40 +55,42 @@ void CollisionEngine1::add_obj_to_grid(std::vector<CollisionEng1Obj> &obj_vec,
     auto ptr = std::lower_bound(obj_vec.begin(), obj_vec.end(), idx, cmp_idx_int);
     k_expects(ptr->idx==idx); //there should be at least one shape
     while(ptr<obj_vec.end() && ptr->idx==idx) {
-        auto aabb = ptr->shape->get_AABB();
+        auto aabb = ptr->polygon->get_AABB();
         int x = x_to_grid_x(0.5f * (aabb.x1 + aabb.x2));
         int y = y_to_grid_y(0.5f * (aabb.y1 + aabb.y2));
         CollisionEng1ObjAndAABB ceng_and_aabb(*ptr, aabb);
-        find_and_add_collisions(collisions, ceng_and_aabb);
-        grid[x][y].push_back(ceng_and_aabb);
+        find_and_add_collisions(collisions, ceng_and_aabb, std::not_equal_to<>());
+        grid.get_ref(x, y).push_back(ceng_and_aabb);
         ptr++;
     }
 }
+template<class IdxCmp>
 void CollisionEngine1::find_and_add_collisions(std::vector<CEng1Collision> *add_to,
-                                               const CollisionEng1ObjAndAABB &ceng_obj)
+                                               const CollisionEng1ObjAndAABB &ceng_obj,
+                                               IdxCmp idx_cmp)
 {
 
     int x1 = x_to_grid_x(ceng_obj.aabb.x1 - 0.5f*max_AABB_w);
     int x2 = x_to_grid_x(ceng_obj.aabb.x2 + 0.5f*max_AABB_w);
     int y1 = y_to_grid_y(ceng_obj.aabb.y1 - 0.5f*max_AABB_h);
     int y2 = y_to_grid_y(ceng_obj.aabb.y2 + 0.5f*max_AABB_h);
-    x1 = std::clamp(x1, 0, Grid::LEN - 1);
-    x2 = std::clamp(x2, 0, Grid::LEN - 1);
-    y1 = std::clamp(y1, 0, Grid::LEN - 1);
-    y2 = std::clamp(y2, 0, Grid::LEN - 1);
+    x1 = std::clamp(x1, 0, GRID_LEN - 1);
+    x2 = std::clamp(x2, 0, GRID_LEN - 1);
+    y1 = std::clamp(y1, 0, GRID_LEN - 1);
+    y2 = std::clamp(y2, 0, GRID_LEN - 1);
 
     for(int x=x1; x<=x2; x++) {
         for(int y=y1; y<=y2; y++) {
-            for(const auto &other: grid[x][y]) {
+            for(const auto &other: grid.get_ref(x, y)) {
                 //filter out a potential collision if:
                 //-the .idx (owner) is the same
                 //-the AABBs don't overlap
                 //-the collision wouldn't matter anyway
-                if(ceng_obj.idx!=other.idx &&
+                if(idx_cmp(ceng_obj.idx, other.idx) &&
                    ceng_obj.aabb.overlaps(other.aabb) &&
                    collision_could_matter(*map_objs[ceng_obj.idx], *map_objs[other.idx]))
                 {
-                    if(ceng_obj.shape->has_collision(*other.shape)) {
+                    if(ceng_obj.polygon->has_collision(*other.polygon)) {
                         CEng1Collision collision;
                         collision.idx1 = ceng_obj.idx;
                         collision.idx2 = other.idx;
@@ -118,9 +121,9 @@ CollisionEngine1::CollisionEngine1(kx::FixedSizeArray<const Collidable*> &&map_o
 
 std::vector<CEng1Collision> CollisionEngine1::find_collisions()
 {
-    //find the grid AABBs. The AABBs are integral with dimensions in the range [0, Grid::LEN).
+    //find the grid AABBs. The AABBs are integral with dimensions in the range [0, GRID_LEN).
     auto get_ceng_obj_AABB = [](const CollisionEng1Obj &c) -> AABB
-                                 {return c.shape->get_AABB();};
+                                 {return c.polygon->get_AABB();};
     cur_AABB = decltype(cur_AABB)(cur.size());
     std::transform(cur.begin(),
                    cur.end(),
@@ -179,7 +182,7 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
 
      global_AABB = std::reduce(cur_AABB.begin(),
                                cur_AABB.end(),
-                               AABB(),
+                               AABB::make_maxbad_AABB(),
                                combine_AABB);
 
      global_AABB = std::reduce(des_AABB.begin(),
@@ -188,8 +191,8 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
                                combine_AABB);
 
 
-    grid_rect_w = (global_AABB.x2 - global_AABB.x1) / Grid::LEN;
-    grid_rect_h = (global_AABB.y2 - global_AABB.y1) / Grid::LEN;
+    grid_rect_w = (global_AABB.x2 - global_AABB.x1) / GRID_LEN;
+    grid_rect_h = (global_AABB.y2 - global_AABB.y1) / GRID_LEN;
 
     //put things in their grid rects
     size_t cur_idx = 0;
@@ -197,8 +200,9 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
 
     std::vector<CollisionEng1ObjAndAABB> active_objs;
 
-    auto add_active_obj = [&]
-         (int i,
+    auto add_active_obj = [this]
+         (std::vector<CollisionEng1ObjAndAABB> *active_objs_,
+          int i,
           decltype(cur) *objs_,
           size_t *obj_idx,
           const decltype(cur_AABB) &AABBs)
@@ -206,7 +210,8 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
           {
               while(*obj_idx < objs_->size() && (*objs_)[*obj_idx].idx<=i) {
                   if((*objs_)[*obj_idx].idx==i) {
-                      active_objs.emplace_back((*objs_)[*obj_idx], AABBs[*obj_idx]);
+                      CollisionEng1ObjAndAABB active_obj();
+                      active_objs_->emplace_back((*objs_)[*obj_idx], AABBs[*obj_idx]);
 
                       auto mx = 0.5f * (AABBs[*obj_idx].x1 + AABBs[*obj_idx].x2);
                       auto my = 0.5f * (AABBs[*obj_idx].y1 + AABBs[*obj_idx].y2);
@@ -214,7 +219,7 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
                       int x = x_to_grid_x(mx);
                       int y = y_to_grid_y(my);
 
-                      grid[x][y].emplace_back((*objs_)[*obj_idx], AABBs[*obj_idx]);
+                      grid.get_ref(x, y).emplace_back((*objs_)[*obj_idx], AABBs[*obj_idx]);
                   }
                   (*obj_idx)++;
               }
@@ -222,17 +227,18 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
 
     for(size_t i=0; i<move_intent.size(); i++) {
         if(move_intent[i] == MoveIntent::GoToDesiredPos)
-            add_active_obj(i, &des, &des_idx, des_AABB);
+            add_active_obj(&active_objs, i, &des, &des_idx, des_AABB);
         else if(move_intent[i] == MoveIntent::StayAtCurrentPos)
-            add_active_obj(i, &cur, &cur_idx, cur_AABB);
+            add_active_obj(&active_objs, i, &cur, &cur_idx, cur_AABB);
     }
 
     std::vector<CEng1Collision> collisions;
+    for(const auto &i: active_objs) {
 
-    //find collisions
-    for(size_t i=0; i<active_objs.size(); i++) {
-        find_and_add_collisions(&collisions, active_objs[i]);
+        find_and_add_collisions(&collisions, i, std::less<>());
     }
+
+    //make sure not to report any collision twice!
 
     return collisions;
 }

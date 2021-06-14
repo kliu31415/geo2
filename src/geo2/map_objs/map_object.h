@@ -30,17 +30,17 @@ public:
     {
         move_intent = move_intent_;
     }
-    /** A raw pointer to shape is used for speed. Make sure that someone else
+    /** A raw pointer to polygon is used for speed. Make sure that someone else
      *  retains ownership of shape to keep it alive while the collision engine
      *  runs, or else there may be a dangling pointer that could cause crashes!
      */
-    inline void add_current_pos(const Shape *shape, uint16_t shape_id = 0) const
+    inline void add_current_pos(const Polygon *polygon, uint16_t shape_id = 0) const
     {
-        ceng_cur->emplace_back(shape, idx, shape_id, false);
+        ceng_cur->emplace_back(polygon, idx, shape_id, false);
     }
-    inline void add_desired_pos(const Shape *shape, uint16_t shape_id = 0) const
+    inline void add_desired_pos(const Polygon *polygon, uint16_t shape_id = 0) const
     {
-        ceng_des->emplace_back(shape, idx, shape_id, true);
+        ceng_des->emplace_back(polygon, idx, shape_id, true);
     }
     inline void set_move_intent(MoveIntent intent) const
     {

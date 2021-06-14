@@ -9,12 +9,12 @@ Level LevelGenerator<Level::Name::Test2>::generate([[maybe_unused]] Game *game)
     using namespace map_obj;
 
     Level level;
-    for(int i=0; i<5; i++) {
-        for(int j=0; j<5; j++) {
+    for(int i=0; i<20; i++) {
+        for(int j=0; j<20; j++) {
             for(int x=0; x<3; x++) {
                 for(int y=0; y<3; y++) {
                     MapRect pos(i*6 + x, j*6 + y, 1, 1);
-                    kx::gfx::LinearColor color(i+0.1, j+0.1, x, 1.0);
+                    kx::gfx::LinearColor color(std::sqrt(i+0.1), std::sqrt(j+0.1), x, 1.0);
                     level.map_objs.push_back(std::make_shared<MonochromaticWall_1>(pos, color));
                 }
             }

@@ -82,7 +82,7 @@ void Player_Type1::process_input(const PlayerInputArgs &args)
     else
         vertical_dir = vertical_input;
 
-    constexpr auto POWER = 400.0;
+    constexpr auto POWER = 500.0;
     constexpr auto MASS = 1.0;
     constexpr auto FRICTION_COEF = 4.0;
     constexpr auto GRAVITY = 9.80665;
@@ -113,7 +113,9 @@ void Player_Type1::process_input(const PlayerInputArgs &args)
         //The max acceleration is set so that if you're at 0 speed, you accelerate so that
         //if you accelerated at this rate, your acceleration would be identical to your
         //acceleration X_s seconds from now. Picking X_s to roughly match the tick length
-        //results in the most smooth acceleration, so X_s is set to 1ms.
+        //results in the most smooth acceleration, so X_s is set to 1ms. This effectively
+        //means that if you're at rest, the zeroth and first ticks will have roughly the
+        //same acceleration.
         constexpr auto X_S = 0.001;
         constexpr auto Q_a = X_S * MASS;
         constexpr auto Q_b = X_S * MASS * FRICTION_COEF * GRAVITY;
@@ -161,7 +163,9 @@ void Player_Type1::run1_mt([[maybe_unused]] const MapObjRun1Args &args)
                      {position.x + 0.5*PSL, position.y + 0.5*PSL},
                      {position.x - 0.5*PSL, position.y + 0.5*PSL}};
     auto cur_span = nonstd::span<MapCoord>(std::begin(cur_v), std::end(cur_v));
-    cur_shape = Shape::make_polygon(cur_span);
+
+    cur_shape = Polygon::make(cur_span);
+
     args.add_current_pos(cur_shape.get());
 
     if(velocity.x!=0 || velocity.y!=0) {
@@ -175,7 +179,7 @@ void Player_Type1::run1_mt([[maybe_unused]] const MapObjRun1Args &args)
                          {desired_position.x - 0.5*PSL, desired_position.y + 0.5*PSL}};
 
         auto des_span = nonstd::span<MapCoord>(std::begin(des_v), std::end(des_v));
-        des_shape = Shape::make_polygon(des_span);
+        des_shape = Polygon::make(des_span);
         args.add_desired_pos(des_shape.get());
     } else {
         move_intent = MoveIntent::StayAtCurrentPos;

@@ -28,8 +28,8 @@ class Player_Type1 final: public Unit_Type1
     nonstd::span<float> op_iu1;
     nonstd::span<float> op_iu2;
 
-    std::unique_ptr<Shape> cur_shape;
-    std::unique_ptr<Shape> des_shape;
+    std::unique_ptr<Polygon> cur_shape;
+    std::unique_ptr<Polygon> des_shape;
 public:
     Player_Type1();
     void process_input(const PlayerInputArgs &args);

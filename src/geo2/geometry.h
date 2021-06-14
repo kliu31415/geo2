@@ -1,5 +1,7 @@
 #pragma once
 
+#include <immintrin.h>
+
 #include "kx/fixed_size_array.h"
 
 #include "span_lite.h"
@@ -118,14 +120,8 @@ template<class T> struct _AABB
     T y1;
     T y2;
 
-    ///initialize to invalid AABB
-    _AABB():
-        x1(std::numeric_limits<T>::max()),
-        x2(std::numeric_limits<T>::min()),
-        y1(std::numeric_limits<T>::max()),
-        y2(std::numeric_limits<T>::min())
+    _AABB()
     {}
-
     _AABB(T x1_, T x2_, T y1_, T y2_):
          x1(x1_),
          x2(x2_),
@@ -156,6 +152,15 @@ template<class T> struct _AABB
     {
         return x1<=other.x1 && x2>=other.x2 && y1<=other.y1 && y2>=other.y2;
     }
+    static _AABB make_maxbad_AABB()
+    {
+        _AABB ret;
+        ret.x1 = std::numeric_limits<T>::max();
+        ret.x2 = std::numeric_limits<T>::min();
+        ret.y1 = std::numeric_limits<T>::max();
+        ret.y2 = std::numeric_limits<T>::min();
+        return ret;
+    }
 };
 using AABB = _AABB<float>;
 
@@ -163,61 +168,43 @@ enum class MoveIntent: uint8_t {
     NotSet, Delete, StayAtCurrentPos, GoToDesiredPos,
 };
 
-class Shape
-{
-public:
-    virtual ~Shape() = default;
-    virtual void translate(float dx, float dy) = 0;
-    virtual void rotate_about_origin(float theta) = 0;
-    virtual AABB get_AABB() const = 0;
-    virtual bool has_collision(const Shape &other) const = 0;
-    virtual bool has_collision(const class Polygon &other) const = 0;
-
-    template<class T> static std::unique_ptr<Shape> make_polygon(nonstd::span<_MapCoord<T>> vertices);
-};
-
-class Polygon: public Shape
+class Polygon final
 {
     //note that one vertex is stored twice for efficiency purposes (i.e. begin()==rbegin())
     kx::FixedSizeArray<_MapCoord<float>> vertices;
 
-public:
-    template<class T> Polygon(nonstd::span<_MapCoord<T>> vertices_, kx::Passkey<Shape>):
+    template<class T> Polygon(nonstd::span<_MapCoord<T>> vertices_):
         vertices(vertices_.size()+1)
     {
         for(size_t i=0; i<vertices_.size(); i++)
             vertices[i] = vertices_[i];
         vertices[vertices_.size()] = vertices[0];
     }
-
     size_t get_num_vertices() const
     {
         return vertices.size() - 1;
     }
-    void translate(float dx, float dy) override
+public:
+    void translate(float dx, float dy)
     {
         for(auto &coord: vertices) {
             coord.x += dx;
             coord.y += dy;
         }
     }
-    void rotate_about_origin([[maybe_unused]] float theta) override
+    void rotate_about_origin([[maybe_unused]] float theta)
     {
         k_assert(false);
     }
-    AABB get_AABB() const override
+    AABB get_AABB() const
     {
-        AABB ret;
+        AABB ret = AABB::make_maxbad_AABB();
         std::for_each(vertices.begin() + 1,
                       vertices.end(),
                       [&](_MapCoord<float> &x) -> void {ret.combine(x);});
         return ret;
     }
-    bool has_collision(const Shape &other) const override
-    {
-        return other.has_collision(*this);
-    }
-    bool has_collision(const Polygon &other) const override
+    bool has_collision(const Polygon &other) const
     {
         //This only checks for edge intersections; it doesn't check if one is inside the other.
 
@@ -245,13 +232,162 @@ public:
 
         return false;
     }
+    template<class T> static std::unique_ptr<Polygon> make(nonstd::span<_MapCoord<T>> vertices)
+    {
+        std::unique_ptr<Polygon> ret(new Polygon(vertices));
+        return ret;
+    }
 };
 
-template<class T> std::unique_ptr<Shape> Shape::make_polygon(nonstd::span<_MapCoord<T>> vertices)
+/*
+//This is a polygon class optimized for AVX2
+class Polygon final
 {
-    ///I have to construct it like this or I get errors due to the Passkey
-    std::unique_ptr<Shape> ret(new Polygon(vertices, kx::Passkey<Shape>()));
-    return ret;
-}
+    int n;
+    float* vals;
+
+    inline static int get_d_len(int n)
+    {
+        return 7 * ((n + 6) / 7) + 2;
+    }
+
+    template<class T> Polygon(nonstd::span<_MapCoord<T>> vertices):
+        n(vertices.size())
+    {
+        auto d_len = get_d_len(n);
+        vals = (float*)std::malloc(sizeof(float) * 2 * d_len);
+        for(int i=0; i<n; i++) {
+            vals[i] = vertices[i].x;
+            vals[d_len + i] = vertices[i].y;
+        }
+        //we'll have some extra room, so just copy the last few sides
+        //to fill up the space (we can't leave stuff uninitialized
+        //because that could cause fake intersections). Note that we always
+        //copy one of the vertices at least once; i.e. the vertices[0]
+        //always appears more than once.
+        for(int i=n; i<d_len; i++) {
+            vals[i] = vals[i - n];
+            vals[d_len + i] = vals[d_len + i - n];
+        }
+    }
+    int get_num_vertices() const
+    {
+        return n;
+    }
+public:
+    ///too lazy to add support for copy/move rn, but there's no reason copy/move can't work
+    Polygon(const Polygon &other) = delete;
+    Polygon & operator = (const Polygon &other) = delete;
+    Polygon(Polygon &&other) = delete;
+    Polygon & operator = (Polygon &&other) = delete;
+
+    ~Polygon()
+    {
+        std::free(vals);
+    }
+
+    void translate([[maybe_unused]] float dx, [[maybe_unused]] float dy)
+    {
+        k_assert(false);
+    }
+    void rotate_about_origin([[maybe_unused]] float theta)
+    {
+        k_assert(false);
+    }
+    AABB get_AABB() const
+    {
+        AABB ret = AABB::make_maxbad_AABB();
+        auto d_len = get_d_len(n);
+        for(int i=0; i<n; i++) {
+            _MapCoord<float> c(vals[i], vals[d_len + i]);
+            ret.combine(c);
+        }
+        return ret;
+    }
+    bool has_collision(const Polygon &other) const
+    {
+        //This only checks for edge intersections; it doesn't check if one is inside the other.
+
+        //https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
+        //Note that this DOESN'T handle parallel lines properly, but that's usually OK.
+
+        auto this_n = get_num_vertices();
+        auto other_n = other.get_num_vertices();
+        auto this_d_len = get_d_len(this_n);
+        auto other_d_len = get_d_len(other_n);
+
+        const __m256 mm0 = _mm256_set1_ps(0);
+        const __m256 mm1 = _mm256_set1_ps(1);
+
+        std::array<uint32_t, 8> good_vals;
+
+        for(int i=1; i<this_n; i++) {
+
+            __m256 Px = _mm256_set1_ps(vals[i-1]);
+            __m256 Py = _mm256_set1_ps(vals[this_d_len + i-1]);
+            __m256 Rx = _mm256_set1_ps(vals[i] - vals[i-1]);
+            __m256 Ry = _mm256_set1_ps(vals[this_d_len + i] - vals[this_d_len + i-1]);
+
+            for(int j=1; j<other_d_len; j+=7) {
+
+                __m256 Qx = _mm256_loadu_ps(other.vals + j-1);
+                __m256 Qy = _mm256_loadu_ps(other.vals + other_d_len + j-1);
+
+                __m256 p1_Sx = _mm256_loadu_ps(other.vals + j);
+                __m256 p2_Sx = _mm256_loadu_ps(other.vals + j-1);
+                __m256 Sx = p1_Sx - p2_Sx;
+
+                __m256 p1_Sy = _mm256_loadu_ps(other.vals + other_d_len + j);
+                __m256 p2_Sy = _mm256_loadu_ps(other.vals + other_d_len + j-1);
+                __m256 Sy = p1_Sy - p2_Sy;
+
+                __m256 part1x = Qx - Px;
+                __m256 part1y = Qy - Py;
+
+                __m256 Ry_times_Sx = Ry * Sx;
+                __m256 part3 = _mm256_fmsub_ps(Rx, Sy, Ry_times_Sx);
+
+                __m256 part1y_times_Sx = part1y * Sx;
+                __m256 t_part1 = _mm256_fmsub_ps(part1x, Sy, part1y_times_Sx);
+                __m256 t = t_part1 / part3;
+
+                __m256 part1y_times_Rx = part1y * Rx;
+                __m256 u_part1 = _mm256_fmsub_ps(part1x, Ry, part1y_times_Rx);
+                __m256 u = u_part1 / part3;
+
+                __m256 t_geq_0 = _mm256_cmp_ps(t, mm0, _CMP_GT_OQ);
+                __m256 t_leq_1 = _mm256_cmp_ps(t, mm1, _CMP_LT_OQ);
+                __m256 t_good = _mm256_and_ps(t_geq_0, t_leq_1);
+
+                __m256 u_geq_0 = _mm256_cmp_ps(u, mm0, _CMP_GT_OQ);
+                __m256 u_leq_1 = _mm256_cmp_ps(u, mm1, _CMP_LT_OQ);
+                __m256 u_good = _mm256_and_ps(u_geq_0, u_leq_1);
+
+                __m256 good = _mm256_and_ps(t_good, u_good);
+
+                _mm256_storeu_ps((float*)good_vals.data(), good);
+
+                //remember that the last value is bogus; we only operate on 7 things
+                good_vals[0] |= good_vals[1];
+                good_vals[2] |= good_vals[3];
+                good_vals[4] |= good_vals[5];
+                good_vals[0] |= good_vals[2];
+                good_vals[4] |= good_vals[6];
+                good_vals[0] |= good_vals[4];
+
+                if(good_vals[0])
+                    return true;
+            }
+        }
+
+        return false;
+    }
+    template<class T> static std::unique_ptr<Polygon> make(nonstd::span<_MapCoord<T>> vertices)
+    {
+        std::unique_ptr<Polygon> ret(new Polygon(vertices));
+        return ret;
+    }
+};
+*/
 
 }

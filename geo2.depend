@@ -617,7 +617,7 @@
 1623534669 d:\code\cbprojects\geo2\src\geo2\game_render_op_list.h
 	"geo2/render_op.h"
 
-1623518339 d:\code\cbprojects\geo2\src\geo2\collision_engine1.h
+1623654148 d:\code\cbprojects\geo2\src\geo2\collision_engine1.h
 	"geo2/geometry.h"
 	"kx/fixed_size_array.h"
 	"span_lite.h"
@@ -627,7 +627,8 @@
 	<array>
 	<vector>
 
-1623533756 d:\code\cbprojects\geo2\src\geo2\geometry.h
+1623654467 d:\code\cbprojects\geo2\src\geo2\geometry.h
+	<immintrin.h>
 	"kx/fixed_size_array.h"
 	"span_lite.h"
 	<type_traits>
@@ -636,13 +637,13 @@
 	<optional>
 	<cmath>
 
-1623539801 source:d:\code\cbprojects\geo2\src\geo2\collision_engine1.cpp
+1623653587 source:d:\code\cbprojects\geo2\src\geo2\collision_engine1.cpp
 	"geo2/collision_engine1.h"
 	<cmath>
 	<algorithm>
 	<execution>
 
-1623536854 d:\code\cbprojects\geo2\src\geo2\map_objs\map_object.h
+1623642534 d:\code\cbprojects\geo2\src\geo2\map_objs\map_object.h
 	"geo2/collision_engine1.h"
 	"geo2/game_render_op_list.h"
 	"kx/gfx/renderer.h"
@@ -663,7 +664,7 @@
 	"kx/gfx/renderer.h"
 	<cmath>
 
-1623536484 d:\code\cbprojects\geo2\src\geo2\map_objs\unit_type1\player_type1.h
+1623642541 d:\code\cbprojects\geo2\src\geo2\map_objs\unit_type1\player_type1.h
 	"geo2/map_objs/unit_type1/unit_type1.h"
 
 1623460428 d:\code\cbprojects\geo2\src\geo2\map_objs\unit_type1\unit_type1.h
@@ -672,7 +673,7 @@
 1623460601 d:\code\cbprojects\geo2\src\geo2\map_objs\floor_type1\floor_type1.h
 	"geo2/map_objs/map_object.h"
 
-1623569661 source:d:\code\cbprojects\geo2\src\geo2\map_objs\unit_type1\player_type1.cpp
+1623649458 source:d:\code\cbprojects\geo2\src\geo2\map_objs\unit_type1\player_type1.cpp
 	"geo2/map_objs/unit_type1/player_type1.h"
 	<iostream>
 
@@ -688,10 +689,10 @@
 1623460806 d:\code\cbprojects\geo2\src\geo2\map_objs\projectile_type1\projectile_type1.h
 	"geo2/map_objs/map_object.h"
 
-1623546987 source:d:\code\cbprojects\geo2\src\geo2\map_objs\wall_type1\wall_type1.cpp
+1623642592 source:d:\code\cbprojects\geo2\src\geo2\map_objs\wall_type1\wall_type1.cpp
 	"geo2/map_objs/wall_type1/wall_type1.h"
 
-1623532945 d:\code\cbprojects\geo2\src\geo2\map_objs\wall_type1\wall_type1.h
+1623642603 d:\code\cbprojects\geo2\src\geo2\map_objs\wall_type1\wall_type1.h
 	"geo2/map_objs/map_object.h"
 
 1623534878 source:d:\code\cbprojects\geo2\src\geo2\map_objs\wall_type1\monochromatic_wall1.cpp
@@ -701,7 +702,7 @@
 	"geo2/map_objs/wall_type1/wall_type1.h"
 	"kx/gfx/renderer_types.h"
 
-1623532716 source:d:\code\cbprojects\geo2\src\geo2\level_gen\test2.cpp
+1623641160 source:d:\code\cbprojects\geo2\src\geo2\level_gen\test2.cpp
 	"geo2/level_gen/test2.h"
 	"geo2/map_objs/wall_type1/monochromatic_wall1.h"
 

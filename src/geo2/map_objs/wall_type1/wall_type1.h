@@ -10,7 +10,7 @@ class Wall_Type1: public MapObject
 {
 protected:
     MapRect position;
-    std::unique_ptr<Shape> shape;
+    std::unique_ptr<Polygon> polygon;
     Wall_Type1(const MapRect &position_);
 public:
     void run1_mt(const MapObjRun1Args &args) override;

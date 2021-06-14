@@ -15,14 +15,14 @@ namespace geo2 {
 
 struct CollisionEng1Obj
 {
-    const Shape *shape;
+    const Polygon *polygon;
     int idx; //index of owner
     uint16_t shape_id;
     bool is_des;
 
     CollisionEng1Obj() {}
-    CollisionEng1Obj(const Shape *shape_, int idx_, uint16_t shape_id_, bool is_des_):
-        shape(shape_),
+    CollisionEng1Obj(const Polygon *polygon_, int idx_, uint16_t shape_id_, bool is_des_):
+        polygon(polygon_),
         idx(idx_),
         shape_id(shape_id_),
         is_des(is_des_)
@@ -50,42 +50,52 @@ class CollisionEngine1
         {}
     };
 
+    constexpr static int GRID_LEN = 128; //power of 2 is faster cuz mult turns into bitshift
+
     //fastish spatial partition grid
-    class Grid
+    template<class T> class Grid
     {
-        //class to enable 2D indexing
-        class GridCol
-        {
-            std::vector<CollisionEng1ObjAndAABB> *row_ptr;
-        public:
-            GridCol(std::vector<CollisionEng1ObjAndAABB> *row_ptr_):
-                row_ptr(row_ptr_)
-            {}
-            inline std::vector<CollisionEng1ObjAndAABB> &operator [](int idx)
-            {
-                return *(row_ptr + idx);
-            }
-        };
-
-        std::unique_ptr<std::vector<CollisionEng1ObjAndAABB>[]> vals;
-public:
-        constexpr static int LEN = 128; //power of 2 is faster cuz mult turns into bitshift
-
+        std::unique_ptr<std::vector<T>[]> vals;
+    public:
         Grid():
-            vals(std::make_unique<std::vector<CollisionEng1ObjAndAABB>[]>(LEN*LEN))
+            vals(std::make_unique<std::vector<T>[]>(GRID_LEN*GRID_LEN))
         {}
-        inline GridCol operator [](int idx)
+        inline std::vector<T>& get_ref(int a, int b)
         {
-            return GridCol(vals.get() + LEN*idx);
+            return vals[a*GRID_LEN + b];
         }
     };
+
+    /*
+    template<class T> class Grid
+    {
+        kx::FixedSizeArray<T> vals;
+        std::array<int, GRID_LEN*GRID_LEN> offset;
+        std::array<int, GRID_LEN*GRID_LEN> cur_size;
+    public:
+        Grid()
+        {}
+        void init_with_max_sizes(nonstd::span<int> max_sizes)
+        {
+            std::fill(std::begin(cur_size), std::end(cur_size), 0);
+            offset[0] = 0;
+            for(int i=1; i<GRID_LEN*GRID_LEN; i++)
+                offset[i] = offset[i-1] + max_sizes[i-1];
+            vals = decltype(vals)(max_sizes[GRID_LEN*GRID_LEN-1] + offset[GRID_LEN*GRID_LEN-1]);
+        }
+        inline std::vector<T>& get_ref(int a, int b)
+        {
+            return vals[a*GRID_LEN + b];
+        }
+    }
+    */
 
     kx::FixedSizeArray<const Collidable*> map_objs;
     std::function<bool(const Collidable&, const Collidable&)> collision_could_matter;
     std::vector<CollisionEng1Obj> cur;
     std::vector<CollisionEng1Obj> des;
     kx::FixedSizeArray<MoveIntent> move_intent;
-    Grid grid;
+    Grid<CollisionEng1ObjAndAABB> grid;
     kx::FixedSizeArray<AABB> cur_AABB;
     kx::FixedSizeArray<AABB> des_AABB;
     AABB global_AABB;
@@ -100,8 +110,10 @@ public:
     void add_obj_to_grid(std::vector<CollisionEng1Obj> &obj_vec,
                          int idx,
                          std::vector<CEng1Collision> *collisions);
+    template<class IdxCmp>
     void find_and_add_collisions(std::vector<CEng1Collision> *add_to,
-                                 const CollisionEng1ObjAndAABB &ceng_obj);
+                                 const CollisionEng1ObjAndAABB &ceng_obj,
+                                 IdxCmp idx_cmp);
 public:
     ///cur_ and des_ must be sorted (for efficiency reasons)
     CollisionEngine1(kx::FixedSizeArray<const Collidable*> &&map_objs_,
@@ -117,5 +129,4 @@ public:
     std::vector<CEng1Collision> find_collisions();
     void update_intent(int idx, MoveIntent intent, std::vector<CEng1Collision> *add_to);
 };
-
 }

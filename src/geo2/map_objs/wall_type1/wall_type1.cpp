@@ -10,11 +10,11 @@ Wall_Type1::Wall_Type1(const MapRect &position_):
                      {position.x + position.w, position.y + position.h},
                      {position.x, position.y + position.h}};
     auto s = nonstd::span<MapCoord>(std::begin(verts), std::end(verts));
-    shape = Shape::make_polygon(s);
+    polygon = Polygon::make(s);
 }
 void Wall_Type1::run1_mt(const MapObjRun1Args &args)
 {
-    args.add_current_pos(shape.get());
+    args.add_current_pos(polygon.get());
     args.set_move_intent(MoveIntent::StayAtCurrentPos);
 }
 MoveIntent Wall_Type1::handle_collision(MapObject *other, const HandleCollisionArgs &args) const
