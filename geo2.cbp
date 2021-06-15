@@ -50,6 +50,10 @@
 		<Unit filename="src/geo2/geometry.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="src/geo2/level_gen/test2.cpp" />
+		<Unit filename="src/geo2/level_gen/test2.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="src/geo2/map_objs/floor_type1/floor_type1.cpp" />
 		<Unit filename="src/geo2/map_objs/floor_type1/floor_type1.h">
 			<Option target="&lt;{~None~}&gt;" />
@@ -70,6 +74,8 @@
 		<Unit filename="src/geo2/map_objs/unit_type1/unit_type1.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="src/geo2/map_objs/wall_type1/monochromatic_wall1.cpp" />
+		<Unit filename="src/geo2/map_objs/wall_type1/monochromatic_wall1.h" />
 		<Unit filename="src/geo2/map_objs/wall_type1/wall_type1.cpp" />
 		<Unit filename="src/geo2/map_objs/wall_type1/wall_type1.h">
 			<Option target="&lt;{~None~}&gt;" />
@@ -78,12 +84,18 @@
 		<Unit filename="src/geo2/master_instance.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="src/geo2/multithread/thread_pool.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="src/geo2/render_op.cpp" />
 		<Unit filename="src/geo2/render_op.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/geo2/test.cpp" />
 		<Unit filename="src/geo2/test.h" />
+		<Unit filename="src/geo2/timer.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="src/glad/glad.c">
 			<Option compilerVar="CC" />
 		</Unit>

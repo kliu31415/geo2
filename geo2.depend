@@ -208,7 +208,7 @@
 	"kx/debug.h"
 	<cmath>
 
-1615772142 source:d:\code\cbprojects\geo2\src\kx\time.cpp
+1623730104 source:d:\code\cbprojects\geo2\src\kx\time.cpp
 	"kx/time.h"
 	"kx/util.h"
 	"kx/io.h"
@@ -487,7 +487,7 @@
 	<future>
 	<atomic>
 
-1600658832 d:\code\cbprojects\geo2\src\kx\atomic\queue.h
+1623727165 d:\code\cbprojects\geo2\src\kx\atomic\queue.h
 	"kx/util.h"
 	"kx/debug.h"
 	<condition_variable>
@@ -518,7 +518,7 @@
 	<mutex>
 	<map>
 
-1623532237 d:\code\cbprojects\geo2\src\geo2\game.h
+1623729943 d:\code\cbprojects\geo2\src\geo2\game.h
 	"geo2/map_objs/unit_type1/player_type1.h"
 	"kx/gfx/renderer.h"
 	"kx/gfx/kwindow.h"
@@ -526,18 +526,20 @@
 	<vector>
 	<cstdint>
 
-1623549600 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
+1623731589 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
 	"geo2/map_objs/floor_type1/test_terrain1.h"
 	"geo2/game_render_op_list.h"
 	"geo2/game.h"
 	"geo2/map_objs/map_object.h"
 	"geo2/collision_engine1.h"
 	"geo2/level_gen/test2.h"
+	"geo2/multithread/thread_pool.h"
+	"geo2/timer.h"
 	"kx/gfx/renderer.h"
 	"kx/log.h"
 	"kx/io.h"
 	"kx/stats.h"
-	<omp.h>
+	<thread>
 	<cmath>
 
 1622742577 d:\code\cbprojects\geo2\src\geo2\master_instance.h
@@ -617,7 +619,7 @@
 1623534669 d:\code\cbprojects\geo2\src\geo2\game_render_op_list.h
 	"geo2/render_op.h"
 
-1623654148 d:\code\cbprojects\geo2\src\geo2\collision_engine1.h
+1623733088 d:\code\cbprojects\geo2\src\geo2\collision_engine1.h
 	"geo2/geometry.h"
 	"kx/fixed_size_array.h"
 	"span_lite.h"
@@ -627,7 +629,7 @@
 	<array>
 	<vector>
 
-1623654467 d:\code\cbprojects\geo2\src\geo2\geometry.h
+1623733004 d:\code\cbprojects\geo2\src\geo2\geometry.h
 	<immintrin.h>
 	"kx/fixed_size_array.h"
 	"span_lite.h"
@@ -637,13 +639,15 @@
 	<optional>
 	<cmath>
 
-1623653587 source:d:\code\cbprojects\geo2\src\geo2\collision_engine1.cpp
+1623733618 source:d:\code\cbprojects\geo2\src\geo2\collision_engine1.cpp
 	"geo2/collision_engine1.h"
+	"geo2/multithread/thread_pool.h"
+	"geo2/timer.h"
 	<cmath>
 	<algorithm>
 	<execution>
 
-1623642534 d:\code\cbprojects\geo2\src\geo2\map_objs\map_object.h
+1623724025 d:\code\cbprojects\geo2\src\geo2\map_objs\map_object.h
 	"geo2/collision_engine1.h"
 	"geo2/game_render_op_list.h"
 	"kx/gfx/renderer.h"
@@ -673,7 +677,7 @@
 1623460601 d:\code\cbprojects\geo2\src\geo2\map_objs\floor_type1\floor_type1.h
 	"geo2/map_objs/map_object.h"
 
-1623649458 source:d:\code\cbprojects\geo2\src\geo2\map_objs\unit_type1\player_type1.cpp
+1623655438 source:d:\code\cbprojects\geo2\src\geo2\map_objs\unit_type1\player_type1.cpp
 	"geo2/map_objs/unit_type1/player_type1.h"
 	<iostream>
 
@@ -695,17 +699,28 @@
 1623642603 d:\code\cbprojects\geo2\src\geo2\map_objs\wall_type1\wall_type1.h
 	"geo2/map_objs/map_object.h"
 
-1623534878 source:d:\code\cbprojects\geo2\src\geo2\map_objs\wall_type1\monochromatic_wall1.cpp
+1623698018 source:d:\code\cbprojects\geo2\src\geo2\map_objs\wall_type1\monochromatic_wall1.cpp
 	"geo2/map_objs/wall_type1/monochromatic_wall1.h"
 
-1623527855 d:\code\cbprojects\geo2\src\geo2\map_objs\wall_type1\monochromatic_wall1.h
+1623697999 d:\code\cbprojects\geo2\src\geo2\map_objs\wall_type1\monochromatic_wall1.h
 	"geo2/map_objs/wall_type1/wall_type1.h"
 	"kx/gfx/renderer_types.h"
 
-1623641160 source:d:\code\cbprojects\geo2\src\geo2\level_gen\test2.cpp
+1623724624 source:d:\code\cbprojects\geo2\src\geo2\level_gen\test2.cpp
 	"geo2/level_gen/test2.h"
 	"geo2/map_objs/wall_type1/monochromatic_wall1.h"
 
 1623531641 d:\code\cbprojects\geo2\src\geo2\level_gen\test2.h
 	"geo2/game.h"
+
+1623723925 d:\code\cbprojects\geo2\src\geo2\containers\static_size_vector.h
+	<memory>
+
+1623731877 d:\code\cbprojects\geo2\src\geo2\multithread\thread_pool.h
+	"kx/atomic/queue.h"
+	<vector>
+	<thread>
+
+1623731223 d:\code\cbprojects\geo2\src\geo2\timer.h
+	<profileapi.h>
 

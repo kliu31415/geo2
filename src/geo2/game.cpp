@@ -5,14 +5,15 @@
 #include "geo2/collision_engine1.h"
 
 #include "geo2/level_gen/test2.h"
+#include "geo2/multithread/thread_pool.h"
+#include "geo2/timer.h"
 
 #include "kx/gfx/renderer.h"
 #include "kx/log.h"
 #include "kx/io.h"
 #include "kx/stats.h"
 
-#include <omp.h>
-
+#include <thread>
 #include <cmath>
 
 namespace geo2 {
@@ -130,7 +131,30 @@ void Game::generate_and_start_level(Level::Name level_name)
     cur_level = level_name;
     player->set_position({level.player_start_x, level.player_start_y}, {});
 }
-void Game::advance_one_tick([[maybe_unused]] double tick_len)
+void Game::run1(double tick_len)
+{
+    //this could be made multithreaded...
+    map_obj::MapObjRun1Args run1_args;
+    move_intent = decltype(move_intent)(map_objs.size());
+    std::fill(move_intent.begin(), move_intent.end(), MoveIntent::NotSet);
+    run1_args.tick_len = tick_len;
+    run1_args.set_ceng_cur_vec(&ceng_cur);
+    run1_args.set_ceng_des_vec(&ceng_des);
+    run1_args.set_move_intent_vec(&move_intent);
+
+    int num_map_objs = map_objs.size();
+
+    for(int i=0; i<num_map_objs; i++) {
+        run1_args.idx = i;
+        map_objs[i]->run1_mt(run1_args);
+
+        //if a map object added collidable shapes, it should have set a move intent
+        k_ensures(move_intent[i]!=MoveIntent::NotSet ||
+                  !((ceng_cur.size()>0 && ceng_cur.back().idx==i) ||
+                    (ceng_des.size()>0 && ceng_des.back().idx==i)));
+    }
+}
+void Game::advance_one_tick(double tick_len)
 {
     /** Standard sequence:
      *  -Call run1_mt() on everything in parallel. All objects insert shapes representing
@@ -161,27 +185,6 @@ void Game::advance_one_tick([[maybe_unused]] double tick_len)
 
     player->process_input(player_input);
 
-    //first run
-    map_obj::MapObjRun1Args run1_args;
-    run1_args.tick_len = tick_len;
-    std::vector<CollisionEng1Obj> ceng_cur;
-    std::vector<CollisionEng1Obj> ceng_des;
-    kx::FixedSizeArray<MoveIntent> move_intent(map_objs.size());
-    std::fill(move_intent.begin(), move_intent.end(), MoveIntent::NotSet);
-    run1_args.set_ceng_cur_vec(&ceng_cur);
-    run1_args.set_ceng_des_vec(&ceng_des);
-    run1_args.set_move_intent_vec(&move_intent);
-
-    int num_map_objs = map_objs.size();
-    for(int i=0; i<num_map_objs; i++) {
-        run1_args.idx = i;
-        map_objs[i]->run1_mt(run1_args);
-
-        //if a map object added collidable shapes, it should have set a move intent
-        k_ensures(move_intent[i]!=MoveIntent::NotSet ||
-                  !((ceng_cur.size()>0 && ceng_cur.back().idx==i) ||
-                    (ceng_des.size()>0 && ceng_des.back().idx==i)));
-    }
     //run collision engine
     auto collision_could_matter = [](const Collidable &a, const Collidable &b) -> bool
                                     {
@@ -198,15 +201,24 @@ void Game::advance_one_tick([[maybe_unused]] double tick_len)
                        return obj.get();
                    });
 
-    CollisionEngine1 collision_engine(std::move(collidables),
-                                      std::move(collision_could_matter),
-                                      std::move(ceng_cur),
-                                      std::move(ceng_des),
-                                      std::move(move_intent));
-    auto collisions = collision_engine.find_collisions();
+
+    //~200us on Test2(40, 40)
+    run1(tick_len);
+
+
+    //~50us on Test2(40, 40)
+    collision_engine->init(std::move(collidables),
+                           std::move(collision_could_matter),
+                           std::move(ceng_cur),
+                           std::move(ceng_des),
+                           std::move(move_intent));
+
+    //~1500us on Test2(40, 40)
+    auto collisions = collision_engine->find_collisions();
 
     //don't use a range-based loop, because collisions may be modified by
     //update_intent, which would invalidate iterators to it
+    //~400us on Test2(40, 40)
     for(size_t i=0; i<collisions.size(); i++) {
         auto idx1 = collisions[i].idx1;
         auto idx2 = collisions[i].idx2;
@@ -220,19 +232,26 @@ void Game::advance_one_tick([[maybe_unused]] double tick_len)
         args.swap();
         args.other = map_objs[idx2].get();
         auto new_intent1 = map_objs[idx2]->handle_collision(map_objs[idx1].get(), args);
-        collision_engine.update_intent(idx1, new_intent1, &collisions);
-        collision_engine.update_intent(idx2, new_intent2, &collisions);
+        collision_engine->update_intent(idx1, new_intent1, &collisions);
+        collision_engine->update_intent(idx2, new_intent2, &collisions);
     }
 
     //second run
+
     map_obj::MapObjRun2Args run2_args;
     run2_args.tick_len = tick_len;
-
+    //50-100us on Test2(40, 40)
     for(size_t i=0; i<map_objs.size(); i++) {
         map_objs[i]->run2_st(run2_args);
     }
     //remove all map objects that want to be removed
+    //...(not yet implemented)...
 
+    //steal back container memory (this way we don't have to reallocate memory nearly as often)
+    collision_engine->steal_cur_into(&ceng_cur);
+    collision_engine->steal_des_into(&ceng_des);
+    ceng_cur.clear();
+    ceng_des.clear();
 
     //move forward a tick
     cur_level_time_left -= tick_len;
@@ -429,9 +448,13 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
 
     return return_texture;
 }
+//the thread pool size is the number of threads we have - 1 because we should
+//make use of the current thread too to reduce overhead
 Game::Game():
     gfx(std::make_unique<_gfx>()),
-    player(std::make_unique<map_obj::Player_Type1>())
+    player(std::make_unique<map_obj::Player_Type1>()),
+    thread_pool(std::make_shared<ThreadPool>(std::thread::hardware_concurrency() - 1)),
+    collision_engine(std::make_unique<CollisionEngine1>(thread_pool))
 {
     generate_and_start_level(Level::Name::Test2);
 }
@@ -440,13 +463,14 @@ Game::~Game()
 std::shared_ptr<kx::gfx::Texture> Game::run(kx::gfx::KWindowRunning *kwin_r,
                                             int render_w, int render_h)
 {
-
-
     constexpr int TICKS_PER_FRAME = 10;
+
     for(int i=0; i<TICKS_PER_FRAME; i++) {
+        //~2000us on Test2(40, 40)
         advance_one_tick(1.0 / 1440.0);
     }
 
+    //~500us (integrated GPU, no MSAA, 1600x900, TILES_PER_SCREEN=2125) on Test2(40, 40)
     return render(kwin_r, render_w, render_h);
 }
 }

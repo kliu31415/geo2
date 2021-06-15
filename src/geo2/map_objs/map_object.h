@@ -82,6 +82,10 @@ public:
         ret.h = rect.h * cam_h_inv;
         return ret;
     }
+    inline bool is_in_view_nc(kx::gfx::Rect rect) const
+    {
+        return rect.x<1 && rect.x+rect.w>0 && rect.y<1 && rect.y+rect.h>0;
+    }
     inline float x_to_cam_nc(float x) const
     {
         return (x - camera.x) * cam_w_inv;

@@ -168,6 +168,7 @@ enum class MoveIntent: uint8_t {
     NotSet, Delete, StayAtCurrentPos, GoToDesiredPos,
 };
 
+/*
 class Polygon final
 {
     //note that one vertex is stored twice for efficiency purposes (i.e. begin()==rbegin())
@@ -220,10 +221,10 @@ public:
                 _MapVec<float> S = other.vertices[j] - other.vertices[j-1];
 
                 auto part1 = Q - P;
-                auto part3 = 1.0 / R.cross_prod(S);
+                auto part3_rcp = 1.0 / R.cross_prod(S);
 
-                auto t = part1.cross_prod(S) * part3;
-                auto u = part1.cross_prod(R) * part3;
+                auto t = part1.cross_prod(S) * part3_rcp;
+                auto u = part1.cross_prod(R) * part3_rcp;
 
                 if(t>0 && t<1 && u>0 && u<1)
                     return true;
@@ -238,13 +239,15 @@ public:
         return ret;
     }
 };
+*/
 
-/*
+//weird speed bug in Level::Name::Test1
 //This is a polygon class optimized for AVX2
 class Polygon final
 {
+    AABB aabb;
     int n;
-    float* vals;
+    float *vals;
 
     inline static int get_d_len(int n)
     {
@@ -269,10 +272,21 @@ class Polygon final
             vals[i] = vals[i - n];
             vals[d_len + i] = vals[d_len + i - n];
         }
+
+        calc_aabb();
     }
     int get_num_vertices() const
     {
         return n;
+    }
+    void calc_aabb()
+    {
+        auto d_len = get_d_len(n);
+        aabb = AABB::make_maxbad_AABB();
+        for(int i=0; i<n; i++) {
+            _MapCoord<float> c(vals[i], vals[d_len + i]);
+            aabb.combine(c);
+        }
     }
 public:
     ///too lazy to add support for copy/move rn, but there's no reason copy/move can't work
@@ -288,21 +302,17 @@ public:
 
     void translate([[maybe_unused]] float dx, [[maybe_unused]] float dy)
     {
+        calc_aabb();
         k_assert(false);
     }
     void rotate_about_origin([[maybe_unused]] float theta)
     {
+        calc_aabb();
         k_assert(false);
     }
-    AABB get_AABB() const
+    inline const AABB &get_AABB() const
     {
-        AABB ret = AABB::make_maxbad_AABB();
-        auto d_len = get_d_len(n);
-        for(int i=0; i<n; i++) {
-            _MapCoord<float> c(vals[i], vals[d_len + i]);
-            ret.combine(c);
-        }
-        return ret;
+        return aabb;
     }
     bool has_collision(const Polygon &other) const
     {
@@ -319,7 +329,7 @@ public:
         const __m256 mm0 = _mm256_set1_ps(0);
         const __m256 mm1 = _mm256_set1_ps(1);
 
-        std::array<uint32_t, 8> good_vals;
+        std::array<uint64_t, 4> good_vals;
 
         for(int i=1; i<this_n; i++) {
 
@@ -328,7 +338,7 @@ public:
             __m256 Rx = _mm256_set1_ps(vals[i] - vals[i-1]);
             __m256 Ry = _mm256_set1_ps(vals[this_d_len + i] - vals[this_d_len + i-1]);
 
-            for(int j=1; j<other_d_len; j+=7) {
+            for(int j=1; j<other_d_len-1; j+=7) {
 
                 __m256 Qx = _mm256_loadu_ps(other.vals + j-1);
                 __m256 Qy = _mm256_loadu_ps(other.vals + other_d_len + j-1);
@@ -341,27 +351,28 @@ public:
                 __m256 p2_Sy = _mm256_loadu_ps(other.vals + other_d_len + j-1);
                 __m256 Sy = p1_Sy - p2_Sy;
 
-                __m256 part1x = Qx - Px;
-                __m256 part1y = Qy - Py;
-
                 __m256 Ry_times_Sx = Ry * Sx;
                 __m256 part3 = _mm256_fmsub_ps(Rx, Sy, Ry_times_Sx);
+                __m256 part3_rcp = _mm256_rcp_ps(part3);
+
+                __m256 part1y = Qy - Py;
+                __m256 part1x = Qx - Px;
 
                 __m256 part1y_times_Sx = part1y * Sx;
                 __m256 t_part1 = _mm256_fmsub_ps(part1x, Sy, part1y_times_Sx);
-                __m256 t = t_part1 / part3;
+                __m256 t = t_part1 * part3_rcp;
 
                 __m256 part1y_times_Rx = part1y * Rx;
                 __m256 u_part1 = _mm256_fmsub_ps(part1x, Ry, part1y_times_Rx);
-                __m256 u = u_part1 / part3;
+                __m256 u = u_part1 * part3_rcp;
 
-                __m256 t_geq_0 = _mm256_cmp_ps(t, mm0, _CMP_GT_OQ);
-                __m256 t_leq_1 = _mm256_cmp_ps(t, mm1, _CMP_LT_OQ);
-                __m256 t_good = _mm256_and_ps(t_geq_0, t_leq_1);
+                __m256 t_ge_0 = _mm256_cmp_ps(t, mm0, _CMP_GT_OQ);
+                __m256 t_le_1 = _mm256_cmp_ps(t, mm1, _CMP_LT_OQ);
+                __m256 t_good = _mm256_and_ps(t_ge_0, t_le_1);
 
-                __m256 u_geq_0 = _mm256_cmp_ps(u, mm0, _CMP_GT_OQ);
-                __m256 u_leq_1 = _mm256_cmp_ps(u, mm1, _CMP_LT_OQ);
-                __m256 u_good = _mm256_and_ps(u_geq_0, u_leq_1);
+                __m256 u_ge_0 = _mm256_cmp_ps(u, mm0, _CMP_GT_OQ);
+                __m256 u_le_1 = _mm256_cmp_ps(u, mm1, _CMP_LT_OQ);
+                __m256 u_good = _mm256_and_ps(u_ge_0, u_le_1);
 
                 __m256 good = _mm256_and_ps(t_good, u_good);
 
@@ -369,13 +380,9 @@ public:
 
                 //remember that the last value is bogus; we only operate on 7 things
                 good_vals[0] |= good_vals[1];
-                good_vals[2] |= good_vals[3];
-                good_vals[4] |= good_vals[5];
-                good_vals[0] |= good_vals[2];
-                good_vals[4] |= good_vals[6];
-                good_vals[0] |= good_vals[4];
+                good_vals[2] |= *(uint32_t*)&good_vals[3]; //ignore the last 4 bytes
 
-                if(good_vals[0])
+                if(good_vals[0] || good_vals[2])
                     return true;
             }
         }
@@ -388,6 +395,5 @@ public:
         return ret;
     }
 };
-*/
 
 }
