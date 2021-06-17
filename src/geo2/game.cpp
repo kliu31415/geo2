@@ -133,18 +133,17 @@ void Game::generate_and_start_level(Level::Name level_name)
 }
 void Game::run1(double tick_len)
 {
-    //this could be made multithreaded...
-    map_obj::MapObjRun1Args run1_args;
     move_intent = decltype(move_intent)(map_objs.size());
     std::fill(move_intent.begin(), move_intent.end(), MoveIntent::NotSet);
+    map_obj::MapObjRun1Args run1_args;
     run1_args.tick_len = tick_len;
+    ceng_cur.clear();
+    ceng_des.clear();
     run1_args.set_ceng_cur_vec(&ceng_cur);
     run1_args.set_ceng_des_vec(&ceng_des);
     run1_args.set_move_intent_vec(&move_intent);
 
-    int num_map_objs = map_objs.size();
-
-    for(int i=0; i<num_map_objs; i++) {
+    for(int i=0; i<(int)map_objs.size(); i++) {
         run1_args.idx = i;
         map_objs[i]->run1_mt(run1_args);
 
@@ -152,6 +151,138 @@ void Game::run1(double tick_len)
         k_ensures(move_intent[i]!=MoveIntent::NotSet ||
                   !((ceng_cur.size()>0 && ceng_cur.back().idx==i) ||
                     (ceng_des.size()>0 && ceng_des.back().idx==i)));
+    }
+    /*
+    //This multithreaded version is not faster than the singled threaded version.
+    //I think merging ceng_cur and ceng_des is the bottleneck
+    move_intent = decltype(move_intent)(map_objs.size());
+    std::fill(move_intent.begin(), move_intent.end(), MoveIntent::NotSet);
+
+    int num_threads = thread_pool->size() + 1;
+    k_expects(num_threads < 64);
+    ceng_cur_lt.resize(num_threads);
+    ceng_des_lt.resize(num_threads);
+    std::vector<std::future<void>> is_done_futures(num_threads);
+    std::atomic<uint64_t> thread_done(0);
+
+    int num_map_objs = map_objs.size();
+
+    for(int t=num_threads-1; t>=0; t--) {
+        int idx1 = (num_map_objs * (uint64_t)t) / num_threads;
+        int idx2 = (num_map_objs * (uint64_t)(t+1)) / num_threads;
+        auto task = [&thread_done, &is_done_futures, num_threads, this, tick_len, t, idx1, idx2]
+        {
+            map_obj::MapObjRun1Args run1_args;
+            run1_args.tick_len = tick_len;
+            ceng_cur_lt[t].clear();
+            ceng_des_lt[t].clear();
+            run1_args.set_ceng_cur_vec(&ceng_cur_lt[t]);
+            run1_args.set_ceng_des_vec(&ceng_des_lt[t]);
+            run1_args.set_move_intent_vec(&move_intent);
+
+            for(int i=idx1; i<idx2; i++) {
+                run1_args.idx = i;
+                map_objs[i]->run1_mt(run1_args);
+
+                //if a map object added collidable shapes, it should have set a move intent
+                k_ensures(move_intent[i]!=MoveIntent::NotSet ||
+                          !((ceng_cur_lt[t].size()>0 && ceng_cur_lt[t].back().idx==i) ||
+                            (ceng_des_lt[t].size()>0 && ceng_des_lt[t].back().idx==i)));
+            }
+            //threads are in charge of merging ceng_cur_lt and ceng_des_lt
+            //example data propagation: thread 11->10->8->0
+            for(int i=0; (t&(1<<i))==0 && (t+(1<<i))<num_threads; i++) {
+                int other = t + (1<<i);
+
+                //wait for thread other to finish
+                while((thread_done.load(std::memory_order_acquire) & (1ULL<<other)) == 0)
+                    _mm_pause();
+
+                auto cur_n = ceng_cur_lt[t].size();
+                ceng_cur_lt[t].insert(ceng_cur_lt[t].end(),
+                                      ceng_cur_lt[other].begin(),
+                                      ceng_cur_lt[other].end());
+                std::inplace_merge(ceng_cur_lt[t].begin(),
+                                   ceng_cur_lt[t].begin() + cur_n,
+                                   ceng_cur_lt[t].end(),
+                                   CollisionEng1Obj::cmp_idx);
+
+                auto des_n = ceng_des_lt[t].size();
+                ceng_des_lt[t].insert(ceng_des_lt[t].end(),
+                                      ceng_des_lt[other].begin(),
+                                      ceng_des_lt[other].end());
+                std::inplace_merge(ceng_des_lt[t].begin(),
+                                   ceng_des_lt[t].begin() + des_n,
+                                   ceng_des_lt[t].end(),
+                                   CollisionEng1Obj::cmp_idx);
+            }
+            thread_done.fetch_add(1ULL<<t, std::memory_order_release);
+        };
+
+        if(t == 0) {
+            task();
+        } else
+            is_done_futures[t] = thread_pool->add_task(task);
+    }
+
+    for(int t=1; t<num_threads; t++)
+        is_done_futures[t].get();
+
+    ceng_cur.swap(ceng_cur_lt[0]);
+    ceng_des.swap(ceng_des_lt[0]);
+    */
+}
+void Game::run_collision_engine()
+{
+    auto collision_could_matter = [](const Collidable &a, const Collidable &b) -> bool
+                                    {
+                                        auto a_map_obj = (const map_obj::MapObject*)&a;
+                                        auto b_map_obj = (const map_obj::MapObject*)&b;
+                                        return a_map_obj->collision_could_matter(*b_map_obj);
+                                    };
+
+    //takes 10-20us
+    kx::FixedSizeArray<const Collidable*> collidables(map_objs.size());
+    std::transform(map_objs.begin(),
+                   map_objs.end(),
+                   collidables.begin(),
+                   [](std::shared_ptr<map_obj::MapObject> &obj) -> const Collidable*
+                   {
+                       return obj.get();
+                   });
+
+    //all reset/set combined are ~50-100us on Test2(40, 40)
+    collision_engine->reset();
+    collision_engine->set_cur_des(std::move(ceng_cur),
+                                  std::move(ceng_des));
+    collision_engine->set2(std::move(collidables),
+                           std::move(collision_could_matter),
+                           std::move(move_intent));
+
+    //~100us on Test2(40, 40)
+    collision_engine->precompute();
+
+    //~500-550us on Test2(40, 40)
+    auto collisions = collision_engine->find_collisions();
+
+    //don't use a range-based loop, because collisions may be modified by
+    //update_intent, which would invalidate iterators to it
+    //~0us on Test2(40, 40)
+    for(size_t i=0; i<collisions.size(); i++) {
+        auto idx1 = collisions[i].idx1;
+        auto idx2 = collisions[i].idx2;
+
+        map_obj::HandleCollisionArgs args;
+        args.collision_info = collisions[i];
+        args.other = map_objs[idx1].get();
+        //the order has to be SWAPPED; A->handle_collision(B) results in
+        //B processing the collision and reporting its new intent
+        auto new_intent2 = map_objs[idx1]->handle_collision(map_objs[idx2].get(), args);
+        args.swap();
+        args.other = map_objs[idx2].get();
+        auto new_intent1 = map_objs[idx2]->handle_collision(map_objs[idx1].get(), args);
+        collision_engine->update_intent(idx1, new_intent1, &collisions);
+        collision_engine->update_intent(idx2, new_intent2, &collisions);
     }
 }
 void Game::advance_one_tick(double tick_len)
@@ -185,62 +316,16 @@ void Game::advance_one_tick(double tick_len)
 
     player->process_input(player_input);
 
-    //run collision engine
-    auto collision_could_matter = [](const Collidable &a, const Collidable &b) -> bool
-                                    {
-                                        auto a_map_obj = (const map_obj::MapObject*)&a;
-                                        auto b_map_obj = (const map_obj::MapObject*)&b;
-                                        return a_map_obj->collision_could_matter(*b_map_obj);
-                                    };
-    kx::FixedSizeArray<const Collidable*> collidables(map_objs.size());
-    std::transform(map_objs.begin(),
-                   map_objs.end(),
-                   collidables.begin(),
-                   [](std::shared_ptr<map_obj::MapObject> &obj) -> const Collidable*
-                   {
-                       return obj.get();
-                   });
-
-
-    //~200us on Test2(40, 40)
+    //~400us on Test2(40, 40)
     run1(tick_len);
 
-
-    //~50us on Test2(40, 40)
-    collision_engine->init(std::move(collidables),
-                           std::move(collision_could_matter),
-                           std::move(ceng_cur),
-                           std::move(ceng_des),
-                           std::move(move_intent));
-
-    //~1500us on Test2(40, 40)
-    auto collisions = collision_engine->find_collisions();
-
-    //don't use a range-based loop, because collisions may be modified by
-    //update_intent, which would invalidate iterators to it
-    //~400us on Test2(40, 40)
-    for(size_t i=0; i<collisions.size(); i++) {
-        auto idx1 = collisions[i].idx1;
-        auto idx2 = collisions[i].idx2;
-
-        map_obj::HandleCollisionArgs args;
-        args.collision_info = collisions[i];
-        args.other = map_objs[idx1].get();
-        //the order has to be SWAPPED; A->handle_collision(B) results in
-        //B processing the collision and reporting its new intent
-        auto new_intent2 = map_objs[idx1]->handle_collision(map_objs[idx2].get(), args);
-        args.swap();
-        args.other = map_objs[idx2].get();
-        auto new_intent1 = map_objs[idx2]->handle_collision(map_objs[idx1].get(), args);
-        collision_engine->update_intent(idx1, new_intent1, &collisions);
-        collision_engine->update_intent(idx2, new_intent2, &collisions);
-    }
+    //~750us on Test2(40, 40)
+    run_collision_engine();
 
     //second run
-
     map_obj::MapObjRun2Args run2_args;
     run2_args.tick_len = tick_len;
-    //50-100us on Test2(40, 40)
+    //~150us on Test2(40, 40)
     for(size_t i=0; i<map_objs.size(); i++) {
         map_objs[i]->run2_st(run2_args);
     }
@@ -297,10 +382,10 @@ void Game::apply_bloom_and_hdr(kx::gfx::KWindowRunning *kwin_r,
 
     //the bloom shaders assume linear interpolation to speed things up,
     //so make sure linear interpolation is set. If it's not set, it'll be buggy.
-    auto tex1 = rdr->make_texture_target(w, h, Texture::Format::RGBA16F, false);
+    auto tex1 = rdr->make_texture_target(w, h, Texture::Format::RGB16F, false);
     tex1->set_min_filter(Texture::FilterAlgo::Linear);
     tex1->set_mag_filter(Texture::FilterAlgo::Linear);
-    auto tex2 = rdr->make_texture_target(w, h, Texture::Format::RGBA16F, false);
+    auto tex2 = rdr->make_texture_target(w, h, Texture::Format::RGB16F, false);
     tex2->set_min_filter(Texture::FilterAlgo::Linear);
     tex2->set_mag_filter(Texture::FilterAlgo::Linear);
 
@@ -387,7 +472,7 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
     int map_render_h = h;
     auto map_texture = rdr->make_texture_target(map_render_w,
                                                 map_render_h,
-                                                Texture::Format::RGBA16F,
+                                                Texture::Format::RGB16F,
                                                 false,
                                                 1);
     rdr->set_target(map_texture.get());
@@ -439,7 +524,7 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
     //combine the two textures
     auto return_texture = rdr->make_texture_target((int)w,
                                                    (int)h,
-                                                   Texture::Format::RGBA16F,
+                                                   Texture::Format::RGB16F,
                                                    false);
     map_texture->set_min_filter(Texture::FilterAlgo::Nearest);
     map_texture->set_mag_filter(Texture::FilterAlgo::Nearest);
@@ -464,9 +549,8 @@ std::shared_ptr<kx::gfx::Texture> Game::run(kx::gfx::KWindowRunning *kwin_r,
                                             int render_w, int render_h)
 {
     constexpr int TICKS_PER_FRAME = 10;
-
     for(int i=0; i<TICKS_PER_FRAME; i++) {
-        //~2000us on Test2(40, 40)
+        //~1300us on Test2(40, 40)
         advance_one_tick(1.0 / 1440.0);
     }
 

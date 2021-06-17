@@ -173,6 +173,12 @@ Texture::Texture(int w_, int h_, Texture::Format format_, bool is_srgb__, int sa
         else
             glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGBA16F, w, h, false);
         break;
+    case Texture::Format::RGB16F:
+        if(binding_point == GL_TEXTURE_2D)
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, w, h, 0, GL_RGB, GL_FLOAT, nullptr);
+        else
+            glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGB16F, w, h, false);
+        break;
     default:
         log_error("bad texture format given to ctor");
         break;

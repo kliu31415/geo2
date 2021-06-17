@@ -124,6 +124,9 @@
 		<Unit filename="src/kx/multithread/semaphore.h" />
 		<Unit filename="src/kx/multithread/shared_lock_set.h" />
 		<Unit filename="src/kx/multithread/shared_spinlock.h" />
+		<Unit filename="src/kx/multithread/spinlock.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="src/kx/net/client.cpp" />
 		<Unit filename="src/kx/net/client.h" />
 		<Unit filename="src/kx/net/kcurl.cpp" />

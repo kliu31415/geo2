@@ -28,6 +28,10 @@ struct CollisionEng1Obj
         shape_id(shape_id_),
         is_des(is_des_)
     {}
+    static bool cmp_idx(const CollisionEng1Obj &a, const CollisionEng1Obj &b)
+    {
+        return a.idx < b.idx;
+    }
 };
 
 struct CEng1Collision
@@ -40,19 +44,9 @@ struct CEng1Collision
     }
 };
 
+
 class CollisionEngine1
 {
-    struct CollisionEng1ObjAndAABB: public CollisionEng1Obj
-    {
-        AABB aabb;
-        CollisionEng1ObjAndAABB()
-        {}
-        CollisionEng1ObjAndAABB(CollisionEng1Obj obj, AABB aabb_):
-            CollisionEng1Obj(obj),
-            aabb(aabb_)
-        {}
-    };
-
     constexpr static int GRID_LEN = 128; //power of 2 is faster cuz mult turns into bitshift
 
     //fastish spatial partition grid
@@ -63,6 +57,12 @@ class CollisionEngine1
         Grid():
             vals(std::make_unique<std::vector<T>[]>(GRID_LEN*GRID_LEN))
         {}
+        void reset()
+        {
+            for(int i=0; i<GRID_LEN; i++)
+                for(int j=0; j<GRID_LEN; j++)
+                    get_ref(i, j).clear();
+        }
         inline std::vector<T>& get_ref(int a, int b)
         {
             return vals[a*GRID_LEN + b];
@@ -70,6 +70,19 @@ class CollisionEngine1
         inline const std::vector<T>& get_const_ref(int a, int b) const
         {
             return vals[a*GRID_LEN + b];
+        }
+        inline void remove_one_with_idx(int x, int y, int idx)
+        {
+            //remember to preserve ordering of indexes!
+            auto &grid_xy = get_ref(x, y);
+            for(size_t i=0; i<grid_xy.size(); i++) {
+                if(grid_xy[i].idx == idx) {
+                    grid_xy.erase(grid_xy.begin() + i);
+                    return;
+                }
+            }
+            //no matches found!
+            k_assert(false);
         }
     };
 
@@ -103,9 +116,9 @@ class CollisionEngine1
     std::function<bool(const Collidable&, const Collidable&)> collision_could_matter;
     std::vector<CollisionEng1Obj> cur;
     std::vector<CollisionEng1Obj> des;
-    std::vector<CollisionEng1ObjAndAABB> active_objs;
+    std::vector<CollisionEng1Obj> active_objs;
     kx::FixedSizeArray<MoveIntent> move_intent;
-    Grid<CollisionEng1ObjAndAABB> grid;
+    Grid<CollisionEng1Obj> grid;
 
     AABB global_AABB;
     float grid_rect_w;
@@ -119,22 +132,20 @@ class CollisionEngine1
     void add_obj_to_grid(std::vector<CollisionEng1Obj> &obj_vec,
                          int idx,
                          std::vector<CEng1Collision> *collisions);
-    template<class IdxCmp>
-    void find_and_add_collisions(std::vector<CEng1Collision> *add_to,
-                                 const CollisionEng1ObjAndAABB &ceng_obj) const;
+    void find_and_add_collisions_neq(std::vector<CEng1Collision> *add_to,
+                                     const CollisionEng1Obj &ceng_obj) const;
+    void find_and_add_collisions_gt(std::vector<CEng1Collision> *add_to,
+                                    const CollisionEng1Obj &ceng_obj) const;
 public:
     CollisionEngine1(std::shared_ptr<ThreadPool> thread_pool_);
+    void reset();
     ///cur_ and des_ must be sorted (for efficiency reasons)
-    void init(kx::FixedSizeArray<const Collidable*> &&map_objs_,
+    void set_cur_des(std::vector<CollisionEng1Obj> &&cur_,
+                     std::vector<CollisionEng1Obj> &&des_);
+    void set2(kx::FixedSizeArray<const Collidable*> &&map_objs_,
               std::function<bool(const Collidable&, const Collidable&)> collision_could_matter_,
-              std::vector<CollisionEng1Obj> &&cur_,
-              std::vector<CollisionEng1Obj> &&des_,
               kx::FixedSizeArray<MoveIntent> &&move_intent_);
-    /** find_collisions() can only be called once per instance; a second call is UB.
-     *  This should make sense, as this simulates advancing the game a fraction of a
-     *  tick, and you'd have to update the collision engine with new values if you
-     *  wanted to advance the collision engine more
-     */
+    void precompute(); ///depends on set_cur_des, but not set2
     std::vector<CEng1Collision> find_collisions();
     void update_intent(int idx, MoveIntent intent, std::vector<CEng1Collision> *add_to);
     void steal_cur_into(std::vector<CollisionEng1Obj> *vec);

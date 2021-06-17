@@ -26,24 +26,28 @@ public:
 
     void push(const T &val)
     {
-        std::lock_guard<std::mutex> lg(mtx);
-        q.push(val);
+        {
+            std::lock_guard<std::mutex> lg(mtx);
+            q.push(val);
+        }
         cv.notify_one();
     }
     void push(T &&val)
     {
-        std::lock_guard<std::mutex> lg(mtx);
+        {
+            std::lock_guard<std::mutex> lg(mtx);
+            q.push(std::forward<T>(val));
+        }
         cv.notify_one();
-        q.push(std::forward<T>(val));
     }
     T poll_blocking()
     {
         std::unique_lock<std::mutex> mlock(mtx);
-        cv.wait(mlock, [&]{return !q.empty();}); //don't use this->empty() because that causes deadlock
-                                                 //by acquiring the same mutex twice in the same thread
-        k_ensures(!q.empty());
-
-
+        if(q.empty()) {
+            //don't use this->empty() because that causes deadlock
+            //by acquiring the same mutex twice in the same thread
+            cv.wait(mlock, [&]{return !q.empty();});
+        }
         T ret = std::move(q.front());
         q.pop();
         return ret;

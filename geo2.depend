@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1622877513 source:d:\code\cbprojects\geo2\src\main.cpp
+1623736270 source:d:\code\cbprojects\geo2\src\main.cpp
 	"geo2/test.h"
 	"geo2/master_instance.h"
 	"kx/gfx/gfx.h"
@@ -323,7 +323,7 @@
 	"kx/gfx/gl_renderer.h"
 	"kx/gfx/vk_renderer.h"
 
-1623545071 source:d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.cpp
+1623821331 source:d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.cpp
 	"kx/gfx/renderer.h"
 	"kx/gfx/renderer.h"
 	"kx/io.h"
@@ -406,7 +406,7 @@
 	"glad/glad.h"
 	<SDL2/SDL_pixels.h>
 
-1623543518 d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.h
+1623821309 d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.h
 	"kx/gfx/font.h"
 	"kx/gfx/renderer_types.h"
 	"kx/sdl_deleter.h"
@@ -487,7 +487,7 @@
 	<future>
 	<atomic>
 
-1623727165 d:\code\cbprojects\geo2\src\kx\atomic\queue.h
+1623869314 d:\code\cbprojects\geo2\src\kx\atomic\queue.h
 	"kx/util.h"
 	"kx/debug.h"
 	<condition_variable>
@@ -518,7 +518,7 @@
 	<mutex>
 	<map>
 
-1623729943 d:\code\cbprojects\geo2\src\geo2\game.h
+1623900924 d:\code\cbprojects\geo2\src\geo2\game.h
 	"geo2/map_objs/unit_type1/player_type1.h"
 	"kx/gfx/renderer.h"
 	"kx/gfx/kwindow.h"
@@ -526,7 +526,7 @@
 	<vector>
 	<cstdint>
 
-1623731589 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
+1623901021 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
 	"geo2/map_objs/floor_type1/test_terrain1.h"
 	"geo2/game_render_op_list.h"
 	"geo2/game.h"
@@ -619,7 +619,7 @@
 1623534669 d:\code\cbprojects\geo2\src\geo2\game_render_op_list.h
 	"geo2/render_op.h"
 
-1623733088 d:\code\cbprojects\geo2\src\geo2\collision_engine1.h
+1623893756 d:\code\cbprojects\geo2\src\geo2\collision_engine1.h
 	"geo2/geometry.h"
 	"kx/fixed_size_array.h"
 	"span_lite.h"
@@ -629,7 +629,7 @@
 	<array>
 	<vector>
 
-1623733004 d:\code\cbprojects\geo2\src\geo2\geometry.h
+1623828918 d:\code\cbprojects\geo2\src\geo2\geometry.h
 	<immintrin.h>
 	"kx/fixed_size_array.h"
 	"span_lite.h"
@@ -639,7 +639,7 @@
 	<optional>
 	<cmath>
 
-1623733618 source:d:\code\cbprojects\geo2\src\geo2\collision_engine1.cpp
+1623901399 source:d:\code\cbprojects\geo2\src\geo2\collision_engine1.cpp
 	"geo2/collision_engine1.h"
 	"geo2/multithread/thread_pool.h"
 	"geo2/timer.h"
@@ -716,11 +716,25 @@
 1623723925 d:\code\cbprojects\geo2\src\geo2\containers\static_size_vector.h
 	<memory>
 
-1623731877 d:\code\cbprojects\geo2\src\geo2\multithread\thread_pool.h
+1623869218 d:\code\cbprojects\geo2\src\geo2\multithread\thread_pool.h
+	"kx/multithread/spinlock.h"
 	"kx/atomic/queue.h"
 	<vector>
 	<thread>
+	<future>
+	<condition_variable>
+	<mutex>
+	<optional>
+	<queue>
 
 1623731223 d:\code\cbprojects\geo2\src\geo2\timer.h
 	<profileapi.h>
+
+1623830140 d:\code\cbprojects\geo2\src\kx\multithread\spinlock.h
+	"kx/debug.h"
+	"kx/util.h"
+	<cstdint>
+	<xmmintrin.h>
+	<thread>
+	<atomic>
 

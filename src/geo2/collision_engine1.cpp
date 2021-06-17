@@ -9,24 +9,21 @@
 
 namespace geo2 {
 
-bool cmp_idx(const CollisionEng1Obj &a, const CollisionEng1Obj &b)
-{
-    return a.idx < b.idx;
-}
 bool cmp_idx_int(const CollisionEng1Obj &a, int b)
 {
     return a.idx < b;
 }
 int CollisionEngine1::x_to_grid_x(float x) const
 {
-    int x_ = std::min((int)((x - global_AABB.x1) / grid_rect_w), GRID_LEN - 1);
+    int x_ = std::clamp((int)((x - global_AABB.x1) / grid_rect_w), 0, GRID_LEN - 1);
     return x_;
 }
 int CollisionEngine1::y_to_grid_y(float y) const
 {
-    int y_ = std::min((int)((y - global_AABB.y1) / grid_rect_h), GRID_LEN - 1);
+    int y_ = std::clamp((int)((y - global_AABB.y1) / grid_rect_h), 0, GRID_LEN - 1);
     return y_;
 }
+//note: obj_vec is either cur or des
 void CollisionEngine1::remove_obj_from_grid(std::vector<CollisionEng1Obj> &obj_vec, int idx)
 {
     //note that idx doesn't mean obj_vec[idx]
@@ -34,22 +31,13 @@ void CollisionEngine1::remove_obj_from_grid(std::vector<CollisionEng1Obj> &obj_v
     k_expects(ptr->idx==idx); //there should be at least one shape
     while(ptr<obj_vec.end() && ptr->idx==idx) {
         auto aabb = ptr->polygon->get_AABB();
-        int x = x_to_grid_x(0.5f * (aabb.x1 + aabb.x2));
-        int y = y_to_grid_y(0.5f * (aabb.y1 + aabb.y2));
-        bool found = false;
-        auto &grid_xy = grid.get_ref(x, y);
-        for(size_t i=0; i<grid_xy.size(); i++) {
-            if(grid_xy[i].idx == idx) {
-                grid_xy[i] = grid_xy.back();
-                grid_xy.pop_back();
-                found = true;
-                break;
-            }
-        }
-        k_ensures(found);
+        int x = x_to_grid_x(aabb.x1);
+        int y = y_to_grid_y(aabb.y1);
+        grid.remove_one_with_idx(x, y, idx);
         ptr++;
     }
 }
+//note: obj_vec is either cur or des
 void CollisionEngine1::add_obj_to_grid(std::vector<CollisionEng1Obj> &obj_vec,
                                        int idx,
                                        std::vector<CEng1Collision> *collisions)
@@ -59,27 +47,21 @@ void CollisionEngine1::add_obj_to_grid(std::vector<CollisionEng1Obj> &obj_vec,
     k_expects(ptr->idx==idx); //there should be at least one shape
     while(ptr<obj_vec.end() && ptr->idx==idx) {
         auto aabb = ptr->polygon->get_AABB();
-        int x = x_to_grid_x(0.5f * (aabb.x1 + aabb.x2));
-        int y = y_to_grid_y(0.5f * (aabb.y1 + aabb.y2));
-        CollisionEng1ObjAndAABB ceng_and_aabb(*ptr, aabb);
-        find_and_add_collisions<std::not_equal_to<>>(collisions, ceng_and_aabb);
-        grid.get_ref(x, y).push_back(ceng_and_aabb);
+        int x = x_to_grid_x(aabb.x1);
+        int y = y_to_grid_y(aabb.y1);
+        find_and_add_collisions_neq(collisions, *ptr);
+        grid.get_ref(x, y).push_back(*ptr);
         ptr++;
     }
 }
-template<class IdxCmp>
-void CollisionEngine1::find_and_add_collisions(std::vector<CEng1Collision> *add_to,
-                                               const CollisionEng1ObjAndAABB &ceng_obj) const
+void CollisionEngine1::find_and_add_collisions_neq(std::vector<CEng1Collision> *add_to,
+                                                   const CollisionEng1Obj &ceng_obj) const
 {
-
-    int x1 = x_to_grid_x(ceng_obj.aabb.x1 - 0.5f*max_AABB_w);
-    int x2 = x_to_grid_x(ceng_obj.aabb.x2 + 0.5f*max_AABB_w);
-    int y1 = y_to_grid_y(ceng_obj.aabb.y1 - 0.5f*max_AABB_h);
-    int y2 = y_to_grid_y(ceng_obj.aabb.y2 + 0.5f*max_AABB_h);
-    x1 = std::clamp(x1, 0, GRID_LEN - 1);
-    x2 = std::clamp(x2, 0, GRID_LEN - 1);
-    y1 = std::clamp(y1, 0, GRID_LEN - 1);
-    y2 = std::clamp(y2, 0, GRID_LEN - 1);
+    const auto &aabb = ceng_obj.polygon->get_AABB();
+    int x1 = x_to_grid_x(aabb.x1 - max_AABB_w);
+    int x2 = x_to_grid_x(aabb.x2);
+    int y1 = y_to_grid_y(aabb.y1 - max_AABB_h);
+    int y2 = y_to_grid_y(aabb.y2);
 
     for(int x=x1; x<=x2; x++) {
         for(int y=y1; y<=y2; y++) {
@@ -88,8 +70,43 @@ void CollisionEngine1::find_and_add_collisions(std::vector<CEng1Collision> *add_
                 //-the .idx (owner) is the same
                 //-the AABBs don't overlap
                 //-the collision wouldn't matter anyway
-                if(IdxCmp()(ceng_obj.idx, other.idx) &&
-                   ceng_obj.aabb.overlaps(other.aabb) &&
+                if(ceng_obj.idx != other.idx &&
+                   aabb.overlaps(other.polygon->get_AABB()) &&
+                   collision_could_matter(*map_objs[ceng_obj.idx], *map_objs[other.idx]))
+                {
+                    if(ceng_obj.polygon->has_collision(*other.polygon)) {
+                        CEng1Collision collision;
+                        collision.idx1 = ceng_obj.idx;
+                        collision.idx2 = other.idx;
+                        add_to->push_back(collision);
+                    }
+                }
+            }
+        }
+    }
+}
+void CollisionEngine1::find_and_add_collisions_gt(std::vector<CEng1Collision> *add_to,
+                                                  const CollisionEng1Obj &ceng_obj) const
+{
+    const auto &aabb = ceng_obj.polygon->get_AABB();
+    int x1 = x_to_grid_x(aabb.x1 - max_AABB_w);
+    int x2 = x_to_grid_x(aabb.x2);
+    int y1 = y_to_grid_y(aabb.y1 - max_AABB_h);
+    int y2 = y_to_grid_y(aabb.y2);
+
+    for(int x=x1; x<=x2; x++) {
+        for(int y=y1; y<=y2; y++) {
+            for(const auto &other: grid.get_const_ref(x, y)) {
+                //filter out a potential collision if:
+                //-the .idx (owner) is the same
+                //-the AABBs don't overlap
+                //-the collision wouldn't matter anyway
+
+                //note that we assume the grid cells are ordered, so we can break
+                //and move on to the next cell if our idx isn't greater than the other's idx
+                if(ceng_obj.idx <= other.idx)
+                    break;
+                if(aabb.overlaps(other.polygon->get_AABB()) &&
                    collision_could_matter(*map_objs[ceng_obj.idx], *map_objs[other.idx]))
                 {
                     if(ceng_obj.polygon->has_collision(*other.polygon)) {
@@ -106,28 +123,30 @@ void CollisionEngine1::find_and_add_collisions(std::vector<CEng1Collision> *add_
 CollisionEngine1::CollisionEngine1(std::shared_ptr<ThreadPool> thread_pool_):
     thread_pool(std::move(thread_pool_))
 {}
-void CollisionEngine1::init(kx::FixedSizeArray<const Collidable*> &&map_objs_,
+void CollisionEngine1::reset()
+{
+    grid.reset();
+}
+void CollisionEngine1::set_cur_des(std::vector<CollisionEng1Obj> &&cur_,
+                                   std::vector<CollisionEng1Obj> &&des_)
+{
+    cur = std::move(cur_);
+    des = std::move(des_);
+    k_expects(std::is_sorted(cur.begin(), cur.end(), CollisionEng1Obj::cmp_idx));
+    k_expects(std::is_sorted(des.begin(), des.end(), CollisionEng1Obj::cmp_idx));
+}
+void CollisionEngine1::set2(kx::FixedSizeArray<const Collidable*> &&map_objs_,
                             std::function<bool(const Collidable&, const Collidable&)> collision_could_matter_,
-                            std::vector<CollisionEng1Obj> &&cur_,
-                            std::vector<CollisionEng1Obj> &&des_,
                             kx::FixedSizeArray<MoveIntent> &&move_intent_)
 {
     map_objs = std::move(map_objs_);
     collision_could_matter = std::move(collision_could_matter_);
-    cur = std::move(cur_);
-    des = std::move(des_);
     move_intent = std::move(move_intent_);
+    grid.reset();
 
-    for(int i=0; i<GRID_LEN; i++)
-        for(int j=0; j<GRID_LEN; j++)
-            grid.get_ref(i, j).clear();
-
-    k_expects(std::is_sorted(cur.begin(), cur.end(), cmp_idx));
-    k_expects(std::is_sorted(des.begin(), des.end(), cmp_idx));
     k_expects(map_objs.size() == move_intent.size());
 }
-
-std::vector<CEng1Collision> CollisionEngine1::find_collisions()
+void CollisionEngine1::precompute()
 {
     auto get_AABB_w = [](const CollisionEng1Obj &obj) -> float
                         {
@@ -145,7 +164,6 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
                             {
                                 return a > b? a: b;
                             };
-
 
     max_AABB_w = std::transform_reduce(cur.begin(),
                                        cur.end(),
@@ -171,18 +189,25 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
                                        get_max_float,
                                        get_AABB_h);
 
-    auto combine_AABB = [](const AABB &a, const AABB &b) -> AABB
-                            {AABB ret = a; ret.combine(b); return ret;};
-
+    //we grid things based on their top left corner, so calculate the global
+    //AABB based on top left corners only.
     global_AABB = AABB::make_maxbad_AABB();
-    for(const auto &obj: cur)
-        global_AABB.combine(obj.polygon->get_AABB());
-    for(const auto &obj: des)
-        global_AABB.combine(obj.polygon->get_AABB());
+
+    auto calc_global_AABB = [this](const CollisionEng1Obj &obj) -> void
+    {
+        global_AABB.x1 = std::min(global_AABB.x1, obj.polygon->get_AABB().x1);
+        global_AABB.x2 = std::max(global_AABB.x2, obj.polygon->get_AABB().x1);
+        global_AABB.y1 = std::min(global_AABB.y1, obj.polygon->get_AABB().y1);
+        global_AABB.y2 = std::max(global_AABB.y2, obj.polygon->get_AABB().y1);
+    };
+    std::for_each(cur.begin(), cur.end(), calc_global_AABB);
+    std::for_each(des.begin(), des.end(), calc_global_AABB);
 
     grid_rect_w = (global_AABB.x2 - global_AABB.x1) / GRID_LEN;
     grid_rect_h = (global_AABB.y2 - global_AABB.y1) / GRID_LEN;
-
+}
+std::vector<CEng1Collision> CollisionEngine1::find_collisions()
+{
     //put things in their grid rects
     size_t cur_idx = 0;
     size_t des_idx = 0;
@@ -190,7 +215,7 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
     active_objs.clear();
 
     auto add_active_obj = [this]
-         (std::vector<CollisionEng1ObjAndAABB> *active_objs_,
+         (std::vector<CollisionEng1Obj> *active_objs_,
           int i,
           decltype(cur) __restrict *objs_,
           size_t __restrict *obj_idx)
@@ -200,20 +225,18 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
                   if((*objs_)[*obj_idx].idx==i) {
                       const auto &obj_ref = (*objs_)[*obj_idx];
                       const auto &aabb = obj_ref.polygon->get_AABB();
-                      active_objs_->emplace_back(obj_ref, aabb);
+                      active_objs_->push_back(obj_ref);
 
-                      auto mx = 0.5f * (aabb.x1 + aabb.x2);
-                      auto my = 0.5f * (aabb.y1 + aabb.y2);
+                      int x = x_to_grid_x(aabb.x1);
+                      int y = y_to_grid_y(aabb.y1);
 
-                      int x = x_to_grid_x(mx);
-                      int y = y_to_grid_y(my);
-
-                      grid.get_ref(x, y).emplace_back((*objs_)[*obj_idx], aabb);
+                      grid.get_ref(x, y).push_back(obj_ref);
                   }
                   (*obj_idx)++;
               }
           };
 
+    //~300-350us on Test2(40, 40), which adding to the grid takes ~200us
     for(size_t i=0; i<move_intent.size(); i++) {
         if(move_intent[i] == MoveIntent::GoToDesiredPos)
             add_active_obj(&active_objs, i, &des, &des_idx);
@@ -225,38 +248,40 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
 
     std::vector<std::vector<CEng1Collision>> collisions(num_threads);
     std::vector<std::function<void()>> tasks(num_threads);
-    std::vector<std::atomic<bool>> is_done(num_threads);
-    for(auto &flag: is_done)
-        flag.store(false, std::memory_order_relaxed);
+    std::vector<std::future<void>> is_done(num_threads);
 
-    for(size_t i=0; i<tasks.size(); i++) {
-        size_t idx1 = active_objs.size() * i / num_threads;
-        size_t idx2 = active_objs.size() * (i+1) / num_threads;
-        tasks[i] = [&is_done, i, idx1, idx2, this, &collisions]
+    //note that processing an object has a complexity roughly linearly proportional
+    //to its index because (a, b) is checked for overlap only if a.idx < b.idx, so
+    //later objects require more work to check. Therefore, not every task should
+    //consist of the same number of objects. Empirically, using a power of ~0.75
+    //results in the best runtime.
+    for(size_t i=0; i<num_threads; i++) {
+        size_t idx1 = active_objs.size() * std::pow(i / (double)num_threads, 0.75);
+        size_t idx2 = active_objs.size() * std::pow((i+1) / (double)num_threads, 0.75);
+        tasks[i] = [num_threads, i, idx1, idx2, this, &collisions]
                     {
                         for(size_t j=idx1; j<idx2; j++)
-                            find_and_add_collisions<std::less<>>(&collisions[i], active_objs[j]);
-                        is_done[i].store(true, std::memory_order_release);
+                            find_and_add_collisions_gt(&collisions[i], active_objs[j]);
                     };
     }
-
+    //the multithreaded version ~200-250us on Test2(40, 40)
     for(size_t i=1; i<tasks.size(); i++)
-        thread_pool->add_task(tasks[i]);
+        is_done[i] = thread_pool->add_task(tasks[i]);
     tasks[0]();
-    for(size_t i=1; i<tasks.size(); i++) {
-        while(!is_done[i].load(std::memory_order_acquire))
-        {}
-    }
 
+    for(size_t i=1; i<collisions.size(); i++)
+        is_done[i].get();
     for(size_t i=1; i<collisions.size(); i++)
         collisions[0].insert(collisions[0].end(), collisions[i].begin(), collisions[i].end());
 
     return collisions[0];
 
-    /* //single threaded version
+    /*
+    //single threaded version
+    //takes ~700-800us on Test2(40, 40)
     std::vector<CEng1Collision> collisions;
     for(size_t i=0; i<active_objs.size(); i++) {
-        find_and_add_collisions<std::less<>>(&collisions, active_objs[i]);
+        find_and_add_collisions_gt(&collisions, active_objs[i]);
     }
     return collisions;
     */

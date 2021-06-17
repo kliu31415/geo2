@@ -48,6 +48,7 @@ class Game final
     void generate_and_start_level(Level::Name level_name);
 
     void run1(double tick_len);
+    void run_collision_engine();
     void advance_one_tick(double tick_len);
 
     void apply_bloom_and_hdr(kx::gfx::KWindowRunning *kwin_r,

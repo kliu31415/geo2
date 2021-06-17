@@ -114,7 +114,9 @@ using MapRect = _MapRect<double>;
 
 template<class T> struct _AABB
 {
-    ///invariant: x1 <= x2 and y1 <= y2 for all valid AABBs
+    ///invariant: x1 <= x2 and y1 <= y2 for all valid AABBs.
+    ///The AABB covers [x1, x2) x [y1, y2). This means X and Y don't
+    ///overlap if they touch on an edge, but they do if X==Y.
     T x1;
     T x2;
     T y1;
@@ -144,8 +146,8 @@ template<class T> struct _AABB
     }
     inline bool overlaps(const _AABB &other) const
     {
-        bool x_overlap = (x1>=other.x1 && x1<=other.x2) || (other.x1>=x1 && other.x1<=x2);
-        bool y_overlap = (y2>=other.y1 && y2<=other.y2) || (other.y2>=y1 && other.y2<=y2);
+        bool x_overlap = (x1>=other.x1 && x1<other.x2) || (other.x1>=x1 && other.x1<x2);
+        bool y_overlap = (y1>=other.y1 && y1<other.y2) || (other.y1>=y1 && other.y1<y2);
         return x_overlap && y_overlap;
     }
     inline bool contains(const _AABB &other) const
@@ -171,6 +173,7 @@ enum class MoveIntent: uint8_t {
 /*
 class Polygon final
 {
+    AABB aabb;
     //note that one vertex is stored twice for efficiency purposes (i.e. begin()==rbegin())
     kx::FixedSizeArray<_MapCoord<float>> vertices;
 
@@ -180,6 +183,14 @@ class Polygon final
         for(size_t i=0; i<vertices_.size(); i++)
             vertices[i] = vertices_[i];
         vertices[vertices_.size()] = vertices[0];
+        calc_aabb();
+    }
+    void calc_aabb()
+    {
+        aabb = AABB::make_maxbad_AABB();
+        std::for_each(vertices.begin() + 1,
+                      vertices.end(),
+                      [&](_MapCoord<float> &x) -> void {aabb.combine(x);});
     }
     size_t get_num_vertices() const
     {
@@ -192,18 +203,16 @@ public:
             coord.x += dx;
             coord.y += dy;
         }
+        calc_aabb();
     }
     void rotate_about_origin([[maybe_unused]] float theta)
     {
+        calc_aabb();
         k_assert(false);
     }
-    AABB get_AABB() const
+    const AABB& get_AABB() const
     {
-        AABB ret = AABB::make_maxbad_AABB();
-        std::for_each(vertices.begin() + 1,
-                      vertices.end(),
-                      [&](_MapCoord<float> &x) -> void {ret.combine(x);});
-        return ret;
+        return aabb;
     }
     bool has_collision(const Polygon &other) const
     {
@@ -246,12 +255,12 @@ public:
 class Polygon final
 {
     AABB aabb;
-    int n;
     float *vals;
+    int n;
 
     inline static int get_d_len(int n)
     {
-        return 7 * ((n + 6) / 7) + 2;
+        return 8 * ((n + 7) / 8) + 1;
     }
 
     template<class T> Polygon(nonstd::span<_MapCoord<T>> vertices):
@@ -326,10 +335,12 @@ public:
         auto this_d_len = get_d_len(this_n);
         auto other_d_len = get_d_len(other_n);
 
+        //could be faster to do it the other way
+        if(this_n * other_d_len > other_n * this_d_len)
+            return other.has_collision(*this);
+
         const __m256 mm0 = _mm256_set1_ps(0);
         const __m256 mm1 = _mm256_set1_ps(1);
-
-        std::array<uint64_t, 4> good_vals;
 
         for(int i=1; i<this_n; i++) {
 
@@ -338,7 +349,7 @@ public:
             __m256 Rx = _mm256_set1_ps(vals[i] - vals[i-1]);
             __m256 Ry = _mm256_set1_ps(vals[this_d_len + i] - vals[this_d_len + i-1]);
 
-            for(int j=1; j<other_d_len-1; j+=7) {
+            for(int j=1; j<other_d_len; j+=8) {
 
                 __m256 Qx = _mm256_loadu_ps(other.vals + j-1);
                 __m256 Qy = _mm256_loadu_ps(other.vals + other_d_len + j-1);
@@ -347,11 +358,12 @@ public:
                 __m256 p2_Sx = _mm256_loadu_ps(other.vals + j-1);
                 __m256 Sx = p1_Sx - p2_Sx;
 
+                __m256 Ry_times_Sx = Ry * Sx;
+
                 __m256 p1_Sy = _mm256_loadu_ps(other.vals + other_d_len + j);
                 __m256 p2_Sy = _mm256_loadu_ps(other.vals + other_d_len + j-1);
                 __m256 Sy = p1_Sy - p2_Sy;
 
-                __m256 Ry_times_Sx = Ry * Sx;
                 __m256 part3 = _mm256_fmsub_ps(Rx, Sy, Ry_times_Sx);
                 __m256 part3_rcp = _mm256_rcp_ps(part3);
 
@@ -366,23 +378,18 @@ public:
                 __m256 u_part1 = _mm256_fmsub_ps(part1x, Ry, part1y_times_Rx);
                 __m256 u = u_part1 * part3_rcp;
 
-                __m256 t_ge_0 = _mm256_cmp_ps(t, mm0, _CMP_GT_OQ);
-                __m256 t_le_1 = _mm256_cmp_ps(t, mm1, _CMP_LT_OQ);
-                __m256 t_good = _mm256_and_ps(t_ge_0, t_le_1);
+                //use GE and LE to avoid having to test for parallel lines in
+                //polygons; the tips of segments count for intersections with GE/LE
+                __m256 t_ge_0 = _mm256_cmp_ps(t, mm0, _CMP_GE_OQ);
+                __m256 t_le_1 = _mm256_cmp_ps(t, mm1, _CMP_LE_OQ);
+                __m256 u_ge_0 = _mm256_cmp_ps(u, mm0, _CMP_GE_OQ);
+                __m256 u_le_1 = _mm256_cmp_ps(u, mm1, _CMP_LE_OQ);
 
-                __m256 u_ge_0 = _mm256_cmp_ps(u, mm0, _CMP_GT_OQ);
-                __m256 u_le_1 = _mm256_cmp_ps(u, mm1, _CMP_LT_OQ);
+                __m256 t_good = _mm256_and_ps(t_ge_0, t_le_1);
                 __m256 u_good = _mm256_and_ps(u_ge_0, u_le_1);
 
                 __m256 good = _mm256_and_ps(t_good, u_good);
-
-                _mm256_storeu_ps((float*)good_vals.data(), good);
-
-                //remember that the last value is bogus; we only operate on 7 things
-                good_vals[0] |= good_vals[1];
-                good_vals[2] |= *(uint32_t*)&good_vals[3]; //ignore the last 4 bytes
-
-                if(good_vals[0] || good_vals[2])
+                if(_mm256_movemask_ps(good))
                     return true;
             }
         }

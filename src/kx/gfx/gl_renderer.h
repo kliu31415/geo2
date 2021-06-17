@@ -88,7 +88,7 @@ struct ColorMod
 class Texture
 {
 public:
-    enum class Format {RGBA8888, RGB888, RGBA16F};
+    enum class Format {RGBA8888, RGB888, RGBA16F, RGB16F};
 private:
     friend class Renderer;
 
