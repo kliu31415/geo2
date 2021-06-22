@@ -2,7 +2,7 @@
 
 layout(std140) uniform block1
 {
-    vec4 data[128*5];
+    vec4 data[204*5];
     //[0] = (pos0.x, pos0.y, pos1.x, pos1.y)
     //[1] = (pos2.x, pos2.y, unused, unused)
     //[2] = (thickness0, thickness1, thickness2, unused)

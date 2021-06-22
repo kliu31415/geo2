@@ -1,4 +1,4 @@
-#include "geo2/map_objs/map_object.h"
+#include "geo2/map_obj/map_object.h"
 
 #include "kx/io.h"
 

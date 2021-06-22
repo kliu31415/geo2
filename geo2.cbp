@@ -54,32 +54,30 @@
 		<Unit filename="src/geo2/level_gen/test2.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="src/geo2/map_objs/floor_type1/floor_type1.cpp" />
-		<Unit filename="src/geo2/map_objs/floor_type1/floor_type1.h">
+		<Unit filename="src/geo2/level_gen/test3.cpp" />
+		<Unit filename="src/geo2/level_gen/test3.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="src/geo2/map_objs/floor_type1/test_terrain1.cpp" />
-		<Unit filename="src/geo2/map_objs/floor_type1/test_terrain1.h" />
-		<Unit filename="src/geo2/map_objs/map_object.cpp" />
-		<Unit filename="src/geo2/map_objs/map_object.h" />
-		<Unit filename="src/geo2/map_objs/projectile_type1/projectile_type1.cpp" />
-		<Unit filename="src/geo2/map_objs/projectile_type1/projectile_type1.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/geo2/map_objs/unit_type1/player_type1.cpp" />
-		<Unit filename="src/geo2/map_objs/unit_type1/player_type1.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/geo2/map_objs/unit_type1/unit_type1.cpp" />
-		<Unit filename="src/geo2/map_objs/unit_type1/unit_type1.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/geo2/map_objs/wall_type1/monochromatic_wall1.cpp" />
-		<Unit filename="src/geo2/map_objs/wall_type1/monochromatic_wall1.h" />
-		<Unit filename="src/geo2/map_objs/wall_type1/wall_type1.cpp" />
-		<Unit filename="src/geo2/map_objs/wall_type1/wall_type1.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/geo2/map_obj/floor_type1/floor_type1.cpp" />
+		<Unit filename="src/geo2/map_obj/floor_type1/floor_type1.h" />
+		<Unit filename="src/geo2/map_obj/floor_type1/monochromatic_floor_1.cpp" />
+		<Unit filename="src/geo2/map_obj/floor_type1/monochromatic_floor_1.h" />
+		<Unit filename="src/geo2/map_obj/floor_type1/test_terrain1.cpp" />
+		<Unit filename="src/geo2/map_obj/floor_type1/test_terrain1.h" />
+		<Unit filename="src/geo2/map_obj/map_object.cpp" />
+		<Unit filename="src/geo2/map_obj/map_object.h" />
+		<Unit filename="src/geo2/map_obj/projectile_type1/projectile_type1.cpp" />
+		<Unit filename="src/geo2/map_obj/projectile_type1/projectile_type1.h" />
+		<Unit filename="src/geo2/map_obj/unit_type1/pig_1.cpp" />
+		<Unit filename="src/geo2/map_obj/unit_type1/pig_1.h" />
+		<Unit filename="src/geo2/map_obj/unit_type1/player_type1.cpp" />
+		<Unit filename="src/geo2/map_obj/unit_type1/player_type1.h" />
+		<Unit filename="src/geo2/map_obj/unit_type1/unit_type1.cpp" />
+		<Unit filename="src/geo2/map_obj/unit_type1/unit_type1.h" />
+		<Unit filename="src/geo2/map_obj/wall_type1/monochromatic_wall_1.cpp" />
+		<Unit filename="src/geo2/map_obj/wall_type1/monochromatic_wall_1.h" />
+		<Unit filename="src/geo2/map_obj/wall_type1/wall_type1.cpp" />
+		<Unit filename="src/geo2/map_obj/wall_type1/wall_type1.h" />
 		<Unit filename="src/geo2/master_instance.cpp" />
 		<Unit filename="src/geo2/master_instance.h">
 			<Option target="&lt;{~None~}&gt;" />
@@ -94,6 +92,14 @@
 		<Unit filename="src/geo2/test.cpp" />
 		<Unit filename="src/geo2/test.h" />
 		<Unit filename="src/geo2/timer.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="src/geo2/weapon/test_laser_1.cpp" />
+		<Unit filename="src/geo2/weapon/test_laser_1.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="src/geo2/weapon/weapon.cpp" />
+		<Unit filename="src/geo2/weapon/weapon.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/glad/glad.c">

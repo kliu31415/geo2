@@ -1,4 +1,4 @@
-#include "geo2/map_objs/wall_type1/wall_type1.h"
+#include "geo2/map_obj/wall_type1/wall_type1.h"
 
 namespace geo2 { namespace map_obj {
 

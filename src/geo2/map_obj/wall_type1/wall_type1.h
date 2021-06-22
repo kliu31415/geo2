@@ -1,6 +1,6 @@
 #pragma once
 
-#include "geo2/map_objs/map_object.h"
+#include "geo2/map_obj/map_object.h"
 
 namespace geo2 { namespace map_obj {
 
@@ -13,6 +13,7 @@ protected:
     std::unique_ptr<Polygon> polygon;
     Wall_Type1(const MapRect &position_);
 public:
+    virtual ~Wall_Type1() = default;
     void run1_mt(const MapObjRun1Args &args) override;
 
     MoveIntent handle_collision(MapObject *other,

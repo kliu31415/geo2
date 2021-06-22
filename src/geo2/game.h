@@ -1,6 +1,6 @@
 #pragma once
 
-#include "geo2/map_objs/unit_type1/player_type1.h"
+#include "geo2/map_obj/unit_type1/player_type1.h"
 
 #include "kx/gfx/renderer.h"
 #include "kx/gfx/kwindow.h"
@@ -17,6 +17,7 @@ struct Level
         NotSet,
         Test1,
         Test2,
+        Test3,
     };
     std::vector<std::shared_ptr<map_obj::MapObject>> map_objs;
     double time_to_complete;
@@ -40,7 +41,7 @@ class Game final
     std::shared_ptr<class ThreadPool> thread_pool;
 
     //these persistent across run() calls to save memory allocations
-    kx::FixedSizeArray<MoveIntent> move_intent;
+    std::vector<MoveIntent> move_intent;
     std::vector<CollisionEng1Obj> ceng_cur;
     std::vector<CollisionEng1Obj> ceng_des;
     std::unique_ptr<class CollisionEngine1> collision_engine;

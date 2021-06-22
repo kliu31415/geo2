@@ -1,4 +1,4 @@
-#include "geo2/map_objs/wall_type1/monochromatic_wall1.h"
+#include "geo2/map_obj/wall_type1/monochromatic_wall_1.h"
 
 namespace geo2 { namespace map_obj {
 
@@ -10,24 +10,26 @@ MonochromaticWall_1::MonochromaticWall_1(const MapRect &position_,
 void MonochromaticWall_1::add_render_objs(const MapObjRenderArgs &args)
 {
     if(op == nullptr) {
-        op = std::make_shared<RenderOpShader>(*args.shaders->test_terrain1);
+        op = std::make_shared<RenderOpShader>(*args.shaders->monoc_wall_1);
         op_group = std::make_shared<RenderOpGroup>(1000.0);
         op_group->add_op(op);
         auto iu_map = op->map_instance_uniform(0);
         op_iu = {(float*)iu_map.begin(), (float*)iu_map.end()};
     }
 
-    auto dst = args.to_cam_nc(position);
-    if(args.is_in_view_nc(dst)) {
-        op_iu[0] = args.x_nc_to_ndc(dst.x);
-        op_iu[1] = args.y_nc_to_ndc(dst.y);
-        op_iu[2] = args.x_nc_to_ndc(dst.x + dst.w);
-        op_iu[3] = args.y_nc_to_ndc(dst.y + dst.h);
-        op_iu[4] = color.r;
-        op_iu[5] = color.g;
-        op_iu[6] = color.b;
-        op_iu[7] = color.a;
+    op_iu[0] = args.x_to_ndc(position.x);
+    op_iu[1] = args.y_to_ndc(position.y);
+    op_iu[2] = args.x_to_ndc(position.x + position.w);
+    op_iu[3] = args.y_to_ndc(position.y + position.h);
 
+    op_iu[4] = color.r;
+    op_iu[5] = color.g;
+    op_iu[6] = color.b;
+    op_iu[7] = color.a;
+
+    if(args.is_x_line_ndc_in_view(op_iu[0], op_iu[2]) &&
+       args.is_y_line_ndc_in_view(op_iu[1], op_iu[3]))
+    {
         args.add_op_group(op_group);
     }
 }

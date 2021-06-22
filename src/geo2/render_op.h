@@ -27,8 +27,6 @@ class UBO_Allocator;
 
 class GShader final
 {
-public:
-    constexpr static int MAX_INSTANCES = 128;
 private:
     template<class T> using FSA = kx::FixedSizeArray<T>;
     //Each UB has some global data at the beginning, then up to
@@ -41,17 +39,20 @@ private:
     };
 
     std::shared_ptr<kx::gfx::ShaderProgram> program;
+    int max_instances;
     kx::gfx::DrawMode draw_mode;
     int count;
     std::vector<UB> UBs;
 public:
     GShader(const std::shared_ptr<kx::gfx::ShaderProgram> &program_,
+            int max_instances_,
             const kx::gfx::DrawMode draw_mode_,
             int count_);
 
     void add_UB(const std::string &name, int global_data_sz, int instance_data_sz);
     size_t get_num_UBs() const;
-    size_t get_instance_uniform_size_bytes(size_t idx) const;
+    int get_instance_uniform_size_bytes(size_t idx) const;
+    int get_max_instances() const;
     void render(UBO_Allocator *ubo_allocator,
                 nonstd::span<const FSA<FSA<uint8_t>>*> instance_uniform_data,
                 kx::gfx::KWindowRunning *kwin_r,

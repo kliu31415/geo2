@@ -2,7 +2,7 @@
 
 layout(std140) uniform block1
 {
-    vec4 data[128*2];
+    vec4 data[512*2];
 };
 
 flat out int idx;

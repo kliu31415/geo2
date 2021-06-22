@@ -1,4 +1,4 @@
-#include "geo2/map_objs/unit_type1/player_type1.h"
+#include "geo2/map_obj/unit_type1/player_type1.h"
 
 #include <iostream>
 
@@ -9,7 +9,8 @@ Player_Type1::Player_Type1():
     left_pressed_tick_count(0),
     right_pressed_tick_count(0),
     up_pressed_tick_count(0),
-    down_pressed_tick_count(0)
+    down_pressed_tick_count(0),
+    velocity(MapVec(0, 0))
 {
 
 }
@@ -82,7 +83,7 @@ void Player_Type1::process_input(const PlayerInputArgs &args)
     else
         vertical_dir = vertical_input;
 
-    constexpr auto POWER = 500.0;
+    constexpr auto POWER = 120.0;
     constexpr auto MASS = 1.0;
     constexpr auto FRICTION_COEF = 4.0;
     constexpr auto GRAVITY = 9.80665;
@@ -94,8 +95,8 @@ void Player_Type1::process_input(const PlayerInputArgs &args)
         horizontal_dir /= dir_norm;
 
         MapVec accel;
-        accel.x = args.tick_len * horizontal_dir * POWER / MASS;
-        accel.y = args.tick_len * vertical_dir * POWER / MASS;
+        accel.x = args.tick_len * FRICTION_COEF * horizontal_dir * POWER / MASS;
+        accel.y = args.tick_len * FRICTION_COEF * vertical_dir * POWER / MASS;
 
         auto old_velocity = velocity;
         auto old_speed = old_velocity.norm();
@@ -108,7 +109,7 @@ void Player_Type1::process_input(const PlayerInputArgs &args)
             accel.y /= EPS;
         }
 
-        //The F = W / v, aka Force = Power / velocity, but this is a degenerate case
+        //F = W / v, aka Force = Power / velocity, but this results in a degenerate case
         //when v=0 or v is very small. Handle this manually by setting a max acceleration.
         //The max acceleration is set so that if you're at 0 speed, you accelerate so that
         //if you accelerated at this rate, your acceleration would be identical to your
@@ -119,7 +120,7 @@ void Player_Type1::process_input(const PlayerInputArgs &args)
         constexpr auto X_S = 0.001;
         constexpr auto Q_a = X_S * MASS;
         constexpr auto Q_b = X_S * MASS * FRICTION_COEF * GRAVITY;
-        constexpr auto Q_c = -POWER;
+        constexpr auto Q_c = -FRICTION_COEF * POWER;
         constexpr auto MAX_ACCEL_PER_S = (-Q_b + std::sqrt(Q_b*Q_b - 4*Q_a*Q_c)) / (2 * Q_a);
         auto max_accel = MAX_ACCEL_PER_S * args.tick_len;
 
@@ -154,7 +155,7 @@ void Player_Type1::process_input(const PlayerInputArgs &args)
     }
 }
 constexpr double PLAYER_SIDE_LEN = 1.6;
-void Player_Type1::run1_mt([[maybe_unused]] const MapObjRun1Args &args)
+void Player_Type1::run1_mt(const MapObjRun1Args &args)
 {
     constexpr auto PSL = PLAYER_SIDE_LEN;
 
@@ -185,7 +186,6 @@ void Player_Type1::run1_mt([[maybe_unused]] const MapObjRun1Args &args)
         move_intent = MoveIntent::StayAtCurrentPos;
     }
     args.set_move_intent(move_intent);
-
 }
 void Player_Type1::run2_st([[maybe_unused]] const MapObjRun2Args &args)
 {
@@ -193,10 +193,10 @@ void Player_Type1::run2_st([[maybe_unused]] const MapObjRun2Args &args)
         position = desired_position;
     }
 }
-void Player_Type1::add_render_objs([[maybe_unused]] const MapObjRenderArgs &args)
+void Player_Type1::add_render_objs(const MapObjRenderArgs &args)
 {
     if(op1 == nullptr) {
-        op_group = std::make_shared<RenderOpGroup>(2000.0);
+        op_group = std::make_shared<RenderOpGroup>(3000.0);
         op1 = std::make_shared<RenderOpShader>(*args.shaders->outlined_tri);
         op_group->add_op(op1);
         op2 = std::make_shared<RenderOpShader>(*args.shaders->outlined_tri);

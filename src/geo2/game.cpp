@@ -1,10 +1,12 @@
-#include "geo2/map_objs/floor_type1/test_terrain1.h"
+#include "geo2/map_obj/floor_type1/test_terrain1.h"
 #include "geo2/game_render_op_list.h"
 #include "geo2/game.h"
-#include "geo2/map_objs/map_object.h"
+#include "geo2/map_obj/map_object.h"
 #include "geo2/collision_engine1.h"
 
 #include "geo2/level_gen/test2.h"
+#include "geo2/level_gen/test3.h"
+
 #include "geo2/multithread/thread_pool.h"
 #include "geo2/timer.h"
 
@@ -120,6 +122,9 @@ void Game::generate_and_start_level(Level::Name level_name)
     case Level::Name::Test2:
         level = LevelGenerator<Level::Name::Test2>().generate(this);
         break;
+    case Level::Name::Test3:
+        level = LevelGenerator<Level::Name::Test3>().generate(this);
+        break;
     default:
         log_error("Game attempted to generate unknown level");
     }
@@ -133,8 +138,6 @@ void Game::generate_and_start_level(Level::Name level_name)
 }
 void Game::run1(double tick_len)
 {
-    move_intent = decltype(move_intent)(map_objs.size());
-    std::fill(move_intent.begin(), move_intent.end(), MoveIntent::NotSet);
     map_obj::MapObjRun1Args run1_args;
     run1_args.tick_len = tick_len;
     ceng_cur.clear();
@@ -142,7 +145,9 @@ void Game::run1(double tick_len)
     run1_args.set_ceng_cur_vec(&ceng_cur);
     run1_args.set_ceng_des_vec(&ceng_des);
     run1_args.set_move_intent_vec(&move_intent);
+    run1_args.set_map_objs_vec(&map_objs);
 
+    //don't use an enhanced for loop here because we might modify map_objs
     for(int i=0; i<(int)map_objs.size(); i++) {
         run1_args.idx = i;
         map_objs[i]->run1_mt(run1_args);
@@ -511,6 +516,7 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
     gfx->render_op_list->render(*this, kwin_r, map_render_w, map_render_h);
     gfx->render_op_list->clear();
 
+
     //if we have a multisample texture, resolve it into a 1-sample texture
     if(map_texture->is_multisample()) {
         gfx->resolve_multisamples(rdr, &map_texture);
@@ -541,7 +547,7 @@ Game::Game():
     thread_pool(std::make_shared<ThreadPool>(std::thread::hardware_concurrency() - 1)),
     collision_engine(std::make_unique<CollisionEngine1>(thread_pool))
 {
-    generate_and_start_level(Level::Name::Test2);
+    generate_and_start_level(Level::Name::Test3);
 }
 Game::~Game()
 {}

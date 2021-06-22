@@ -35,15 +35,17 @@ public:
 };
 
 GShader::GShader(const std::shared_ptr<kx::gfx::ShaderProgram> &program_,
+                 int max_instances_,
                  const kx::gfx::DrawMode draw_mode_,
                  int count_):
     program(program_),
+    max_instances(max_instances_),
     draw_mode(draw_mode_),
     count(count_)
 {}
 void GShader::add_UB(const std::string &name, int global_data_sz, int instance_data_sz)
 {
-    k_expects(global_data_sz + instance_data_sz*MAX_INSTANCES <= MAX_RO_UBO_SIZE);
+    k_expects(global_data_sz + instance_data_sz*max_instances <= MAX_RO_UBO_SIZE);
     k_expects(UBs.size() < MAX_RO_NUM_UBOS);
 
     UB ub;
@@ -56,9 +58,13 @@ size_t GShader::get_num_UBs() const
 {
     return UBs.size();
 }
-size_t GShader::get_instance_uniform_size_bytes(size_t idx) const
+int GShader::get_instance_uniform_size_bytes(size_t idx) const
 {
     return UBs[idx].instance_data_size;
+}
+int GShader::get_max_instances() const
+{
+    return max_instances;
 }
 
 using ByteFSA2D = kx::FixedSizeArray<kx::FixedSizeArray<uint8_t>>;
@@ -83,7 +89,7 @@ void GShader::render(UBO_Allocator *ubo_allocator,
     for(const auto &single_iu_data: instance_uniform_data) {
         for(size_t i=0; i<num_instance_uniforms; i++) {
             auto usize = get_instance_uniform_size_bytes(i);
-            k_expects((*single_iu_data)[i].size() == usize);
+            k_expects((*single_iu_data)[i].size() == (size_t)usize);
             std::copy_n((*single_iu_data)[i].begin(), usize, grouped_iu_data[i].begin() + idx*usize);
         }
         idx++;
@@ -215,7 +221,7 @@ void RenderOpList::render_internal(kx::gfx::KWindowRunning *kwin_r,
     for(const auto &op: ops_flattened) {
         if(auto shader = dynamic_cast<RenderOpShader*>(op)) {
             if(cur_shader!=nullptr &&
-               (instance_uniform_data.size()==GShader::MAX_INSTANCES ||
+               (instance_uniform_data.size()==(size_t)shader->shader->get_max_instances() ||
                 cur_shader!=shader->shader))
             {
                 cur_shader->render(ubo_allocator.get(), instance_uniform_data, kwin_r, {});

@@ -345,6 +345,22 @@ public:
     Renderer(Renderer&&) = delete;
     Renderer &operator = (Renderer&&) = delete;
 
+    inline float is_x_ndc_in_view(float x) const
+    {
+        return x>-1.0f && x<1.0f;
+    }
+    inline float is_y_ndc_in_view(float y) const
+    {
+        return y>-1.0f && y<1.0f;
+    }
+    inline bool is_x_line_ndc_in_view(float x1, float x2) const
+    {
+        return !(x1<=-1 && x2<=-1) && !(x1>=1 && x2>=1);
+    }
+    inline bool is_y_line_ndc_in_view(float y1, float y2) const
+    {
+        return !(y1<=-1 && y2<=-1) && !(y1>=1 && y2>=1);
+    }
     inline float x_to_ndc(float x) const
     {
         return x_to_gl_coord<CoordSys::Absolute>(x);

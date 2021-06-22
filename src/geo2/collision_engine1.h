@@ -117,7 +117,7 @@ class CollisionEngine1
     std::vector<CollisionEng1Obj> cur;
     std::vector<CollisionEng1Obj> des;
     std::vector<CollisionEng1Obj> active_objs;
-    kx::FixedSizeArray<MoveIntent> move_intent;
+    std::vector<MoveIntent> move_intent;
     Grid<CollisionEng1Obj> grid;
 
     AABB global_AABB;
@@ -138,17 +138,19 @@ class CollisionEngine1
                                     const CollisionEng1Obj &ceng_obj) const;
 public:
     CollisionEngine1(std::shared_ptr<ThreadPool> thread_pool_);
+
     void reset();
     ///cur_ and des_ must be sorted (for efficiency reasons)
     void set_cur_des(std::vector<CollisionEng1Obj> &&cur_,
                      std::vector<CollisionEng1Obj> &&des_);
     void set2(kx::FixedSizeArray<const Collidable*> &&map_objs_,
               std::function<bool(const Collidable&, const Collidable&)> collision_could_matter_,
-              kx::FixedSizeArray<MoveIntent> &&move_intent_);
+              std::vector<MoveIntent> &&move_intent_);
     void precompute(); ///depends on set_cur_des, but not set2
     std::vector<CEng1Collision> find_collisions();
     void update_intent(int idx, MoveIntent intent, std::vector<CEng1Collision> *add_to);
     void steal_cur_into(std::vector<CollisionEng1Obj> *vec);
     void steal_des_into(std::vector<CollisionEng1Obj> *vec);
+    void steal_move_intent_into(std::vector<MoveIntent> *vec);
 };
 }

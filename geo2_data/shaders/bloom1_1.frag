@@ -11,6 +11,6 @@ void main()
     vec4 c = texture(texture_in, tex_coord);
     float luminance = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
     if(luminance > 1)
-        frag_color = vec4(c.rgb * (luminance - 1) / luminance, c.a);
+        frag_color = vec4(c.rgb * (luminance - 1) / luminance, 1.0);
     else frag_color = vec4(0);
 }

@@ -136,8 +136,8 @@ void CollisionEngine1::set_cur_des(std::vector<CollisionEng1Obj> &&cur_,
     k_expects(std::is_sorted(des.begin(), des.end(), CollisionEng1Obj::cmp_idx));
 }
 void CollisionEngine1::set2(kx::FixedSizeArray<const Collidable*> &&map_objs_,
-                            std::function<bool(const Collidable&, const Collidable&)> collision_could_matter_,
-                            kx::FixedSizeArray<MoveIntent> &&move_intent_)
+                std::function<bool(const Collidable&, const Collidable&)> collision_could_matter_,
+                            std::vector<MoveIntent> &&move_intent_)
 {
     map_objs = std::move(map_objs_);
     collision_could_matter = std::move(collision_could_matter_);
@@ -322,6 +322,10 @@ void CollisionEngine1::steal_cur_into(std::vector<CollisionEng1Obj> *vec)
 void CollisionEngine1::steal_des_into(std::vector<CollisionEng1Obj> *vec)
 {
     *vec = std::move(des);
+}
+void CollisionEngine1::steal_move_intent_into(std::vector<MoveIntent> *vec)
+{
+    *vec = std::move(move_intent);
 }
 
 }

@@ -1,4 +1,4 @@
-#include "geo2/map_objs/floor_type1/test_terrain1.h"
+#include "geo2/map_obj/floor_type1/test_terrain1.h"
 #include "geo2/game_render_op_list.h"
 
 #include "kx/gfx/renderer.h"
@@ -8,7 +8,7 @@
 namespace geo2 { namespace map_obj {
 
 TestTerrain1::TestTerrain1(MapCoord pos_):
-    pos(pos_)
+    Floor_Type1(MapRect(pos_.x, pos_.y, 1, 1))
 {
 
 }
@@ -30,14 +30,13 @@ void TestTerrain1::add_render_objs(const MapObjRenderArgs &info)
     }
 
     Rect dst(pos.x, pos.y, 1.0f, 1.0f);
-    dst = info.to_cam_nc(dst);
 
-    op_iu[0] = info.x_nc_to_ndc(dst.x);
-    op_iu[1] = info.y_nc_to_ndc(dst.y);
-    op_iu[2] = info.x_nc_to_ndc(dst.x + dst.w);
-    op_iu[3] = info.y_nc_to_ndc(dst.y + dst.h);
-    op_iu[4] = 0.5f;//std::cbrt(2.0 + std::max(0.0, pos.x));
-    op_iu[5] = 0.5f;//std::cbrt(2.0 + std::max(0.0, pos.y));
+    op_iu[0] = info.x_to_ndc(dst.x);
+    op_iu[1] = info.y_to_ndc(dst.y);
+    op_iu[2] = info.x_to_ndc(dst.x + dst.w);
+    op_iu[3] = info.y_to_ndc(dst.y + dst.h);
+    op_iu[4] = 0.5f;
+    op_iu[5] = 0.5f;
     op_iu[6] = 0.0f;
     op_iu[7] = 1.0f;
 

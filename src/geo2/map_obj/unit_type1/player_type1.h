@@ -1,4 +1,4 @@
-#include "geo2/map_objs/unit_type1/unit_type1.h"
+#include "geo2/map_obj/unit_type1/unit_type1.h"
 
 namespace geo2 { namespace map_obj {
 
@@ -30,6 +30,8 @@ class Player_Type1 final: public Unit_Type1
 
     std::unique_ptr<Polygon> cur_shape;
     std::unique_ptr<Polygon> des_shape;
+
+    MapVec velocity;
 public:
     Player_Type1();
     void process_input(const PlayerInputArgs &args);

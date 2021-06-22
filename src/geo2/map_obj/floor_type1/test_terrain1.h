@@ -1,12 +1,12 @@
 #pragma once
 
-#include "geo2/map_objs/floor_type1/floor_type1.h"
+#include "geo2/map_obj/floor_type1/floor_type1.h"
 
 #include "span_lite.h"
 
 namespace geo2 { namespace map_obj {
 
-class TestTerrain1: public Floor_Type1
+class TestTerrain1 final: public Floor_Type1
 {
     MapCoord pos;
     std::shared_ptr<class RenderOpShader> op;
