@@ -1,6 +1,7 @@
 #pragma once
 
 #include "geo2/ceng1_obj.h"
+#include "geo2/map_obj/map_object.h"
 #include "geo2/geometry.h"
 
 #include "kx/fixed_size_array.h"
@@ -21,7 +22,6 @@ namespace geo2 {
  *  put into the grid. It doesn't make much sense for the MapObject to be the owner,
  *  so the CollisionEngine1 will own the Polygons.
  */
-
 
 class CollisionEngine1
 {
@@ -91,8 +91,8 @@ class CollisionEngine1
 
     std::shared_ptr<class ThreadPool> thread_pool;
 
-    kx::FixedSizeArray<const Collidable*> map_objs;
-    std::function<bool(const Collidable&, const Collidable&)> collision_could_matter;
+    kx::FixedSizeArray<const map_obj::MapObject*> map_objs;
+    std::function<bool(const map_obj::MapObject&, const map_obj::MapObject&)> collision_could_matter;
     std::vector<CEng1Obj> cur;
     std::vector<CEng1Obj> des;
     std::vector<CEng1Obj> active_objs;
@@ -122,8 +122,8 @@ public:
     ///cur_ and des_ must be sorted (for efficiency reasons)
     void set_cur_des(std::vector<CEng1Obj> &&cur_,
                      std::vector<CEng1Obj> &&des_);
-    void set2(kx::FixedSizeArray<const Collidable*> &&map_objs_,
-              std::function<bool(const Collidable&, const Collidable&)> collision_could_matter_,
+    void set2(kx::FixedSizeArray<const map_obj::MapObject*> &&map_objs_,
+              std::function<bool(const map_obj::MapObject&, const map_obj::MapObject&)> collision_could_matter_,
               std::vector<MoveIntent> &&move_intent_);
     void precompute(); ///depends on set_cur_des, but not set2
     std::vector<CEng1Collision> find_collisions();

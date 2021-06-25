@@ -1,6 +1,7 @@
 #pragma once
 
 #include "geo2/map_obj/unit_type1/unit_type1.h"
+#include "geo2/game_render_op_list.h"
 
 namespace geo2 { namespace map_obj {
 
@@ -11,8 +12,8 @@ class Pig_1 final: public Unit_Type1
     std::unique_ptr<Polygon> cur_shape;
     std::unique_ptr<Polygon> des_shape;
 
-    std::shared_ptr<class RenderOpShader> op;
-    std::shared_ptr<class RenderOpGroup> op_group;
+    std::shared_ptr<RenderOpShader> op;
+    std::shared_ptr<RenderOpGroup> op_group;
     nonstd::span<float> op_iu;
 public:
     Pig_1(MapCoord position_);

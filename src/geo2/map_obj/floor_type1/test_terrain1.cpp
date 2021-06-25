@@ -1,5 +1,7 @@
 #include "geo2/map_obj/floor_type1/test_terrain1.h"
 #include "geo2/game_render_op_list.h"
+#include "geo2/map_obj/map_obj_args.h"
+#include "geo2/render_op.h"
 
 #include "kx/gfx/renderer.h"
 

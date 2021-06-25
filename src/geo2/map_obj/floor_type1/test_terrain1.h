@@ -4,6 +4,8 @@
 
 #include "span_lite.h"
 
+namespace geo2 {class RenderOpGroup; class RenderOpShader;}
+
 namespace geo2 { namespace map_obj {
 
 class TestTerrain1 final: public Floor_Type1

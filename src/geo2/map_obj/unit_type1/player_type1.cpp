@@ -1,4 +1,5 @@
 #include "geo2/map_obj/unit_type1/player_type1.h"
+#include "geo2/map_obj/map_obj_args.h"
 
 #include <iostream>
 

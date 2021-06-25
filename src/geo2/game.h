@@ -1,6 +1,7 @@
 #pragma once
 
 #include "geo2/map_obj/unit_type1/player_type1.h"
+#include "geo2/ceng1_obj.h"
 
 #include "kx/gfx/renderer.h"
 #include "kx/gfx/kwindow.h"

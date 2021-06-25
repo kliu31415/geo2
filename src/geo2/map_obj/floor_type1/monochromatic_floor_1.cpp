@@ -1,4 +1,7 @@
 #include "geo2/map_obj/floor_type1/monochromatic_floor_1.h"
+#include "geo2/map_obj/map_obj_args.h"
+#include "geo2/game_render_op_list.h"
+#include "geo2/render_op.h"
 
 namespace geo2 { namespace map_obj {
 

@@ -6,7 +6,7 @@
 
 namespace geo2 {
 
-struct CEng1Obj
+struct CEng1Obj final
 {
     const Polygon *polygon;
     int idx; //index of owner
@@ -24,7 +24,7 @@ struct CEng1Obj
     }
 };
 
-struct CEng1Collision
+struct CEng1Collision final
 {
     int idx1;
     int idx2;

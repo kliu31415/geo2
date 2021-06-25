@@ -14,22 +14,6 @@
 
 namespace geo2 {
 
-class Polygon;
-
-template<class T> struct LL_Node
-{
-    T val;
-    std::unique_ptr<LL_Node> next;
-};
-
-class Collidable
-{
-    LL_Node<std::unique_ptr<Polygon>> cur;
-    LL_Node<std::unique_ptr<Polygon>> des;
-public:
-    virtual ~Collidable() = default;
-};
-
 template<class T> struct _MapVec
 {
     ///T should not be integral. It could be fixed, but fixeds don't really exist.

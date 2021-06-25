@@ -9,6 +9,8 @@
 
 namespace geo2 {
 
+using namespace map_obj;
+
 bool cmp_idx_int(const CEng1Obj &a, int b)
 {
     return a.idx < b;
@@ -135,8 +137,8 @@ void CollisionEngine1::set_cur_des(std::vector<CEng1Obj> &&cur_,
     k_expects(std::is_sorted(cur.begin(), cur.end(), CEng1Obj::cmp_idx));
     k_expects(std::is_sorted(des.begin(), des.end(), CEng1Obj::cmp_idx));
 }
-void CollisionEngine1::set2(kx::FixedSizeArray<const Collidable*> &&map_objs_,
-                std::function<bool(const Collidable&, const Collidable&)> collision_could_matter_,
+void CollisionEngine1::set2(kx::FixedSizeArray<const MapObject*> &&map_objs_,
+                std::function<bool(const MapObject&, const MapObject&)> collision_could_matter_,
                             std::vector<MoveIntent> &&move_intent_)
 {
     map_objs = std::move(map_objs_);

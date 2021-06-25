@@ -1,5 +1,6 @@
 #include "geo2/map_obj/projectile_type1/projectile_type1.h"
 #include "geo2/map_obj/unit_type1/unit_type1.h"
+#include "geo2/map_obj/map_obj_args.h"
 
 namespace geo2 { namespace map_obj {
 

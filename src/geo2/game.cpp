@@ -2,6 +2,7 @@
 #include "geo2/game_render_op_list.h"
 #include "geo2/game.h"
 #include "geo2/map_obj/map_object.h"
+#include "geo2/map_obj/map_obj_args.h"
 #include "geo2/collision_engine1.h"
 
 #include "geo2/level_gen/test2.h"
@@ -241,19 +242,20 @@ void Game::run1(double tick_len)
 }
 void Game::run_collision_engine()
 {
-    auto collision_could_matter = [](const Collidable &a, const Collidable &b) -> bool
+    using map_obj::MapObject;
+    auto collision_could_matter = [](const MapObject &a, const MapObject &b) -> bool
                                     {
-                                        auto a_map_obj = (const map_obj::MapObject*)&a;
-                                        auto b_map_obj = (const map_obj::MapObject*)&b;
+                                        auto a_map_obj = (const MapObject*)&a;
+                                        auto b_map_obj = (const MapObject*)&b;
                                         return a_map_obj->collision_could_matter(*b_map_obj);
                                     };
 
     //takes 10-20us
-    kx::FixedSizeArray<const Collidable*> collidables(map_objs.size());
+    kx::FixedSizeArray<const map_obj::MapObject*> collidables(map_objs.size());
     std::transform(map_objs.begin(),
                    map_objs.end(),
                    collidables.begin(),
-                   [](std::shared_ptr<map_obj::MapObject> &obj) -> const Collidable*
+                   [](std::shared_ptr<map_obj::MapObject> &obj) -> map_obj::MapObject*
                    {
                        return obj.get();
                    });

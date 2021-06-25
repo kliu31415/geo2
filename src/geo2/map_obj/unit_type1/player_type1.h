@@ -1,5 +1,7 @@
 #include "geo2/map_obj/unit_type1/unit_type1.h"
 
+namespace geo2 {class RenderOpGroup; class RenderOpShader; class Game;}
+
 namespace geo2 { namespace map_obj {
 
 struct PlayerInputArgs final
@@ -22,9 +24,9 @@ class Player_Type1 final: public Unit_Type1
     int up_pressed_tick_count;
     int down_pressed_tick_count;
 
-    std::shared_ptr<class RenderOpShader> op1;
-    std::shared_ptr<class RenderOpShader> op2;
-    std::shared_ptr<class RenderOpGroup> op_group;
+    std::shared_ptr<RenderOpShader> op1;
+    std::shared_ptr<RenderOpShader> op2;
+    std::shared_ptr<RenderOpGroup> op_group;
     nonstd::span<float> op_iu1;
     nonstd::span<float> op_iu2;
 
