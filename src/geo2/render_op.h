@@ -43,11 +43,14 @@ private:
     kx::gfx::DrawMode draw_mode;
     int count;
     std::vector<UB> UBs;
+    GShader() = default;
 public:
     GShader(const std::shared_ptr<kx::gfx::ShaderProgram> &program_,
             int max_instances_,
             const kx::gfx::DrawMode draw_mode_,
             int count_);
+
+    static std::unique_ptr<GShader> get_empty_gshader();
 
     void add_UB(const std::string &name, int global_data_sz, int instance_data_sz);
     size_t get_num_UBs() const;

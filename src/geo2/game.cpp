@@ -142,6 +142,8 @@ void Game::run1(double tick_len)
     run1_args.tick_len = tick_len;
     ceng_cur.clear();
     ceng_des.clear();
+    move_intent.clear();
+    std::fill(move_intent.begin(), move_intent.end(), MoveIntent::NotSet);
     run1_args.set_ceng_cur_vec(&ceng_cur);
     run1_args.set_ceng_des_vec(&ceng_des);
     run1_args.set_move_intent_vec(&move_intent);
@@ -210,7 +212,7 @@ void Game::run1(double tick_len)
                 std::inplace_merge(ceng_cur_lt[t].begin(),
                                    ceng_cur_lt[t].begin() + cur_n,
                                    ceng_cur_lt[t].end(),
-                                   CollisionEng1Obj::cmp_idx);
+                                   CEng1Obj::cmp_idx);
 
                 auto des_n = ceng_des_lt[t].size();
                 ceng_des_lt[t].insert(ceng_des_lt[t].end(),
@@ -219,7 +221,7 @@ void Game::run1(double tick_len)
                 std::inplace_merge(ceng_des_lt[t].begin(),
                                    ceng_des_lt[t].begin() + des_n,
                                    ceng_des_lt[t].end(),
-                                   CollisionEng1Obj::cmp_idx);
+                                   CEng1Obj::cmp_idx);
             }
             thread_done.fetch_add(1ULL<<t, std::memory_order_release);
         };
@@ -547,7 +549,7 @@ Game::Game():
     thread_pool(std::make_shared<ThreadPool>(std::thread::hardware_concurrency() - 1)),
     collision_engine(std::make_unique<CollisionEngine1>(thread_pool))
 {
-    generate_and_start_level(Level::Name::Test3);
+    generate_and_start_level(Level::Name::Test2);
 }
 Game::~Game()
 {}

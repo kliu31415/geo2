@@ -1,6 +1,6 @@
 #pragma once
 
-#include "geo2/collision_engine1.h"
+#include "geo2/ceng1_obj.h"
 #include "geo2/game_render_op_list.h"
 
 #include "kx/gfx/renderer.h"
@@ -58,19 +58,19 @@ class CosmeticMapObj: public MapObject
 
 class MapObjRun1Args final
 {
-    std::vector<CollisionEng1Obj> *ceng_cur;
-    std::vector<CollisionEng1Obj> *ceng_des;
+    std::vector<CEng1Obj> *ceng_cur;
+    std::vector<CEng1Obj> *ceng_des;
     std::vector<MoveIntent> *move_intent;
     std::vector<std::shared_ptr<MapObject>> *map_objs;
 public:
     double tick_len;
     size_t idx;
 
-    void set_ceng_cur_vec(std::vector<CollisionEng1Obj> *ceng_cur_)
+    void set_ceng_cur_vec(std::vector<CEng1Obj> *ceng_cur_)
     {
         ceng_cur = ceng_cur_;
     }
-    void set_ceng_des_vec(std::vector<CollisionEng1Obj> *ceng_des_)
+    void set_ceng_des_vec(std::vector<CEng1Obj> *ceng_des_)
     {
         ceng_des = ceng_des_;
     }
@@ -88,11 +88,11 @@ public:
      */
     inline void add_current_pos(const Polygon *polygon, uint16_t shape_id = 0) const
     {
-        ceng_cur->emplace_back(polygon, idx, shape_id, false);
+        ceng_cur->emplace_back(polygon, idx, shape_id);
     }
     inline void add_desired_pos(const Polygon *polygon, uint16_t shape_id = 0) const
     {
-        ceng_des->emplace_back(polygon, idx, shape_id, true);
+        ceng_des->emplace_back(polygon, idx, shape_id);
     }
     inline void set_move_intent(MoveIntent intent) const
     {
@@ -153,6 +153,10 @@ public:
     {
         return rdr->is_y_ndc_in_view(y);
     }
+    inline bool is_coord_ndc_in_view(float x, float y) const
+    {
+        return is_x_ndc_in_view(x) && is_y_ndc_in_view(y);
+    }
     inline float x_to_ndc(float x) const
     {
         return rdr->x_nc_to_ndc((x - camera.x) * cam_w_inv);
@@ -160,6 +164,11 @@ public:
     inline float y_to_ndc(float y) const
     {
         return rdr->y_nc_to_ndc((y - camera.y) * cam_h_inv);
+    }
+    inline bool is_AABB_in_view(const AABB &aabb) const
+    {
+        return is_x_line_ndc_in_view(x_to_ndc(aabb.x1), x_to_ndc(aabb.x2)) &&
+               is_y_line_ndc_in_view(y_to_ndc(aabb.y1), y_to_ndc(aabb.y2));
     }
     inline void add_op_group(const std::shared_ptr<RenderOpGroup> &op_group) const
     {

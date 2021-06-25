@@ -9,7 +9,7 @@
 
 namespace geo2 {
 
-bool cmp_idx_int(const CollisionEng1Obj &a, int b)
+bool cmp_idx_int(const CEng1Obj &a, int b)
 {
     return a.idx < b;
 }
@@ -24,7 +24,7 @@ int CollisionEngine1::y_to_grid_y(float y) const
     return y_;
 }
 //note: obj_vec is either cur or des
-void CollisionEngine1::remove_obj_from_grid(std::vector<CollisionEng1Obj> &obj_vec, int idx)
+void CollisionEngine1::remove_obj_from_grid(std::vector<CEng1Obj> &obj_vec, int idx)
 {
     //note that idx doesn't mean obj_vec[idx]
     auto ptr = std::lower_bound(obj_vec.begin(), obj_vec.end(), idx, cmp_idx_int);
@@ -38,7 +38,7 @@ void CollisionEngine1::remove_obj_from_grid(std::vector<CollisionEng1Obj> &obj_v
     }
 }
 //note: obj_vec is either cur or des
-void CollisionEngine1::add_obj_to_grid(std::vector<CollisionEng1Obj> &obj_vec,
+void CollisionEngine1::add_obj_to_grid(std::vector<CEng1Obj> &obj_vec,
                                        int idx,
                                        std::vector<CEng1Collision> *collisions)
 {
@@ -55,7 +55,7 @@ void CollisionEngine1::add_obj_to_grid(std::vector<CollisionEng1Obj> &obj_vec,
     }
 }
 void CollisionEngine1::find_and_add_collisions_neq(std::vector<CEng1Collision> *add_to,
-                                                   const CollisionEng1Obj &ceng_obj) const
+                                                   const CEng1Obj &ceng_obj) const
 {
     const auto &aabb = ceng_obj.polygon->get_AABB();
     int x1 = x_to_grid_x(aabb.x1 - max_AABB_w);
@@ -86,7 +86,7 @@ void CollisionEngine1::find_and_add_collisions_neq(std::vector<CEng1Collision> *
     }
 }
 void CollisionEngine1::find_and_add_collisions_gt(std::vector<CEng1Collision> *add_to,
-                                                  const CollisionEng1Obj &ceng_obj) const
+                                                  const CEng1Obj &ceng_obj) const
 {
     const auto &aabb = ceng_obj.polygon->get_AABB();
     int x1 = x_to_grid_x(aabb.x1 - max_AABB_w);
@@ -127,13 +127,13 @@ void CollisionEngine1::reset()
 {
     grid.reset();
 }
-void CollisionEngine1::set_cur_des(std::vector<CollisionEng1Obj> &&cur_,
-                                   std::vector<CollisionEng1Obj> &&des_)
+void CollisionEngine1::set_cur_des(std::vector<CEng1Obj> &&cur_,
+                                   std::vector<CEng1Obj> &&des_)
 {
     cur = std::move(cur_);
     des = std::move(des_);
-    k_expects(std::is_sorted(cur.begin(), cur.end(), CollisionEng1Obj::cmp_idx));
-    k_expects(std::is_sorted(des.begin(), des.end(), CollisionEng1Obj::cmp_idx));
+    k_expects(std::is_sorted(cur.begin(), cur.end(), CEng1Obj::cmp_idx));
+    k_expects(std::is_sorted(des.begin(), des.end(), CEng1Obj::cmp_idx));
 }
 void CollisionEngine1::set2(kx::FixedSizeArray<const Collidable*> &&map_objs_,
                 std::function<bool(const Collidable&, const Collidable&)> collision_could_matter_,
@@ -148,13 +148,13 @@ void CollisionEngine1::set2(kx::FixedSizeArray<const Collidable*> &&map_objs_,
 }
 void CollisionEngine1::precompute()
 {
-    auto get_AABB_w = [](const CollisionEng1Obj &obj) -> float
+    auto get_AABB_w = [](const CEng1Obj &obj) -> float
                         {
                             const auto &aabb = obj.polygon->get_AABB();
                             return aabb.x2 - aabb.x1;
                         };
 
-    auto get_AABB_h = [](const CollisionEng1Obj &obj) -> float
+    auto get_AABB_h = [](const CEng1Obj &obj) -> float
                         {
                             const auto &aabb = obj.polygon->get_AABB();
                             return aabb.y2 - aabb.y1;
@@ -193,7 +193,7 @@ void CollisionEngine1::precompute()
     //AABB based on top left corners only.
     global_AABB = AABB::make_maxbad_AABB();
 
-    auto calc_global_AABB = [this](const CollisionEng1Obj &obj) -> void
+    auto calc_global_AABB = [this](const CEng1Obj &obj) -> void
     {
         global_AABB.x1 = std::min(global_AABB.x1, obj.polygon->get_AABB().x1);
         global_AABB.x2 = std::max(global_AABB.x2, obj.polygon->get_AABB().x1);
@@ -215,7 +215,7 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
     active_objs.clear();
 
     auto add_active_obj = [this]
-         (std::vector<CollisionEng1Obj> *active_objs_,
+         (std::vector<CEng1Obj> *active_objs_,
           int i,
           decltype(cur) __restrict *objs_,
           size_t __restrict *obj_idx)
@@ -315,14 +315,18 @@ void CollisionEngine1::update_intent(int idx, MoveIntent intent, std::vector<CEn
 
     move_intent[idx] = intent;
 }
-void CollisionEngine1::steal_cur_into(std::vector<CollisionEng1Obj> *vec)
+//clear CEng1Obj vectors to release pseudo-ownership (decrement Polygon ref counts)
+void CollisionEngine1::steal_cur_into(std::vector<CEng1Obj> *vec)
 {
+    cur.clear();
     *vec = std::move(cur);
 }
-void CollisionEngine1::steal_des_into(std::vector<CollisionEng1Obj> *vec)
+void CollisionEngine1::steal_des_into(std::vector<CEng1Obj> *vec)
 {
+    des.clear();
     *vec = std::move(des);
 }
+
 void CollisionEngine1::steal_move_intent_into(std::vector<MoveIntent> *vec)
 {
     *vec = std::move(move_intent);

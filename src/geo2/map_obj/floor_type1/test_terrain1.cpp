@@ -22,7 +22,7 @@ void TestTerrain1::add_render_objs(const MapObjRenderArgs &info)
     info.rdr->fill_rect_nc(dst);*/
 
     if(op == nullptr) {
-        op = std::make_shared<RenderOpShader>(*info.shaders->test_terrain1);
+        op = std::make_shared<RenderOpShader>(*info.shaders->test_terrain_1);
         op_group = std::make_shared<RenderOpGroup>(0.0);
         op_group->add_op(op);
         auto iu_map = op->map_instance_uniform(0);

@@ -10,11 +10,22 @@
 #include <memory>
 #include <optional>
 #include <cmath>
+#include <vector>
 
 namespace geo2 {
 
+class Polygon;
+
+template<class T> struct LL_Node
+{
+    T val;
+    std::unique_ptr<LL_Node> next;
+};
+
 class Collidable
 {
+    LL_Node<std::unique_ptr<Polygon>> cur;
+    LL_Node<std::unique_ptr<Polygon>> des;
 public:
     virtual ~Collidable() = default;
 };
@@ -250,8 +261,7 @@ public:
 };
 */
 
-//weird speed bug in Level::Name::Test1
-//This is a polygon class optimized for AVX2
+//This is a polygon class that uses AVX2
 class Polygon final
 {
     AABB aabb;
@@ -263,11 +273,19 @@ class Polygon final
         return 8 * ((n + 7) / 8) + 1;
     }
 
+    Polygon():
+        n(0)
+    {
+
+    }
+
     template<class T> Polygon(nonstd::span<_MapCoord<T>> vertices):
         n(vertices.size())
     {
         auto d_len = get_d_len(n);
+
         vals = (float*)std::malloc(sizeof(float) * 2 * d_len);
+
         for(int i=0; i<n; i++) {
             vals[i] = vertices[i].x;
             vals[d_len + i] = vertices[i].y;
@@ -298,9 +316,21 @@ class Polygon final
         }
     }
 public:
-    ///too lazy to add support for copy/move rn, but there's no reason copy/move can't work
+
+    std::unique_ptr<Polygon> copy() const
+    {
+        std::unique_ptr<Polygon> ret(new Polygon());
+        ret->aabb = aabb;
+        ret->n = n;
+        auto d_len = get_d_len(n);
+        ret->vals = (float*)std::malloc(sizeof(float) * 2 * d_len);
+        std::copy(vals, vals + 2*d_len, ret->vals);
+        return ret;
+    }
+    /** Polygons are only heap-allocatable for future proofing reasons
+     */
     Polygon(const Polygon &other) = delete;
-    Polygon & operator = (const Polygon &other) = delete;
+    Polygon &operator = (const Polygon &other) = delete;
     Polygon(Polygon &&other) = delete;
     Polygon & operator = (Polygon &&other) = delete;
 
@@ -309,15 +339,31 @@ public:
         std::free(vals);
     }
 
-    void translate([[maybe_unused]] float dx, [[maybe_unused]] float dy)
+    void translate(float dx, float dy)
     {
+        auto d_len = get_d_len(n);
+        for(int i=0; i<n; i++) {
+            vals[i] += dx;
+            vals[d_len + i] += dy;
+        }
+
         calc_aabb();
-        k_assert(false);
     }
-    void rotate_about_origin([[maybe_unused]] float theta)
+    void rotate_about_origin(float theta)
     {
+        auto v0 = std::cos(theta);
+        auto v1 = std::sin(theta);
+
+        auto d_len = get_d_len(n);
+
+        for(int i=0; i<n; i++) {
+            auto cur_x = vals[i];
+            auto cur_y = vals[d_len + i];
+            vals[i] = cur_x * v0 - cur_y * v1;
+            vals[d_len + i] = cur_x * v1 + cur_y * v0;
+        }
+
         calc_aabb();
-        k_assert(false);
     }
     inline const AABB &get_AABB() const
     {
@@ -396,10 +442,51 @@ public:
 
         return false;
     }
+    template<class T> void remake(nonstd::span<_MapCoord<T>> vertices)
+    {
+        //we should only be remaking Polygons that we uniquely own;
+        //remaking shared Polygons could cause bugs
+
+        int new_n = vertices.size();
+        auto d_len = get_d_len(new_n);
+
+        if(get_d_len(n) != get_d_len(new_n)) {
+            std::free(vals);
+            vals = (float*)std::malloc(sizeof(float) * 2 * d_len);
+        }
+
+        n = new_n;
+
+        for(int i=0; i<n; i++) {
+            vals[i] = vertices[i].x;
+            vals[d_len + i] = vertices[i].y;
+        }
+
+        for(int i=n; i<d_len; i++) {
+            vals[i] = vals[i - n];
+            vals[d_len + i] = vals[d_len + i - n];
+        }
+
+        calc_aabb();
+    }
+    inline _MapCoord<float> get_vertex(size_t idx) const
+    {
+        auto d_len = get_d_len(n);
+        return _MapCoord<float>(vals[idx], vals[d_len + idx]);
+    }
     template<class T> static std::unique_ptr<Polygon> make(nonstd::span<_MapCoord<T>> vertices)
     {
         std::unique_ptr<Polygon> ret(new Polygon(vertices));
         return ret;
+    }
+    template<class T> static std::unique_ptr<Polygon> make(std::vector<T> coords)
+    {
+        k_expects(coords.size() % 2 == 0);
+        std::vector<_MapCoord<T>> mc;
+        for(size_t i=0; i<coords.size(); i+=2) {
+            mc.emplace_back(coords[i], coords[i+1]);
+        }
+        return make(nonstd::span<_MapCoord<T>>(mc.begin(), mc.end()));
     }
 };
 

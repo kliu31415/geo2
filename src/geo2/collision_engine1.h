@@ -1,5 +1,6 @@
 #pragma once
 
+#include "geo2/ceng1_obj.h"
 #include "geo2/geometry.h"
 
 #include "kx/fixed_size_array.h"
@@ -13,36 +14,13 @@
 
 namespace geo2 {
 
-struct CollisionEng1Obj
-{
-    const Polygon *polygon;
-    int idx; //index of owner
-    uint16_t shape_id;
-    bool is_des;
-
-    CollisionEng1Obj()
-    {}
-    CollisionEng1Obj(const Polygon *polygon_, int idx_, uint16_t shape_id_, bool is_des_):
-        polygon(polygon_),
-        idx(idx_),
-        shape_id(shape_id_),
-        is_des(is_des_)
-    {}
-    static bool cmp_idx(const CollisionEng1Obj &a, const CollisionEng1Obj &b)
-    {
-        return a.idx < b.idx;
-    }
-};
-
-struct CEng1Collision
-{
-    int idx1;
-    int idx2;
-    void swap()
-    {
-        std::swap(idx1, idx2);
-    }
-};
+/** The collision engine is, unsurprisingly, the bottleneck. An issue that arose was
+ *  how to deal with Polygon ownership. The simplest solution is to use shared_ptr,
+ *  in which case a MapObject and a CEng1Obj can both own a Polygon, but copying
+ *  shared_ptr is slow, and shared_ptr needs to be copied every time a Polygon is
+ *  put into the grid. It doesn't make much sense for the MapObject to be the owner,
+ *  so the CollisionEngine1 will own the Polygons.
+ */
 
 
 class CollisionEngine1
@@ -50,6 +28,7 @@ class CollisionEngine1
     constexpr static int GRID_LEN = 128; //power of 2 is faster cuz mult turns into bitshift
 
     //fastish spatial partition grid
+    //NOTE: All buckets should be sorted by CEng1Obj.idx
     template<class T> class Grid
     {
         std::unique_ptr<std::vector<T>[]> vals;
@@ -114,11 +93,11 @@ class CollisionEngine1
 
     kx::FixedSizeArray<const Collidable*> map_objs;
     std::function<bool(const Collidable&, const Collidable&)> collision_could_matter;
-    std::vector<CollisionEng1Obj> cur;
-    std::vector<CollisionEng1Obj> des;
-    std::vector<CollisionEng1Obj> active_objs;
+    std::vector<CEng1Obj> cur;
+    std::vector<CEng1Obj> des;
+    std::vector<CEng1Obj> active_objs;
     std::vector<MoveIntent> move_intent;
-    Grid<CollisionEng1Obj> grid;
+    Grid<CEng1Obj> grid;
 
     AABB global_AABB;
     float grid_rect_w;
@@ -128,29 +107,29 @@ class CollisionEngine1
 
     int x_to_grid_x(float x) const;
     int y_to_grid_y(float y) const;
-    void remove_obj_from_grid(std::vector<CollisionEng1Obj> &obj_vec, int idx);
-    void add_obj_to_grid(std::vector<CollisionEng1Obj> &obj_vec,
+    void remove_obj_from_grid(std::vector<CEng1Obj> &obj_vec, int idx);
+    void add_obj_to_grid(std::vector<CEng1Obj> &obj_vec,
                          int idx,
                          std::vector<CEng1Collision> *collisions);
     void find_and_add_collisions_neq(std::vector<CEng1Collision> *add_to,
-                                     const CollisionEng1Obj &ceng_obj) const;
+                                     const CEng1Obj &ceng_obj) const;
     void find_and_add_collisions_gt(std::vector<CEng1Collision> *add_to,
-                                    const CollisionEng1Obj &ceng_obj) const;
+                                    const CEng1Obj &ceng_obj) const;
 public:
     CollisionEngine1(std::shared_ptr<ThreadPool> thread_pool_);
 
     void reset();
     ///cur_ and des_ must be sorted (for efficiency reasons)
-    void set_cur_des(std::vector<CollisionEng1Obj> &&cur_,
-                     std::vector<CollisionEng1Obj> &&des_);
+    void set_cur_des(std::vector<CEng1Obj> &&cur_,
+                     std::vector<CEng1Obj> &&des_);
     void set2(kx::FixedSizeArray<const Collidable*> &&map_objs_,
               std::function<bool(const Collidable&, const Collidable&)> collision_could_matter_,
               std::vector<MoveIntent> &&move_intent_);
     void precompute(); ///depends on set_cur_des, but not set2
     std::vector<CEng1Collision> find_collisions();
     void update_intent(int idx, MoveIntent intent, std::vector<CEng1Collision> *add_to);
-    void steal_cur_into(std::vector<CollisionEng1Obj> *vec);
-    void steal_des_into(std::vector<CollisionEng1Obj> *vec);
+    void steal_cur_into(std::vector<CEng1Obj> *vec);
+    void steal_des_into(std::vector<CEng1Obj> *vec);
     void steal_move_intent_into(std::vector<MoveIntent> *vec);
 };
 }

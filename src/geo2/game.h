@@ -42,8 +42,8 @@ class Game final
 
     //these persistent across run() calls to save memory allocations
     std::vector<MoveIntent> move_intent;
-    std::vector<CollisionEng1Obj> ceng_cur;
-    std::vector<CollisionEng1Obj> ceng_des;
+    std::vector<CEng1Obj> ceng_cur;
+    std::vector<CEng1Obj> ceng_des;
     std::unique_ptr<class CollisionEngine1> collision_engine;
 
     void generate_and_start_level(Level::Name level_name);

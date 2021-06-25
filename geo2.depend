@@ -518,7 +518,7 @@
 	<mutex>
 	<map>
 
-1624342546 d:\code\cbprojects\geo2\src\geo2\game.h
+1624414567 d:\code\cbprojects\geo2\src\geo2\game.h
 	"geo2/map_obj/unit_type1/player_type1.h"
 	"kx/gfx/renderer.h"
 	"kx/gfx/kwindow.h"
@@ -526,7 +526,7 @@
 	<vector>
 	<cstdint>
 
-1624343380 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
+1624422978 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
 	"geo2/map_obj/floor_type1/test_terrain1.h"
 	"geo2/game_render_op_list.h"
 	"geo2/game.h"
@@ -596,13 +596,13 @@
 	<tuple>
 	<tuple>
 
-1623986927 source:d:\code\cbprojects\geo2\src\geo2\render_op.cpp
+1624414227 source:d:\code\cbprojects\geo2\src\geo2\render_op.cpp
 	"geo2/render_op.h"
 	"kx/gfx/renderer.h"
 	"kx/gfx/kwindow.h"
 	<execution>
 
-1623986878 d:\code\cbprojects\geo2\src\geo2\render_op.h
+1624408140 d:\code\cbprojects\geo2\src\geo2\render_op.h
 	"kx/gfx/renderer_types.h"
 	"kx/fixed_size_array.h"
 	"span_lite.h"
@@ -612,15 +612,16 @@
 	<string>
 	<variant>
 
-1624215655 source:d:\code\cbprojects\geo2\src\geo2\game_render_op_list.cpp
+1624414435 source:d:\code\cbprojects\geo2\src\geo2\game_render_op_list.cpp
 	"geo2/game_render_op_list.h"
 	"kx/gfx/kwindow.h"
 	"kx/gfx/renderer.h"
 
-1624056018 d:\code\cbprojects\geo2\src\geo2\game_render_op_list.h
+1624414093 d:\code\cbprojects\geo2\src\geo2\game_render_op_list.h
 	"geo2/render_op.h"
 
-1624342598 d:\code\cbprojects\geo2\src\geo2\collision_engine1.h
+1624585186 d:\code\cbprojects\geo2\src\geo2\collision_engine1.h
+	"geo2/ceng1_obj.h"
 	"geo2/geometry.h"
 	"kx/fixed_size_array.h"
 	"span_lite.h"
@@ -630,7 +631,7 @@
 	<array>
 	<vector>
 
-1623828918 d:\code\cbprojects\geo2\src\geo2\geometry.h
+1624585080 d:\code\cbprojects\geo2\src\geo2\geometry.h
 	<immintrin.h>
 	"kx/fixed_size_array.h"
 	"span_lite.h"
@@ -639,8 +640,9 @@
 	<memory>
 	<optional>
 	<cmath>
+	<vector>
 
-1624342616 source:d:\code\cbprojects\geo2\src\geo2\collision_engine1.cpp
+1624473893 source:d:\code\cbprojects\geo2\src\geo2\collision_engine1.cpp
 	"geo2/collision_engine1.h"
 	"geo2/multithread/thread_pool.h"
 	"geo2/timer.h"
@@ -774,8 +776,8 @@
 1624342062 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\unit_type1.h
 	"geo2/map_obj/map_object.h"
 
-1624343390 d:\code\cbprojects\geo2\src\geo2\map_obj\map_object.h
-	"geo2/collision_engine1.h"
+1624585152 d:\code\cbprojects\geo2\src\geo2\map_obj\map_object.h
+	"geo2/ceng1_obj.h"
 	"geo2/game_render_op_list.h"
 	"kx/gfx/renderer.h"
 	"kx/fixed_size_array.h"
@@ -807,7 +809,7 @@
 1624335874 source:d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\monochromatic_floor_1.cpp
 	"geo2/map_obj/floor_type1/monochromatic_floor_1.h"
 
-1624335859 source:d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\test_terrain1.cpp
+1624414102 source:d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\test_terrain1.cpp
 	"geo2/map_obj/floor_type1/test_terrain1.h"
 	"geo2/game_render_op_list.h"
 	"kx/gfx/renderer.h"
@@ -828,7 +830,7 @@
 1624335874 source:d:\code\cbprojects\geo2\src\geo2\map_obj\wall_type1\monochromatic_wall_1.cpp
 	"geo2/map_obj/wall_type1/monochromatic_wall_1.h"
 
-1624335874 source:d:\code\cbprojects\geo2\src\geo2\map_obj\wall_type1\wall_type1.cpp
+1624424363 source:d:\code\cbprojects\geo2\src\geo2\map_obj\wall_type1\wall_type1.cpp
 	"geo2/map_obj/wall_type1/wall_type1.h"
 
 1624342072 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\unit_type1.cpp
@@ -836,21 +838,41 @@
 
 1624335913 source:d:\code\cbprojects\geo2\src\geo2\weapon\weapon.cpp
 
-1624342319 source:d:\code\cbprojects\geo2\src\geo2\weapon\test_laser_1.cpp
+1624343510 source:d:\code\cbprojects\geo2\src\geo2\weapon\test_laser_1.cpp
 	"geo2/weapon/test_laser_1.h"
 
 1624340899 d:\code\cbprojects\geo2\src\geo2\weapon\test_laser_1.h
 	"geo2/weapon/weapon.h"
 
-1624341080 d:\code\cbprojects\geo2\src\geo2\weapon\weapon.h
+1624343549 d:\code\cbprojects\geo2\src\geo2\weapon\weapon.h
 	"geo2/geometry.h"
+	"geo2/map_obj/map_object.h"
 	<SDL2/SDL_mouse.h>
 	<cmath>
 
-1624342431 source:d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\projectile_type1.cpp
+1624406166 source:d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\projectile_type1.cpp
 	"geo2/map_obj/projectile_type1/projectile_type1.h"
 	"geo2/map_obj/unit_type1/unit_type1.h"
 
-1624342386 d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\projectile_type1.h
+1624406127 d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\projectile_type1.h
 	"geo2/map_obj/map_object.h"
+
+1624414186 source:d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\simple_proj_1.cpp
+	"geo2/map_obj/projectile_type1/simple_proj_1.h"
+	"geo2/map_obj/unit_type1/unit_type1.h"
+
+1624412250 d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\simple_proj_1.h
+	"geo2/map_obj/projectile_type1/projectile_type1.h"
+
+1624415208 source:d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\laser_proj_1.cpp
+	"geo2/map_obj/projectile_type1/laser_proj_1.h"
+	<cmath>
+	<vector>
+
+1624412270 d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\laser_proj_1.h
+	"geo2/map_obj/projectile_type1/simple_proj_1.h"
+
+1624585186 d:\code\cbprojects\geo2\src\geo2\ceng1_obj.h
+	"geo2/geometry.h"
+	<cstdint>
 

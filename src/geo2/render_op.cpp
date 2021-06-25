@@ -43,6 +43,10 @@ GShader::GShader(const std::shared_ptr<kx::gfx::ShaderProgram> &program_,
     draw_mode(draw_mode_),
     count(count_)
 {}
+std::unique_ptr<GShader> GShader::get_empty_gshader()
+{
+    return std::unique_ptr<GShader>(new GShader());
+}
 void GShader::add_UB(const std::string &name, int global_data_sz, int instance_data_sz)
 {
     k_expects(global_data_sz + instance_data_sz*max_instances <= MAX_RO_UBO_SIZE);
