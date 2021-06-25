@@ -35,6 +35,9 @@
 			<Add option="-DKX_RENDERER_GL" />
 			<Add directory="src" />
 		</Compiler>
+		<Unit filename="src/geo2/ceng1_data.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="src/geo2/ceng1_obj.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
@@ -67,6 +70,9 @@
 		<Unit filename="src/geo2/map_obj/floor_type1/monochromatic_floor_1.h" />
 		<Unit filename="src/geo2/map_obj/floor_type1/test_terrain1.cpp" />
 		<Unit filename="src/geo2/map_obj/floor_type1/test_terrain1.h" />
+		<Unit filename="src/geo2/map_obj/map_obj_args.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="src/geo2/map_obj/map_object.cpp" />
 		<Unit filename="src/geo2/map_obj/map_object.h" />
 		<Unit filename="src/geo2/map_obj/projectile_type1/projectile_type1.cpp" />
