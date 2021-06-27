@@ -130,115 +130,83 @@ void Game::generate_and_start_level(Level::Name level_name)
         log_error("Game attempted to generate unknown level");
     }
 
-    map_objs = std::move(level.map_objs);
-    map_objs.push_back(player);
+    map_objs.clear();
+    map_objs_to_add = std::move(level.map_objs);
+    map_objs_to_add.push_back(player);
+    process_added_map_objs();
     cur_level_time_left = level.time_to_complete;
     cur_level_tick = 0;
     cur_level = level_name;
     player->set_position({level.player_start_x, level.player_start_y}, {});
 }
+void Game::process_added_map_objs()
+{
+    ceng_data.resize(map_objs.size() + map_objs_to_add.size());
+    map_obj::MapObjInitArgs args;
+    size_t ceng_data_idx = map_objs.size();
+    for(auto &mobj: map_objs_to_add) {
+        args.set_ceng_data(&ceng_data[ceng_data_idx]);
+        mobj->init(args);
+        ceng_data_idx++;
+    }
+    map_objs.insert(map_objs.end(), map_objs_to_add.begin(), map_objs_to_add.end());
+    map_objs_to_add.clear();
+}
 void Game::run1(double tick_len)
 {
-    map_obj::MapObjRun1Args run1_args;
-    run1_args.tick_len = tick_len;
-    ceng_cur.clear();
-    ceng_des.clear();
-    move_intent.clear();
-    std::fill(move_intent.begin(), move_intent.end(), MoveIntent::NotSet);
-    run1_args.set_ceng_cur_vec(&ceng_cur);
-    run1_args.set_ceng_des_vec(&ceng_des);
-    run1_args.set_move_intent_vec(&move_intent);
-    run1_args.set_map_objs_vec(&map_objs);
+    //single threaded version takes ~300us
+    /*map_obj::MapObjRun1Args run1_args({});
+    run1_args.set_tick_len(tick_len);
+    run1_args.set_ceng_data(&ceng_data);
+    run1_args.set_map_objs_to_add(&map_objs_to_add);
+    for(auto &cdata: ceng_data)
+        cdata.set_move_intent(MoveIntent::NotSet);
 
     //don't use an enhanced for loop here because we might modify map_objs
-    for(int i=0; i<(int)map_objs.size(); i++) {
-        run1_args.idx = i;
+    for(size_t i=0; i<map_objs.size(); i++) {
+        run1_args.set_index(i);
         map_objs[i]->run1_mt(run1_args);
-
-        //if a map object added collidable shapes, it should have set a move intent
-        k_ensures(move_intent[i]!=MoveIntent::NotSet ||
-                  !((ceng_cur.size()>0 && ceng_cur.back().idx==i) ||
-                    (ceng_des.size()>0 && ceng_des.back().idx==i)));
     }
-    /*
-    //This multithreaded version is not faster than the singled threaded version.
-    //I think merging ceng_cur and ceng_des is the bottleneck
-    move_intent = decltype(move_intent)(map_objs.size());
-    std::fill(move_intent.begin(), move_intent.end(), MoveIntent::NotSet);
+    */
+
+    //multithreaded version takes ~150us
 
     int num_threads = thread_pool->size() + 1;
-    k_expects(num_threads < 64);
-    ceng_cur_lt.resize(num_threads);
-    ceng_des_lt.resize(num_threads);
     std::vector<std::future<void>> is_done_futures(num_threads);
-    std::atomic<uint64_t> thread_done(0);
 
     int num_map_objs = map_objs.size();
+
+    map_objs_to_add_lt.resize(num_threads);
+    for(auto &i: map_objs_to_add_lt)
+        i.clear();
 
     for(int t=num_threads-1; t>=0; t--) {
         int idx1 = (num_map_objs * (uint64_t)t) / num_threads;
         int idx2 = (num_map_objs * (uint64_t)(t+1)) / num_threads;
-        auto task = [&thread_done, &is_done_futures, num_threads, this, tick_len, t, idx1, idx2]
+        auto task = [this, t, tick_len, idx1, idx2]
         {
             map_obj::MapObjRun1Args run1_args;
-            run1_args.tick_len = tick_len;
-            ceng_cur_lt[t].clear();
-            ceng_des_lt[t].clear();
-            run1_args.set_ceng_cur_vec(&ceng_cur_lt[t]);
-            run1_args.set_ceng_des_vec(&ceng_des_lt[t]);
-            run1_args.set_move_intent_vec(&move_intent);
+            run1_args.set_tick_len(tick_len);
+            run1_args.set_ceng_data(&ceng_data);
+            run1_args.set_map_objs_to_add(&map_objs_to_add_lt[t]);
 
             for(int i=idx1; i<idx2; i++) {
-                run1_args.idx = i;
+                run1_args.set_index(i);
                 map_objs[i]->run1_mt(run1_args);
-
-                //if a map object added collidable shapes, it should have set a move intent
-                k_ensures(move_intent[i]!=MoveIntent::NotSet ||
-                          !((ceng_cur_lt[t].size()>0 && ceng_cur_lt[t].back().idx==i) ||
-                            (ceng_des_lt[t].size()>0 && ceng_des_lt[t].back().idx==i)));
             }
-            //threads are in charge of merging ceng_cur_lt and ceng_des_lt
-            //example data propagation: thread 11->10->8->0
-            for(int i=0; (t&(1<<i))==0 && (t+(1<<i))<num_threads; i++) {
-                int other = t + (1<<i);
-
-                //wait for thread other to finish
-                while((thread_done.load(std::memory_order_acquire) & (1ULL<<other)) == 0)
-                    _mm_pause();
-
-                auto cur_n = ceng_cur_lt[t].size();
-                ceng_cur_lt[t].insert(ceng_cur_lt[t].end(),
-                                      ceng_cur_lt[other].begin(),
-                                      ceng_cur_lt[other].end());
-                std::inplace_merge(ceng_cur_lt[t].begin(),
-                                   ceng_cur_lt[t].begin() + cur_n,
-                                   ceng_cur_lt[t].end(),
-                                   CEng1Obj::cmp_idx);
-
-                auto des_n = ceng_des_lt[t].size();
-                ceng_des_lt[t].insert(ceng_des_lt[t].end(),
-                                      ceng_des_lt[other].begin(),
-                                      ceng_des_lt[other].end());
-                std::inplace_merge(ceng_des_lt[t].begin(),
-                                   ceng_des_lt[t].begin() + des_n,
-                                   ceng_des_lt[t].end(),
-                                   CEng1Obj::cmp_idx);
-            }
-            thread_done.fetch_add(1ULL<<t, std::memory_order_release);
         };
 
-        if(t == 0) {
+        if(t == 0)
             task();
-        } else
+        else
             is_done_futures[t] = thread_pool->add_task(task);
     }
 
     for(int t=1; t<num_threads; t++)
         is_done_futures[t].get();
 
-    ceng_cur.swap(ceng_cur_lt[0]);
-    ceng_des.swap(ceng_des_lt[0]);
-    */
+    for(const auto &i: map_objs_to_add_lt)
+        map_objs_to_add.insert(map_objs_to_add.end(), i.begin(), i.end());
 }
 void Game::run_collision_engine()
 {
@@ -250,23 +218,10 @@ void Game::run_collision_engine()
                                         return a_map_obj->collision_could_matter(*b_map_obj);
                                     };
 
-    //takes 10-20us
-    kx::FixedSizeArray<const map_obj::MapObject*> collidables(map_objs.size());
-    std::transform(map_objs.begin(),
-                   map_objs.end(),
-                   collidables.begin(),
-                   [](std::shared_ptr<map_obj::MapObject> &obj) -> map_obj::MapObject*
-                   {
-                       return obj.get();
-                   });
-
     //all reset/set combined are ~50-100us on Test2(40, 40)
     collision_engine->reset();
-    collision_engine->set_cur_des(std::move(ceng_cur),
-                                  std::move(ceng_des));
-    collision_engine->set2(std::move(collidables),
-                           std::move(collision_could_matter),
-                           std::move(move_intent));
+    collision_engine->set_ceng_data(&ceng_data);
+    collision_engine->set2(&map_objs, std::move(collision_could_matter));
 
     //~100us on Test2(40, 40)
     collision_engine->precompute();
@@ -282,16 +237,21 @@ void Game::run_collision_engine()
         auto idx2 = collisions[i].idx2;
 
         map_obj::HandleCollisionArgs args;
+        args.set_ceng_data(&ceng_data);
         args.collision_info = collisions[i];
         args.other = map_objs[idx1].get();
         //the order has to be SWAPPED; A->handle_collision(B) results in
         //B processing the collision and reporting its new intent
-        auto new_intent2 = map_objs[idx1]->handle_collision(map_objs[idx2].get(), args);
+        auto prev_intent1 = ceng_data[idx1].get_move_intent();
+        auto prev_intent2 = ceng_data[idx2].get_move_intent();
+        args.set_index(idx2);
+        map_objs[idx1]->handle_collision(map_objs[idx2].get(), args);
         args.swap();
         args.other = map_objs[idx2].get();
-        auto new_intent1 = map_objs[idx2]->handle_collision(map_objs[idx1].get(), args);
-        collision_engine->update_intent(idx1, new_intent1, &collisions);
-        collision_engine->update_intent(idx2, new_intent2, &collisions);
+        args.set_index(idx1);
+        map_objs[idx2]->handle_collision(map_objs[idx1].get(), args);
+        collision_engine->update_intent(idx1, prev_intent1, &collisions);
+        collision_engine->update_intent(idx2, prev_intent2, &collisions);
     }
 }
 void Game::advance_one_tick(double tick_len)
@@ -310,7 +270,6 @@ void Game::advance_one_tick(double tick_len)
      *   their position. Objects that require sole access to data to update will likely
      *   perform a more complicated operation.
      */
-
     //process input
     map_obj::PlayerInputArgs player_input;
     player_input.tick_len = tick_len;
@@ -333,19 +292,30 @@ void Game::advance_one_tick(double tick_len)
 
     //second run
     map_obj::MapObjRun2Args run2_args;
-    run2_args.tick_len = tick_len;
+    run2_args.set_tick_len(tick_len);
+    run2_args.set_ceng_data(&ceng_data);
+    run2_args.set_map_objs_to_add(&map_objs_to_add);
     //~150us on Test2(40, 40)
     for(size_t i=0; i<map_objs.size(); i++) {
+        run2_args.set_index(i);
         map_objs[i]->run2_st(run2_args);
     }
+
     //remove all map objects that want to be removed
     //...(not yet implemented)...
+    size_t after_idx = 0;
+    for(size_t i=0; i<map_objs.size(); i++) {
+        if(ceng_data[i].get_move_intent() != MoveIntent::Delete) {
+            if(i != after_idx) {
+                ceng_data[after_idx] = std::move(ceng_data[i]);
+                map_objs[after_idx] = std::move(map_objs[i]);
+            }
+            after_idx++;
+        }
+    }
 
-    //steal back container memory (this way we don't have to reallocate memory nearly as often)
-    collision_engine->steal_cur_into(&ceng_cur);
-    collision_engine->steal_des_into(&ceng_des);
-    ceng_cur.clear();
-    ceng_des.clear();
+    //everything in map_objs_to_add is moved to map_objs
+    process_added_map_objs();
 
     //move forward a tick
     cur_level_time_left -= tick_len;

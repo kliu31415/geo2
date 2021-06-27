@@ -1,6 +1,7 @@
 #pragma once
 
 #include "geo2/map_obj/map_object.h"
+#include "geo2/ceng1_data.h"
 
 #include "geo2/ceng1_obj.h"
 #include "geo2/game_render_op_list.h"
@@ -8,131 +9,181 @@
 #include "kx/gfx/renderer.h"
 #include "kx/fixed_size_array.h"
 
+namespace geo2 {class Game;}
+
 namespace geo2 { namespace map_obj {
 
-class MapObjRun1Args;
-class MapObjRun2Args;
-class MapObjCtorArgs;
-class MapObjRenderArgs;
+class MapObjInitArgs final
+{
+    CEng1Data *data;
+public:
+    MapObjInitArgs() = default;
+
+    MapObjInitArgs(const MapObjInitArgs&) = delete;
+    MapObjInitArgs & operator = (const MapObjInitArgs&) = delete;
+    MapObjInitArgs(MapObjInitArgs&&) = delete;
+    MapObjInitArgs & operator = (MapObjInitArgs&&) = delete;
+
+    inline void add_current_pos(std::unique_ptr<Polygon> &&polygon) const
+    {
+        data->add_current_pos(std::move(polygon));
+    }
+    inline void add_desired_pos(std::unique_ptr<Polygon> &&polygon) const
+    {
+        data->add_desired_pos(std::move(polygon));
+    }
+    inline Polygon *get_current_pos_front() const
+    {
+        return data->get_current_pos_front();
+    }
+    inline Polygon *get_desired_pos_front() const
+    {
+        return data->get_desired_pos_front();
+    }
+    inline void set_move_intent(MoveIntent new_intent) const
+    {
+        data->set_move_intent(new_intent);
+    }
+    inline void set_ceng_data(CEng1Data *data_)
+    {
+        data = data_;
+    }
+};
 
 class CEng1DataReaderAttorney
 {
-    friend MapObjRun1Args;
-    friend MapObjRun2Args;
-    friend MapObjCtorArgs;
-    friend MapObjRenderArgs;
-    friend class CEng1DataMutatorAttorney;
-
-    CEng1DataReaderAttorney() {}
+protected:
+    std::vector<CEng1Data> *ceng_data;
+    std::vector<std::shared_ptr<MapObject>> *map_objs_to_add;
+    size_t idx;
 public:
-    inline const Polygon *cur_front(const MapObject *obj)
+    CEng1DataReaderAttorney() = default;
+
+    CEng1DataReaderAttorney(const CEng1DataReaderAttorney&) = delete;
+    CEng1DataReaderAttorney & operator = (const CEng1DataReaderAttorney&) = delete;
+    CEng1DataReaderAttorney(CEng1DataReaderAttorney&&) = delete;
+    CEng1DataReaderAttorney & operator = (CEng1DataReaderAttorney&&) = delete;
+
+    inline void set_ceng_data(std::vector<CEng1Data> *ceng_data_)
     {
-        return obj->get_ceng_data_ref().cur_front();
+        ceng_data = ceng_data_;
     }
-    inline const Polygon *des_front(const MapObject *obj)
+    inline void set_map_objs_to_add(std::vector<std::shared_ptr<MapObject>> *to_add)
     {
-        return obj->get_ceng_data_ref().des_front();
+        map_objs_to_add = to_add;
     }
-    inline MoveIntent get_move_intent(const MapObject *obj)
+    inline void set_index(size_t idx_)
     {
-        return obj->get_ceng_data_ref().get_move_intent();
+        //make sure ceng_data and map_objs_to_add are null before calling this function
+        //so the k_expects doesn't crash
+        k_expects(idx_ < ceng_data->size());
+        idx = idx_;
+    }
+    inline void add_map_obj(std::shared_ptr<MapObject> obj) const
+    {
+        map_objs_to_add->push_back(std::move(obj));
+    }
+
+    inline const Polygon *get_current_pos_front() const
+    {
+        return (*ceng_data)[idx].get_current_pos_front();
+    }
+    inline const Polygon *get_desired_pos_front() const
+    {
+        return (*ceng_data)[idx].get_desired_pos_front();
+    }
+    inline MoveIntent get_move_intent() const
+    {
+        return (*ceng_data)[idx].get_move_intent();
     }
 };
 
 class CEng1DataMutatorAttorney: public CEng1DataReaderAttorney
 {
-    friend MapObjRun1Args;
-    friend MapObjRun2Args;
-    friend MapObjCtorArgs;
-    friend MapObjRenderArgs;
-
-    CEng1DataMutatorAttorney() {}
 public:
-    inline void push_back_cur(MapObject *obj, std::unique_ptr<Polygon> &&polygon)
+    CEng1DataMutatorAttorney() = default;
+
+    CEng1DataMutatorAttorney(const CEng1DataMutatorAttorney&) = delete;
+    CEng1DataMutatorAttorney & operator = (const CEng1DataMutatorAttorney&) = delete;
+    CEng1DataMutatorAttorney(CEng1DataMutatorAttorney&&) = delete;
+    CEng1DataMutatorAttorney & operator = (CEng1DataMutatorAttorney&&) = delete;
+
+    inline void add_current_pos(std::unique_ptr<Polygon> &&polygon) const
     {
-        obj->get_ceng_data_ref().push_back_cur(std::move(polygon));
+        (*ceng_data)[idx].add_current_pos(std::move(polygon));
     }
-    inline void push_back_des(MapObject *obj, std::unique_ptr<Polygon> &&polygon)
+    inline void add_desired_pos(std::unique_ptr<Polygon> &&polygon)  const
     {
-        obj->get_ceng_data_ref().push_back_des(std::move(polygon));
+        (*ceng_data)[idx].add_desired_pos(std::move(polygon));
     }
-    inline Polygon *cur_front(MapObject *obj)
+    inline Polygon *get_current_pos_front() const
     {
-        return obj->get_ceng_data_ref().cur_front();
+        return (*ceng_data)[idx].get_current_pos_front();
     }
-    inline Polygon *des_front(MapObject *obj)
+    inline Polygon *get_desired_pos_front() const
     {
-        return obj->get_ceng_data_ref().des_front();
+        return (*ceng_data)[idx].get_desired_pos_front();
     }
-    inline void set_move_intent(MapObject *obj, MoveIntent new_intent)
+    inline void set_move_intent(MoveIntent new_intent) const
     {
-        obj->get_ceng_data_ref().set_move_intent(new_intent);
+        (*ceng_data)[idx].set_move_intent(new_intent);
     }
 };
 
-
-class MapObjRun1Args final
+class MapObjRunArgs
 {
-    std::vector<CEng1Obj> *ceng_cur;
-    std::vector<CEng1Obj> *ceng_des;
-    std::vector<MoveIntent> *move_intent;
-    std::vector<std::shared_ptr<MapObject>> *map_objs;
-public:
     double tick_len;
-    size_t idx;
-
-    void set_ceng_cur_vec(std::vector<CEng1Obj> *ceng_cur_)
+public:
+    inline void set_tick_len(double tick_len_)
     {
-        ceng_cur = ceng_cur_;
+        tick_len = tick_len_;
     }
-    void set_ceng_des_vec(std::vector<CEng1Obj> *ceng_des_)
+    inline double get_tick_len() const
     {
-        ceng_des = ceng_des_;
-    }
-    void set_move_intent_vec(std::vector<MoveIntent> *move_intent_)
-    {
-        move_intent = move_intent_;
-    }
-    void set_map_objs_vec(std::vector<std::shared_ptr<MapObject>> *map_objs_)
-    {
-        map_objs = map_objs_;
-    }
-    /** A raw pointer to polygon is used for speed. Make sure that someone else
-     *  retains ownership of shape to keep it alive while the collision engine
-     *  runs, or else there may be a dangling pointer that could cause crashes!
-     */
-    inline void add_current_pos(const Polygon *polygon, uint16_t shape_id = 0) const
-    {
-        ceng_cur->emplace_back(polygon, idx, shape_id);
-    }
-    inline void add_desired_pos(const Polygon *polygon, uint16_t shape_id = 0) const
-    {
-        ceng_des->emplace_back(polygon, idx, shape_id);
-    }
-    inline void set_move_intent(MoveIntent intent) const
-    {
-        if(move_intent->size() <= idx)
-            move_intent->resize(idx+1);
-        (*move_intent)[idx] = intent;
-    }
-    inline void add_map_obj(std::shared_ptr<MapObject> obj) const
-    {
-        map_objs->push_back(std::move(obj));
+        return tick_len;
     }
 };
 
-inline bool are_teams_enemies(int team1, int team2)
-{
-    return team1 != team2;
-}
-
-class MapObjRun2Args final
+class MapObjRun1Args final: public CEng1DataMutatorAttorney, public MapObjRunArgs
 {
 public:
-    double tick_len;
+    MapObjRun1Args() = default;
+
+    MapObjRun1Args(const MapObjRun1Args&) = delete;
+    MapObjRun1Args & operator = (const MapObjRun1Args&) = delete;
+    MapObjRun1Args(MapObjRun1Args&&) = delete;
+    MapObjRun1Args & operator = (MapObjRun1Args&&) = delete;
 };
 
-class MapObjRenderArgs final
+struct HandleCollisionArgs final: public CEng1DataReaderAttorney
+{
+    class MapObject *other;
+    CEng1Collision collision_info;
+
+    HandleCollisionArgs() = default;
+
+    void swap()
+    {
+        collision_info.swap();
+    }
+    inline void set_move_intent(MoveIntent new_intent) const
+    {
+        (*ceng_data)[idx].set_move_intent(new_intent);
+    }
+};
+
+class MapObjRun2Args final: public CEng1DataReaderAttorney, public MapObjRunArgs
+{
+public:
+    MapObjRun2Args() = default;
+
+    MapObjRun2Args(const MapObjRun2Args&) = delete;
+    MapObjRun2Args & operator = (const MapObjRun2Args&) = delete;
+    MapObjRun2Args(MapObjRun2Args&&) = delete;
+    MapObjRun2Args & operator = (MapObjRun2Args&&) = delete;
+};
+
+class MapObjRenderArgs final: public CEng1DataMutatorAttorney
 {
     std::vector<std::shared_ptr<RenderOpGroup>> *op_groups;
     const kx::gfx::Renderer *rdr;
@@ -151,6 +202,13 @@ class MapObjRenderArgs final
     }*/
 public:
     const GameRenderOpList::Shaders *shaders;
+
+    MapObjRenderArgs() = default;
+
+    MapObjRenderArgs(const MapObjRenderArgs&) = delete;
+    MapObjRenderArgs & operator = (const MapObjRenderArgs&) = delete;
+    MapObjRenderArgs(MapObjRenderArgs&&) = delete;
+    MapObjRenderArgs & operator = (MapObjRenderArgs&&) = delete;
 
     inline bool is_x_line_ndc_in_view(float x1, float x2) const
     {
@@ -205,14 +263,9 @@ public:
     }
 };
 
-struct HandleCollisionArgs final
+inline bool are_teams_enemies(int team1, int team2)
 {
-    class MapObject *other;
-    CEng1Collision collision_info;
-    void swap()
-    {
-        collision_info.swap();
-    }
-};
+    return team1 != team2;
+}
 
 }}

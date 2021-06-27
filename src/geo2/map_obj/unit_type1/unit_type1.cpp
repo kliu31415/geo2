@@ -1,4 +1,5 @@
 #include "geo2/map_obj/unit_type1/unit_type1.h"
+#include "geo2/map_obj/map_obj_args.h"
 
 namespace geo2 { namespace map_obj {
 
@@ -7,28 +8,26 @@ Unit_Type1::Unit_Type1(int team_, MapCoord position_, double collision_damage_):
     position(position_),
     collision_damage(collision_damage_)
 {}
-MoveIntent Unit_Type1::handle_collision(MapObject *other, const HandleCollisionArgs &args) const
+void Unit_Type1::handle_collision(MapObject *other, const HandleCollisionArgs &args) const
 {
-    return other->handle_collision(*this, args);
+    other->handle_collision(*this, args);
 }
-MoveIntent Unit_Type1::handle_collision([[maybe_unused]] const Wall_Type1 &other,
+void Unit_Type1::handle_collision([[maybe_unused]] const Wall_Type1 &other,
                                         [[maybe_unused]] const HandleCollisionArgs &args)
 {
-    move_intent = MoveIntent::StayAtCurrentPos;
-    return MoveIntent::StayAtCurrentPos;
+    args.set_move_intent(MoveIntent::StayAtCurrentPos);
 }
-MoveIntent Unit_Type1::handle_collision([[maybe_unused]] const Unit_Type1 &other,
+void Unit_Type1::handle_collision([[maybe_unused]] const Unit_Type1 &other,
                                         [[maybe_unused]] const HandleCollisionArgs &args)
 {
-    move_intent = MoveIntent::StayAtCurrentPos;
+    args.set_move_intent(MoveIntent::StayAtCurrentPos);
     //deal damage? apply effects?
-    return MoveIntent::StayAtCurrentPos;
 }
-MoveIntent Unit_Type1::handle_collision([[maybe_unused]] const Projectile_Type1 &other,
+void Unit_Type1::handle_collision([[maybe_unused]] const Projectile_Type1 &other,
                                         [[maybe_unused]] const HandleCollisionArgs &args)
 {
     //deal damage? apply effects?
-    return move_intent;
+    //move_intent stays the same
 }
 MapCoord Unit_Type1::get_pos() const
 {

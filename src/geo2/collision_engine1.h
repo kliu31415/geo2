@@ -1,6 +1,7 @@
 #pragma once
 
 #include "geo2/ceng1_obj.h"
+#include "geo2/ceng1_data.h"
 #include "geo2/map_obj/map_object.h"
 #include "geo2/geometry.h"
 
@@ -28,7 +29,8 @@ class CollisionEngine1
     constexpr static int GRID_LEN = 128; //power of 2 is faster cuz mult turns into bitshift
 
     //fastish spatial partition grid
-    //NOTE: All buckets should be sorted by CEng1Obj.idx
+    //NOTE: All buckets should be sorted by CEng1Obj.idx when find_and_add_collisions_gt
+    //is called; this doesn't have to hold true for find_and_add_collisions_neq
     template<class T> class Grid
     {
         std::unique_ptr<std::vector<T>[]> vals;
@@ -50,13 +52,14 @@ class CollisionEngine1
         {
             return vals[a*GRID_LEN + b];
         }
+        //this DOESN'T preserve ordering! Don't call this before find_and_add_collisions_gt.
         inline void remove_one_with_idx(int x, int y, int idx)
         {
-            //remember to preserve ordering of indexes!
             auto &grid_xy = get_ref(x, y);
             for(size_t i=0; i<grid_xy.size(); i++) {
                 if(grid_xy[i].idx == idx) {
-                    grid_xy.erase(grid_xy.begin() + i);
+                    grid_xy[i] = grid_xy.back();
+                    grid_xy.pop_back();
                     return;
                 }
             }
@@ -91,12 +94,13 @@ class CollisionEngine1
 
     std::shared_ptr<class ThreadPool> thread_pool;
 
-    kx::FixedSizeArray<const map_obj::MapObject*> map_objs;
+    const std::vector<std::shared_ptr<map_obj::MapObject>> *map_objs;
     std::function<bool(const map_obj::MapObject&, const map_obj::MapObject&)> collision_could_matter;
-    std::vector<CEng1Obj> cur;
-    std::vector<CEng1Obj> des;
+    //ceng_data is const, but due to lambda weirdness, I have to spend extra runtime
+    //if I declare it const because I can't pass a capturing lambda, so I decided to
+    //not declare it const and just make a note here that it is effectively const.
+    std::vector<CEng1Data> *ceng_data;
     std::vector<CEng1Obj> active_objs;
-    std::vector<MoveIntent> move_intent;
     Grid<CEng1Obj> grid;
 
     AABB global_AABB;
@@ -107,7 +111,10 @@ class CollisionEngine1
 
     int x_to_grid_x(float x) const;
     int y_to_grid_y(float y) const;
-    void remove_obj_from_grid(std::vector<CEng1Obj> &obj_vec, int idx);
+    void remove_cur_from_grid(int idx);
+    void remove_des_from_grid(int idx);
+    void add_cur_to_grid(int idx, std::vector<CEng1Collision> *collisions);
+    void add_des_to_grid(int idx, std::vector<CEng1Collision> *collisions);
     void add_obj_to_grid(std::vector<CEng1Obj> &obj_vec,
                          int idx,
                          std::vector<CEng1Collision> *collisions);
@@ -120,16 +127,12 @@ public:
 
     void reset();
     ///cur_ and des_ must be sorted (for efficiency reasons)
-    void set_cur_des(std::vector<CEng1Obj> &&cur_,
-                     std::vector<CEng1Obj> &&des_);
-    void set2(kx::FixedSizeArray<const map_obj::MapObject*> &&map_objs_,
-              std::function<bool(const map_obj::MapObject&, const map_obj::MapObject&)> collision_could_matter_,
-              std::vector<MoveIntent> &&move_intent_);
+    void set_ceng_data(std::vector<CEng1Data> *data);
+    void set2(const std::vector<std::shared_ptr<map_obj::MapObject>> *map_objs_,
+              std::function<bool(const map_obj::MapObject&,
+                               const map_obj::MapObject&)> collision_could_matter_);
     void precompute(); ///depends on set_cur_des, but not set2
     std::vector<CEng1Collision> find_collisions();
     void update_intent(int idx, MoveIntent intent, std::vector<CEng1Collision> *add_to);
-    void steal_cur_into(std::vector<CEng1Obj> *vec);
-    void steal_des_into(std::vector<CEng1Obj> *vec);
-    void steal_move_intent_into(std::vector<MoveIntent> *vec);
 };
 }

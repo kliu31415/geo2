@@ -25,39 +25,57 @@ int CollisionEngine1::y_to_grid_y(float y) const
     int y_ = std::clamp((int)((y - global_AABB.y1) / grid_rect_h), 0, GRID_LEN - 1);
     return y_;
 }
-//note: obj_vec is either cur or des
-void CollisionEngine1::remove_obj_from_grid(std::vector<CEng1Obj> &obj_vec, int idx)
+void CollisionEngine1::remove_cur_from_grid(int idx)
 {
-    //note that idx doesn't mean obj_vec[idx]
-    auto ptr = std::lower_bound(obj_vec.begin(), obj_vec.end(), idx, cmp_idx_int);
-    k_expects(ptr->idx==idx); //there should be at least one shape
-    while(ptr<obj_vec.end() && ptr->idx==idx) {
-        auto aabb = ptr->polygon->get_AABB();
+    auto remove_obj_from_grid = [this, idx](const Polygon *polygon, int) -> void
+    {
+        auto aabb = polygon->get_AABB();
         int x = x_to_grid_x(aabb.x1);
         int y = y_to_grid_y(aabb.y1);
         grid.remove_one_with_idx(x, y, idx);
-        ptr++;
-    }
+    };
+    (*ceng_data)[idx].for_each_cur(remove_obj_from_grid);
 }
-//note: obj_vec is either cur or des
-void CollisionEngine1::add_obj_to_grid(std::vector<CEng1Obj> &obj_vec,
-                                       int idx,
-                                       std::vector<CEng1Collision> *collisions)
+void CollisionEngine1::remove_des_from_grid(int idx)
 {
-    //note that idx doesn't mean obj_vec[idx]
-    auto ptr = std::lower_bound(obj_vec.begin(), obj_vec.end(), idx, cmp_idx_int);
-    k_expects(ptr->idx==idx); //there should be at least one shape
-    while(ptr<obj_vec.end() && ptr->idx==idx) {
-        auto aabb = ptr->polygon->get_AABB();
+    auto remove_obj_from_grid = [this, idx](const Polygon *polygon, int) -> void
+    {
+        auto aabb = polygon->get_AABB();
         int x = x_to_grid_x(aabb.x1);
         int y = y_to_grid_y(aabb.y1);
-        find_and_add_collisions_neq(collisions, *ptr);
-        grid.get_ref(x, y).push_back(*ptr);
-        ptr++;
-    }
+        grid.remove_one_with_idx(x, y, idx);
+    };
+    (*ceng_data)[idx].for_each_des(remove_obj_from_grid);
+}
+void CollisionEngine1::add_cur_to_grid(int idx, std::vector<CEng1Collision> *collisions)
+{
+    auto add_obj_to_grid = [this, idx, collisions](const Polygon *polygon, int shape_id)
+                            {
+                                auto aabb = polygon->get_AABB();
+                                int x = x_to_grid_x(aabb.x1);
+                                int y = y_to_grid_y(aabb.y1);
+                                CEng1Obj obj(polygon, idx, shape_id);
+                                find_and_add_collisions_neq(collisions, obj);
+                                grid.get_ref(x, y).push_back(obj);
+                            };
+    (*ceng_data)[idx].for_each_cur(add_obj_to_grid);
+}
+void CollisionEngine1::add_des_to_grid(int idx, std::vector<CEng1Collision> *collisions)
+{
+    auto add_obj_to_grid = [this, idx, collisions](const Polygon *polygon, int shape_id)
+                            {
+                                auto aabb = polygon->get_AABB();
+                                int x = x_to_grid_x(aabb.x1);
+                                int y = y_to_grid_y(aabb.y1);
+                                CEng1Obj obj(polygon, idx, shape_id);
+                                find_and_add_collisions_neq(collisions, obj);
+                                grid.get_ref(x, y).push_back(obj);
+                            };
+    (*ceng_data)[idx].for_each_des(add_obj_to_grid);
 }
 void CollisionEngine1::find_and_add_collisions_neq(std::vector<CEng1Collision> *add_to,
-                                                   const CEng1Obj &ceng_obj) const
+                                                   const CEng1Obj &ceng_obj)
+                                                   const
 {
     const auto &aabb = ceng_obj.polygon->get_AABB();
     int x1 = x_to_grid_x(aabb.x1 - max_AABB_w);
@@ -74,7 +92,7 @@ void CollisionEngine1::find_and_add_collisions_neq(std::vector<CEng1Collision> *
                 //-the collision wouldn't matter anyway
                 if(ceng_obj.idx != other.idx &&
                    aabb.overlaps(other.polygon->get_AABB()) &&
-                   collision_could_matter(*map_objs[ceng_obj.idx], *map_objs[other.idx]))
+                   collision_could_matter(*(*map_objs)[ceng_obj.idx], *(*map_objs)[other.idx]))
                 {
                     if(ceng_obj.polygon->has_collision(*other.polygon)) {
                         CEng1Collision collision;
@@ -109,7 +127,7 @@ void CollisionEngine1::find_and_add_collisions_gt(std::vector<CEng1Collision> *a
                 if(ceng_obj.idx <= other.idx)
                     break;
                 if(aabb.overlaps(other.polygon->get_AABB()) &&
-                   collision_could_matter(*map_objs[ceng_obj.idx], *map_objs[other.idx]))
+                   collision_could_matter(*(*map_objs)[ceng_obj.idx], *(*map_objs)[other.idx]))
                 {
                     if(ceng_obj.polygon->has_collision(*other.polygon)) {
                         CEng1Collision collision;
@@ -129,121 +147,74 @@ void CollisionEngine1::reset()
 {
     grid.reset();
 }
-void CollisionEngine1::set_cur_des(std::vector<CEng1Obj> &&cur_,
-                                   std::vector<CEng1Obj> &&des_)
+void CollisionEngine1::set_ceng_data(std::vector<CEng1Data> *data)
 {
-    cur = std::move(cur_);
-    des = std::move(des_);
-    k_expects(std::is_sorted(cur.begin(), cur.end(), CEng1Obj::cmp_idx));
-    k_expects(std::is_sorted(des.begin(), des.end(), CEng1Obj::cmp_idx));
+    ceng_data = data;
 }
-void CollisionEngine1::set2(kx::FixedSizeArray<const MapObject*> &&map_objs_,
-                std::function<bool(const MapObject&, const MapObject&)> collision_could_matter_,
-                            std::vector<MoveIntent> &&move_intent_)
+void CollisionEngine1::set2(const std::vector<std::shared_ptr<map_obj::MapObject>> *map_objs_,
+                std::function<bool(const MapObject&, const MapObject&)> collision_could_matter_)
 {
-    map_objs = std::move(map_objs_);
+    map_objs = map_objs_;
     collision_could_matter = std::move(collision_could_matter_);
-    move_intent = std::move(move_intent_);
     grid.reset();
 
-    k_expects(map_objs.size() == move_intent.size());
+    k_expects(map_objs->size() == ceng_data->size());
 }
 void CollisionEngine1::precompute()
 {
-    auto get_AABB_w = [](const CEng1Obj &obj) -> float
-                        {
-                            const auto &aabb = obj.polygon->get_AABB();
-                            return aabb.x2 - aabb.x1;
-                        };
+    auto get_AABB_dim = [this](const Polygon *polygon, int) -> void
+                                {
+                                    const auto &aabb = polygon->get_AABB();
+                                    max_AABB_w = std::max(max_AABB_w, aabb.x2 - aabb.x1);
+                                    max_AABB_h = std::max(max_AABB_h, aabb.y2 - aabb.y1);
+                                };
 
-    auto get_AABB_h = [](const CEng1Obj &obj) -> float
-                        {
-                            const auto &aabb = obj.polygon->get_AABB();
-                            return aabb.y2 - aabb.y1;
-                        };
-
-    auto get_max_float = [](float a, float b) -> float
-                            {
-                                return a > b? a: b;
-                            };
-
-    max_AABB_w = std::transform_reduce(cur.begin(),
-                                       cur.end(),
-                                       0.0f,
-                                       get_max_float,
-                                       get_AABB_w);
-
-    max_AABB_w = std::transform_reduce(des.begin(),
-                                       des.end(),
-                                       max_AABB_w,
-                                       get_max_float,
-                                       get_AABB_w);
-
-    max_AABB_h = std::transform_reduce(cur.begin(),
-                                       cur.end(),
-                                       0.0f,
-                                       get_max_float,
-                                       get_AABB_h);
-
-    max_AABB_h = std::transform_reduce(des.begin(),
-                                       des.end(),
-                                       max_AABB_h,
-                                       get_max_float,
-                                       get_AABB_h);
+    max_AABB_w = 0.0f;
+    max_AABB_h = 0.0f;
+    for(auto &cdata: *ceng_data)
+        cdata.for_each(get_AABB_dim);
 
     //we grid things based on their top left corner, so calculate the global
     //AABB based on top left corners only.
     global_AABB = AABB::make_maxbad_AABB();
 
-    auto calc_global_AABB = [this](const CEng1Obj &obj) -> void
+    auto calc_global_AABB = [this](const Polygon *polygon, int) -> void
     {
-        global_AABB.x1 = std::min(global_AABB.x1, obj.polygon->get_AABB().x1);
-        global_AABB.x2 = std::max(global_AABB.x2, obj.polygon->get_AABB().x1);
-        global_AABB.y1 = std::min(global_AABB.y1, obj.polygon->get_AABB().y1);
-        global_AABB.y2 = std::max(global_AABB.y2, obj.polygon->get_AABB().y1);
+        global_AABB.x1 = std::min(global_AABB.x1, polygon->get_AABB().x1);
+        global_AABB.x2 = std::max(global_AABB.x2, polygon->get_AABB().x1);
+        global_AABB.y1 = std::min(global_AABB.y1, polygon->get_AABB().y1);
+        global_AABB.y2 = std::max(global_AABB.y2, polygon->get_AABB().y1);
     };
-    std::for_each(cur.begin(), cur.end(), calc_global_AABB);
-    std::for_each(des.begin(), des.end(), calc_global_AABB);
+    for(auto &cdata: *ceng_data)
+        cdata.for_each(calc_global_AABB);
 
     grid_rect_w = (global_AABB.x2 - global_AABB.x1) / GRID_LEN;
     grid_rect_h = (global_AABB.y2 - global_AABB.y1) / GRID_LEN;
 }
 std::vector<CEng1Collision> CollisionEngine1::find_collisions()
 {
-    //put things in their grid rects
-    size_t cur_idx = 0;
-    size_t des_idx = 0;
-
     active_objs.clear();
 
-    auto add_active_obj = [this]
-         (std::vector<CEng1Obj> *active_objs_,
-          int i,
-          decltype(cur) __restrict *objs_,
-          size_t __restrict *obj_idx)
-            -> void
-          {
-              while(*obj_idx < objs_->size() && (*objs_)[*obj_idx].idx<=i) {
-                  if((*objs_)[*obj_idx].idx==i) {
-                      const auto &obj_ref = (*objs_)[*obj_idx];
-                      const auto &aabb = obj_ref.polygon->get_AABB();
-                      active_objs_->push_back(obj_ref);
-
-                      int x = x_to_grid_x(aabb.x1);
-                      int y = y_to_grid_y(aabb.y1);
-
-                      grid.get_ref(x, y).push_back(obj_ref);
-                  }
-                  (*obj_idx)++;
-              }
-          };
-
     //~300-350us on Test2(40, 40), which adding to the grid takes ~200us
-    for(size_t i=0; i<move_intent.size(); i++) {
-        if(move_intent[i] == MoveIntent::GoToDesiredPos)
-            add_active_obj(&active_objs, i, &des, &des_idx);
-        else if(move_intent[i] == MoveIntent::StayAtCurrentPos)
-            add_active_obj(&active_objs, i, &cur, &cur_idx);
+    for(size_t i=0; i<ceng_data->size(); i++) {
+        auto add_active_obj = [this, i](const Polygon *polygon, int shape_idx) -> void
+                            {
+                                const auto &aabb = polygon->get_AABB();
+
+                                int x = x_to_grid_x(aabb.x1);
+                                int y = y_to_grid_y(aabb.y1);
+
+                                CEng1Obj obj(polygon, i, shape_idx);
+
+                                active_objs.push_back(obj);
+                                grid.get_ref(x, y).push_back(obj);
+                            };
+
+        auto move_intent = (*ceng_data)[i].get_move_intent();
+        if(move_intent == MoveIntent::StayAtCurrentPos)
+            (*ceng_data)[i].for_each_cur(add_active_obj);
+        else if(move_intent == MoveIntent::GoToDesiredPos)
+            (*ceng_data)[i].for_each_des(add_active_obj);
     }
 
     size_t num_threads = 1 + thread_pool->size();
@@ -258,8 +229,8 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
     //consist of the same number of objects. Empirically, using a power of ~0.75
     //results in the best runtime.
     for(size_t i=0; i<num_threads; i++) {
-        size_t idx1 = active_objs.size() * std::pow(i / (double)num_threads, 0.75);
-        size_t idx2 = active_objs.size() * std::pow((i+1) / (double)num_threads, 0.75);
+        size_t idx1 = ceng_data->size() * std::pow(i / (double)num_threads, 0.75);
+        size_t idx2 = ceng_data->size() * std::pow((i+1) / (double)num_threads, 0.75);
         tasks[i] = [num_threads, i, idx1, idx2, this, &collisions]
                     {
                         for(size_t j=idx1; j<idx2; j++)
@@ -288,50 +259,32 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
     return collisions;
     */
 }
-void CollisionEngine1::update_intent(int idx, MoveIntent intent, std::vector<CEng1Collision> *add_to)
+void CollisionEngine1::update_intent(int idx, MoveIntent prev_intent, std::vector<CEng1Collision> *add_to)
 {
-    k_expects(intent != MoveIntent::NotSet);
-
     //if the intent didn't change, do nothing
-    if(intent == move_intent[idx])
+    auto new_intent = (*ceng_data)[idx].get_move_intent();
+    if(new_intent == prev_intent)
         return;
 
-    if(intent == MoveIntent::StayAtCurrentPos) {
-        if(move_intent[idx] == MoveIntent::GoToDesiredPos)
-            remove_obj_from_grid(des, idx);
+    if(new_intent == MoveIntent::StayAtCurrentPos) {
+        if(prev_intent == MoveIntent::GoToDesiredPos)
+            remove_des_from_grid(idx);
         else
             k_assert(false);
 
-        add_obj_to_grid(cur, idx, add_to);
-
-    } else if(intent == MoveIntent::Delete) {
-        if(move_intent[idx] == MoveIntent::GoToDesiredPos)
-            remove_obj_from_grid(des, idx);
-        else if(move_intent[idx] == MoveIntent::StayAtCurrentPos)
-            remove_obj_from_grid(cur, idx);
+        add_cur_to_grid(idx, add_to);
+    } else if(new_intent == MoveIntent::Delete) {
+        if(prev_intent == MoveIntent::GoToDesiredPos)
+            remove_des_from_grid(idx);
+        else if(prev_intent == MoveIntent::StayAtCurrentPos)
+            remove_cur_from_grid(idx);
         else
             k_assert(false);
 
     } else //this shouldn't happen
         k_assert(false);
 
-    move_intent[idx] = intent;
-}
-//clear CEng1Obj vectors to release pseudo-ownership (decrement Polygon ref counts)
-void CollisionEngine1::steal_cur_into(std::vector<CEng1Obj> *vec)
-{
-    cur.clear();
-    *vec = std::move(cur);
-}
-void CollisionEngine1::steal_des_into(std::vector<CEng1Obj> *vec)
-{
-    des.clear();
-    *vec = std::move(des);
-}
-
-void CollisionEngine1::steal_move_intent_into(std::vector<MoveIntent> *vec)
-{
-    *vec = std::move(move_intent);
+    (*ceng_data)[idx].set_move_intent(new_intent);
 }
 
 }

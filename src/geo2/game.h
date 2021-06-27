@@ -2,6 +2,7 @@
 
 #include "geo2/map_obj/unit_type1/player_type1.h"
 #include "geo2/ceng1_obj.h"
+#include "geo2/ceng1_data.h"
 
 #include "kx/gfx/renderer.h"
 #include "kx/gfx/kwindow.h"
@@ -20,7 +21,9 @@ struct Level
         Test2,
         Test3,
     };
+    std::vector<std::shared_ptr<map_obj::MapObject>> to_add;
     std::vector<std::shared_ptr<map_obj::MapObject>> map_objs;
+    std::vector<CEng1Data> ceng_data;
     double time_to_complete;
     double player_start_x;
     double player_start_y;
@@ -42,13 +45,14 @@ class Game final
     std::shared_ptr<class ThreadPool> thread_pool;
 
     //these persistent across run() calls to save memory allocations
-    std::vector<MoveIntent> move_intent;
-    std::vector<CEng1Obj> ceng_cur;
-    std::vector<CEng1Obj> ceng_des;
+    std::vector<std::shared_ptr<map_obj::MapObject>> map_objs_to_add;
+    std::vector<std::vector<std::shared_ptr<map_obj::MapObject>>> map_objs_to_add_lt;
+    std::vector<CEng1Data> ceng_data;
     std::unique_ptr<class CollisionEngine1> collision_engine;
 
     void generate_and_start_level(Level::Name level_name);
 
+    void process_added_map_objs();
     void run1(double tick_len);
     void run_collision_engine();
     void advance_one_tick(double tick_len);

@@ -155,6 +155,11 @@ void Player_Type1::process_input(const PlayerInputArgs &args)
         velocity.y *= scale_velocity;
     }
 }
+void Player_Type1::init(const MapObjInitArgs &args)
+{
+    args.add_current_pos(Polygon::make_with_num_sides(4));
+    args.add_desired_pos(Polygon::make_with_num_sides(4));
+}
 constexpr double PLAYER_SIDE_LEN = 1.6;
 void Player_Type1::run1_mt(const MapObjRun1Args &args)
 {
@@ -166,14 +171,12 @@ void Player_Type1::run1_mt(const MapObjRun1Args &args)
                      {position.x - 0.5*PSL, position.y + 0.5*PSL}};
     auto cur_span = nonstd::span<MapCoord>(std::begin(cur_v), std::end(cur_v));
 
-    cur_shape = Polygon::make(cur_span);
-
-    args.add_current_pos(cur_shape.get());
+    args.get_current_pos_front()->remake(cur_span);
 
     if(velocity.x!=0 || velocity.y!=0) {
-        move_intent = MoveIntent::GoToDesiredPos;
-        desired_position.x = position.x + velocity.x * args.tick_len;
-        desired_position.y = position.y + velocity.y * args.tick_len;
+        args.set_move_intent(MoveIntent::GoToDesiredPos);
+        desired_position.x = position.x + velocity.x * args.get_tick_len();
+        desired_position.y = position.y + velocity.y * args.get_tick_len();
 
         MapCoord des_v[]{{desired_position.x - 0.5*PSL, desired_position.y - 0.5*PSL},
                          {desired_position.x + 0.5*PSL, desired_position.y - 0.5*PSL},
@@ -181,16 +184,14 @@ void Player_Type1::run1_mt(const MapObjRun1Args &args)
                          {desired_position.x - 0.5*PSL, desired_position.y + 0.5*PSL}};
 
         auto des_span = nonstd::span<MapCoord>(std::begin(des_v), std::end(des_v));
-        des_shape = Polygon::make(des_span);
-        args.add_desired_pos(des_shape.get());
+        args.get_desired_pos_front()->remake(des_span);
     } else {
-        move_intent = MoveIntent::StayAtCurrentPos;
+        args.set_move_intent(MoveIntent::StayAtCurrentPos);
     }
-    args.set_move_intent(move_intent);
 }
 void Player_Type1::run2_st([[maybe_unused]] const MapObjRun2Args &args)
 {
-    if(move_intent == MoveIntent::GoToDesiredPos) {
+    if(args.get_move_intent() == MoveIntent::GoToDesiredPos) {
         position = desired_position;
     }
 }

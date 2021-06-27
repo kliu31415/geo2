@@ -1,10 +1,10 @@
 #pragma once
 
 #include "geo2/geometry.h"
-#include "geo2/ceng1_data.h"
 
 namespace geo2 { namespace map_obj {
 
+class MapObjInitArgs;
 class MapObjRun1Args;
 class MapObjRun2Args;
 class MapObjRenderArgs;
@@ -12,24 +12,15 @@ class HandleCollisionArgs;
 class CosmeticMapObj;
 
 #define HANDLE_COLLISION_FUNC_DECLARATION(T) \
-    MoveIntent handle_collision(const class T &other, const HandleCollisionArgs &args)
+    void handle_collision(const class T &other, const HandleCollisionArgs &args)
 
 class MapObject
 {
-    CEng1Data ceng_data;
 public:
     virtual ~MapObject() = default;
 
-    inline CEng1Data &get_ceng_data_ref()
-    {
-        return ceng_data;
-    }
-    inline const CEng1Data &get_ceng_data_ref() const
-    {
-        return ceng_data;
-    }
-
     ///default behavior for these functions = do nothing
+    virtual void init(const MapObjInitArgs &args);
     virtual void run1_mt(const MapObjRun1Args &args);
     virtual void run2_st(const MapObjRun2Args &args);
     virtual void add_render_objs(const MapObjRenderArgs &args);
@@ -41,7 +32,7 @@ public:
      *  const. Note that this function exists solely to perform the first level of
      *  double dispatch.
      */
-    virtual MoveIntent handle_collision(MapObject *other, const HandleCollisionArgs &args) const = 0;
+    virtual void handle_collision(MapObject *other, const HandleCollisionArgs &args) const = 0;
     ///for the below functions, "this" handles the collision and reports its intent
     virtual HANDLE_COLLISION_FUNC_DECLARATION(CosmeticMapObj);
     virtual HANDLE_COLLISION_FUNC_DECLARATION(Wall_Type1) = 0;
@@ -55,7 +46,7 @@ public:
  */
 class CosmeticMapObj: public MapObject
 {
-    MoveIntent handle_collision(MapObject *other, const HandleCollisionArgs &args) const override;
+    void handle_collision(MapObject *other, const HandleCollisionArgs &args) const override;
     HANDLE_COLLISION_FUNC_DECLARATION(Wall_Type1) override;
     HANDLE_COLLISION_FUNC_DECLARATION(Unit_Type1) override;
     HANDLE_COLLISION_FUNC_DECLARATION(Projectile_Type1) override;

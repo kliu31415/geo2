@@ -12,24 +12,22 @@ void Pig_1::run1_mt([[maybe_unused]] const MapObjRun1Args &args)
 
 }
 
-MoveIntent Pig_1::handle_collision([[maybe_unused]] const Wall_Type1 &other,
-                                   [[maybe_unused]] const HandleCollisionArgs &args)
+void Pig_1::handle_collision([[maybe_unused]] const Wall_Type1 &other,
+                             [[maybe_unused]] const HandleCollisionArgs &args)
 {
-    move_intent = MoveIntent::StayAtCurrentPos;
-    return MoveIntent::StayAtCurrentPos;
+    args.set_move_intent(MoveIntent::StayAtCurrentPos);
 }
-MoveIntent Pig_1::handle_collision([[maybe_unused]] const Unit_Type1 &other,
-                                   [[maybe_unused]] const HandleCollisionArgs &args)
+void Pig_1::handle_collision([[maybe_unused]] const Unit_Type1 &other,
+                             [[maybe_unused]] const HandleCollisionArgs &args)
 {
-    move_intent = MoveIntent::StayAtCurrentPos;
+    args.set_move_intent(MoveIntent::StayAtCurrentPos);
     //deal damage? apply effects?
-    return MoveIntent::StayAtCurrentPos;
 }
-MoveIntent Pig_1::handle_collision([[maybe_unused]] const Projectile_Type1 &other,
-                                   [[maybe_unused]] const HandleCollisionArgs &args)
+void Pig_1::handle_collision([[maybe_unused]] const Projectile_Type1 &other,
+                             [[maybe_unused]] const HandleCollisionArgs &args)
 {
     //deal damage? apply effects?
-    return move_intent;
+    //move_intent remains unchanged
 }
 void Pig_1::add_render_objs(const MapObjRenderArgs &args)
 {

@@ -15,9 +15,6 @@ namespace map_obj
  */
 class CEng1Data final
 {
-    friend map_obj::CEng1DataReaderAttorney;
-    friend map_obj::CEng1DataMutatorAttorney;
-
     template<class T> struct LL_Node
     {
         T val;
@@ -47,37 +44,42 @@ class CEng1Data final
             node = &(*node)->next;
         *node = std::make_unique<LL_Node<std::unique_ptr<Polygon>>>(std::move(polygon));
     }
+    template<class Func> inline static void for_each(LL_Node_Polygon *node, Func func)
+    {
+        int idx = 0;
+        while(*node != nullptr) {
+            func((*node)->val.get(), idx);
+            node = &(*node)->next;
+            idx++;
+        }
+    }
+public:
+    CEng1Data() = default;
 
-    ///delete copy/now for now because it's safer that way and we prob won't use them anyway
-    CEng1Data(const CEng1Data&) = delete;
-    CEng1Data & operator = (const CEng1Data&) = delete;
-    CEng1Data(CEng1Data&&) = delete;
-    CEng1Data & operator = (CEng1Data&&) = delete;
-
-    inline void push_back_cur(std::unique_ptr<Polygon> &&polygon)
+    inline void add_current_pos(std::unique_ptr<Polygon> &&polygon)
     {
         push_back(&cur, std::move(polygon));
     }
-    inline void push_back_des(std::unique_ptr<Polygon> &&polygon)
+    inline void add_desired_pos(std::unique_ptr<Polygon> &&polygon)
     {
         push_back(&des, std::move(polygon));
     }
-    inline Polygon *cur_front()
+    inline Polygon *get_current_pos_front()
     {
         k_expects(cur != nullptr);
         return cur->val.get();
     }
-    inline const Polygon *cur_front() const
+    inline const Polygon *get_current_pos_front() const
     {
         k_expects(cur != nullptr);
         return cur->val.get();
     }
-    inline Polygon *des_front()
+    inline Polygon *get_desired_pos_front()
     {
         k_expects(des != nullptr);
         return des->val.get();
     }
-    inline const Polygon *des_front() const
+    inline const Polygon *get_desired_pos_front() const
     {
         k_expects(des != nullptr);
         return des->val.get();
@@ -90,9 +92,22 @@ class CEng1Data final
     {
         move_intent = new_intent;
     }
+    template<class Func> inline void for_each_cur(Func func)
+    {
+        for_each(&cur, func);
+    }
+    template<class Func> inline void for_each_des(Func func)
+    {
+        for_each(&des, func);
+    }
+    template<class Func> inline void for_each(Func func)
+    {
+        for_each(&cur, func);
+        for_each(&des, func);
+    }
+
     ///TODO: add support for multiple shapes and deleting
-public:
-    CEng1Data() = default;
+    ///... more funcs here ...
 };
 
 }

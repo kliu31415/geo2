@@ -259,9 +259,14 @@ class Polygon final
 
     Polygon():
         n(0)
+    {}
+    Polygon(int num_sides):
+        n(num_sides)
     {
-
+        auto d_len = get_d_len(n);
+        vals = (float*)std::malloc(sizeof(float) * 2 * d_len);
     }
+
 
     template<class T> Polygon(nonstd::span<_MapCoord<T>> vertices):
         n(vertices.size())
@@ -428,9 +433,6 @@ public:
     }
     template<class T> void remake(nonstd::span<_MapCoord<T>> vertices)
     {
-        //we should only be remaking Polygons that we uniquely own;
-        //remaking shared Polygons could cause bugs
-
         int new_n = vertices.size();
         auto d_len = get_d_len(new_n);
 
@@ -471,6 +473,10 @@ public:
             mc.emplace_back(coords[i], coords[i+1]);
         }
         return make(nonstd::span<_MapCoord<T>>(mc.begin(), mc.end()));
+    }
+    static std::unique_ptr<Polygon> make_with_num_sides(int num_sides)
+    {
+        return std::unique_ptr<Polygon>(new Polygon(num_sides));
     }
 };
 

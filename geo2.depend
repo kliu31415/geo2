@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1623736270 source:d:\code\cbprojects\geo2\src\main.cpp
+1624667530 source:d:\code\cbprojects\geo2\src\main.cpp
 	"geo2/test.h"
 	"geo2/master_instance.h"
 	"kx/gfx/gfx.h"
@@ -518,16 +518,17 @@
 	<mutex>
 	<map>
 
-1624601704 d:\code\cbprojects\geo2\src\geo2\game.h
+1624763951 d:\code\cbprojects\geo2\src\geo2\game.h
 	"geo2/map_obj/unit_type1/player_type1.h"
 	"geo2/ceng1_obj.h"
+	"geo2/ceng1_data.h"
 	"kx/gfx/renderer.h"
 	"kx/gfx/kwindow.h"
 	<memory>
 	<vector>
 	<cstdint>
 
-1624605677 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
+1624764430 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
 	"geo2/map_obj/floor_type1/test_terrain1.h"
 	"geo2/game_render_op_list.h"
 	"geo2/game.h"
@@ -622,8 +623,9 @@
 1624414093 d:\code\cbprojects\geo2\src\geo2\game_render_op_list.h
 	"geo2/render_op.h"
 
-1624600061 d:\code\cbprojects\geo2\src\geo2\collision_engine1.h
+1624764371 d:\code\cbprojects\geo2\src\geo2\collision_engine1.h
 	"geo2/ceng1_obj.h"
+	"geo2/ceng1_data.h"
 	"geo2/map_obj/map_object.h"
 	"geo2/geometry.h"
 	"kx/fixed_size_array.h"
@@ -634,7 +636,7 @@
 	<array>
 	<vector>
 
-1624588548 d:\code\cbprojects\geo2\src\geo2\geometry.h
+1624763799 d:\code\cbprojects\geo2\src\geo2\geometry.h
 	<immintrin.h>
 	"kx/fixed_size_array.h"
 	"span_lite.h"
@@ -645,7 +647,7 @@
 	<cmath>
 	<vector>
 
-1624586823 source:d:\code\cbprojects\geo2\src\geo2\collision_engine1.cpp
+1624764376 source:d:\code\cbprojects\geo2\src\geo2\collision_engine1.cpp
 	"geo2/collision_engine1.h"
 	"geo2/multithread/thread_pool.h"
 	"geo2/timer.h"
@@ -744,7 +746,7 @@
 	<thread>
 	<atomic>
 
-1624335874 source:d:\code\cbprojects\geo2\src\geo2\level_gen\test3.cpp
+1624758999 source:d:\code\cbprojects\geo2\src\geo2\level_gen\test3.cpp
 	"geo2/level_gen/test3.h"
 	"geo2/map_obj/floor_type1/monochromatic_floor_1.h"
 	"geo2/map_obj/wall_type1/monochromatic_wall_1.h"
@@ -773,15 +775,14 @@
 1624215962 source:d:\code\cbprojects\geo2\src\geo2\map_objs\unit_type1\pig_1.cpp
 	"geo2/map_objs/unit_type1/pig_1.h"
 
-1624605711 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\player_type1.h
+1624761541 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\player_type1.h
 	"geo2/map_obj/unit_type1/unit_type1.h"
 
-1624342062 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\unit_type1.h
+1624761534 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\unit_type1.h
 	"geo2/map_obj/map_object.h"
 
-1624602577 d:\code\cbprojects\geo2\src\geo2\map_obj\map_object.h
+1624760887 d:\code\cbprojects\geo2\src\geo2\map_obj\map_object.h
 	"geo2/geometry.h"
-	"geo2/ceng1_data.h"
 
 1624605285 d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\test_terrain1.h
 	"geo2/map_obj/floor_type1/floor_type1.h"
@@ -790,11 +791,11 @@
 1624341260 d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\floor_type1.h
 	"geo2/map_obj/map_object.h"
 
-1624605644 d:\code\cbprojects\geo2\src\geo2\map_obj\wall_type1\monochromatic_wall_1.h
+1624758897 d:\code\cbprojects\geo2\src\geo2\map_obj\wall_type1\monochromatic_wall_1.h
 	"geo2/map_obj/wall_type1/wall_type1.h"
 	"kx/gfx/renderer_types.h"
 
-1624341285 d:\code\cbprojects\geo2\src\geo2\map_obj\wall_type1\wall_type1.h
+1624760928 d:\code\cbprojects\geo2\src\geo2\map_obj\wall_type1\wall_type1.h
 	"geo2/map_obj/map_object.h"
 
 1624605609 d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\monochromatic_floor_1.h
@@ -822,30 +823,32 @@
 	"kx/gfx/renderer.h"
 	<cmath>
 
-1624335874 source:d:\code\cbprojects\geo2\src\geo2\map_obj\map_object.cpp
+1624761119 source:d:\code\cbprojects\geo2\src\geo2\map_obj\map_object.cpp
 	"geo2/map_obj/map_object.h"
+	"geo2/map_obj/map_obj_args.h"
 	"kx/io.h"
 	<cmath>
 
-1624605332 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\pig_1.cpp
+1624761213 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\pig_1.cpp
 	"geo2/map_obj/unit_type1/pig_1.h"
 	"geo2/map_obj/map_obj_args.h"
 
-1624601601 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\player_type1.cpp
+1624761596 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\player_type1.cpp
 	"geo2/map_obj/unit_type1/player_type1.h"
 	"geo2/map_obj/map_obj_args.h"
 	<iostream>
 
-1624601612 source:d:\code\cbprojects\geo2\src\geo2\map_obj\wall_type1\monochromatic_wall_1.cpp
+1624758905 source:d:\code\cbprojects\geo2\src\geo2\map_obj\wall_type1\monochromatic_wall_1.cpp
 	"geo2/map_obj/wall_type1/monochromatic_wall_1.h"
 	"geo2/map_obj/map_obj_args.h"
 
-1624603288 source:d:\code\cbprojects\geo2\src\geo2\map_obj\wall_type1\wall_type1.cpp
+1624761181 source:d:\code\cbprojects\geo2\src\geo2\map_obj\wall_type1\wall_type1.cpp
 	"geo2/map_obj/wall_type1/wall_type1.h"
 	"geo2/map_obj/map_obj_args.h"
 
-1624342072 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\unit_type1.cpp
+1624761034 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\unit_type1.cpp
 	"geo2/map_obj/unit_type1/unit_type1.h"
+	"geo2/map_obj/map_obj_args.h"
 
 1624335913 source:d:\code\cbprojects\geo2\src\geo2\weapon\weapon.cpp
 
@@ -861,12 +864,12 @@
 	<SDL2/SDL_mouse.h>
 	<cmath>
 
-1624601592 source:d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\projectile_type1.cpp
+1624760987 source:d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\projectile_type1.cpp
 	"geo2/map_obj/projectile_type1/projectile_type1.h"
 	"geo2/map_obj/unit_type1/unit_type1.h"
 	"geo2/map_obj/map_obj_args.h"
 
-1624406127 d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\projectile_type1.h
+1624760923 d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\projectile_type1.h
 	"geo2/map_obj/map_object.h"
 
 1624414186 source:d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\simple_proj_1.cpp
@@ -888,11 +891,12 @@
 	"geo2/geometry.h"
 	<cstdint>
 
-1624603233 d:\code\cbprojects\geo2\src\geo2\ceng1_data.h
+1624758250 d:\code\cbprojects\geo2\src\geo2\ceng1_data.h
 	"geo2/geometry.h"
 
-1624603397 d:\code\cbprojects\geo2\src\geo2\map_obj\map_obj_args.h
+1624761146 d:\code\cbprojects\geo2\src\geo2\map_obj\map_obj_args.h
 	"geo2/map_obj/map_object.h"
+	"geo2/ceng1_data.h"
 	"geo2/ceng1_obj.h"
 	"geo2/game_render_op_list.h"
 	"kx/gfx/renderer.h"

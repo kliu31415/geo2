@@ -14,8 +14,8 @@ int main()
 
     gfx::init();
 
-    std::ios::sync_with_stdio(false); //if we're not using scanf/printf and not using multithreaded
-                                      //non-mutexed printing, then we can disable sync
+    //don't use cout; use io::print instead (which uses cout internally)
+    std::ios::sync_with_stdio(false);
 
     //When moving timezones, change the value here.
     //When DST occurs, change the value here and also change Time::ET_offset.

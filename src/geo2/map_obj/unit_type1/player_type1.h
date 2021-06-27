@@ -30,13 +30,11 @@ class Player_Type1 final: public Unit_Type1
     nonstd::span<float> op_iu1;
     nonstd::span<float> op_iu2;
 
-    std::unique_ptr<Polygon> cur_shape;
-    std::unique_ptr<Polygon> des_shape;
-
     MapVec velocity;
 public:
     Player_Type1();
     void process_input(const PlayerInputArgs &args);
+    void init(const MapObjInitArgs &args) override;
     void run1_mt(const MapObjRun1Args &args) override;
     void run2_st(const MapObjRun2Args &args) override;
     void add_render_objs(const MapObjRenderArgs &args) override;
