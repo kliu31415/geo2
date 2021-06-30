@@ -40,23 +40,17 @@ template<class T> struct _MapVec
     {
         return std::hypot(x, y);
     }
-    _MapVec& operator + (const _MapVec& other)
+    _MapVec operator + (const _MapVec& other) const
     {
-        x += other.x;
-        y += other.y;
-        return *this;
+        return _MapVec(x + other.x, y + other.y);
     }
-    template<class S> _MapVec& operator * (S val)
+    template<class U> _MapVec operator * (U val) const
     {
-        x *= val;
-        y *= val;
-        return *this;
+        return _MapVec(x * val, y * val);
     }
-    template<class S> _MapVec& operator / (S val)
+    template<class U> _MapVec operator / (U val) const
     {
-        x /= val;
-        y /= val;
-        return *this;
+        return _MapVec(x / val, y / val);
     }
 };
 using MapVec = _MapVec<double>;
@@ -75,7 +69,7 @@ template<class T> struct _MapCoord
         y(y_)
     {}
 
-    template<class T2> _MapCoord operator = (const _MapCoord<T2> &other)
+    template<class U> _MapCoord operator = (const _MapCoord<U> &other)
     {
         x = other.x;
         y = other.y;
@@ -84,6 +78,10 @@ template<class T> struct _MapCoord
     _MapVec<T> operator - (const _MapCoord &other) const
     {
         return _MapVec<T>(x - other.x, y - other.y);
+    }
+    template<class U> _MapCoord operator + (const _MapVec<U> &other) const
+    {
+        return _MapCoord(x + other.x, y + other.y);
     }
 };
 using MapCoord = _MapCoord<double>;
@@ -257,16 +255,15 @@ class Polygon final
         return 8 * ((n + 7) / 8) + 1;
     }
 
-    Polygon():
-        n(0)
+    Polygon()
     {}
+
     Polygon(int num_sides):
         n(num_sides)
     {
         auto d_len = get_d_len(n);
         vals = (float*)std::malloc(sizeof(float) * 2 * d_len);
     }
-
 
     template<class T> Polygon(nonstd::span<_MapCoord<T>> vertices):
         n(vertices.size())
@@ -316,10 +313,19 @@ public:
         std::copy(vals, vals + 2*d_len, ret->vals);
         return ret;
     }
+    void copy_from(const Polygon *other)
+    {
+        k_expects(n == other->n);
+
+        auto d_len = get_d_len(n);
+
+        aabb = other->aabb;
+        std::copy(other->vals, other->vals + 2*d_len, vals);
+    }
     /** Polygons are only heap-allocatable for future proofing reasons
      */
     Polygon(const Polygon &other) = delete;
-    Polygon &operator = (const Polygon &other) = delete;
+    Polygon &operator = (const Polygon &other);
     Polygon(Polygon &&other) = delete;
     Polygon & operator = (Polygon &&other) = delete;
 

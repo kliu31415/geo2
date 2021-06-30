@@ -1,12 +1,13 @@
 #include "geo2/map_obj/unit_type1/player_type1.h"
 #include "geo2/map_obj/map_obj_args.h"
+#include "geo2/weapon/test_laser_1.h"
 
 #include <iostream>
 
 namespace geo2 { namespace map_obj {
 
 Player_Type1::Player_Type1():
-    Unit_Type1(1, {}),
+    Unit_Type1(Team::Ally, {}),
     left_pressed_tick_count(0),
     right_pressed_tick_count(0),
     up_pressed_tick_count(0),
@@ -15,8 +16,7 @@ Player_Type1::Player_Type1():
 {
 
 }
-
-void Player_Type1::process_input(const PlayerInputArgs &args)
+void Player_Type1::run_special(const PlayerRunSpecialArgs &args, kx::Passkey<Game>)
 {
     auto &left_ptc = left_pressed_tick_count;
     auto &right_ptc = right_pressed_tick_count;
@@ -154,11 +154,19 @@ void Player_Type1::process_input(const PlayerInputArgs &args)
         velocity.x *= scale_velocity;
         velocity.y *= scale_velocity;
     }
+
+    k_expects(cur_weapon_idx < (int)weapons.size());
+    weapons[cur_weapon_idx]->run(args.weapon_run_args);
 }
-void Player_Type1::init(const MapObjInitArgs &args)
+void Player_Type1::init([[maybe_unused]] const MapObjInitArgs &args)
 {
     args.add_current_pos(Polygon::make_with_num_sides(4));
     args.add_desired_pos(Polygon::make_with_num_sides(4));
+
+    weapons.push_back(std::make_shared<weapon::TestLaser1>(shared_from_this()));
+    weapon::WeaponSwapInArgs swap_in_args;
+    weapons.back()->swap_in(swap_in_args);
+    cur_weapon_idx = 0;
 }
 constexpr double PLAYER_SIDE_LEN = 1.6;
 void Player_Type1::run1_mt(const MapObjRun1Args &args)
@@ -171,7 +179,7 @@ void Player_Type1::run1_mt(const MapObjRun1Args &args)
                      {position.x - 0.5*PSL, position.y + 0.5*PSL}};
     auto cur_span = nonstd::span<MapCoord>(std::begin(cur_v), std::end(cur_v));
 
-    args.get_current_pos_front()->remake(cur_span);
+    args.get_sole_current_pos()->remake(cur_span);
 
     if(velocity.x!=0 || velocity.y!=0) {
         args.set_move_intent(MoveIntent::GoToDesiredPos);
@@ -184,7 +192,7 @@ void Player_Type1::run1_mt(const MapObjRun1Args &args)
                          {desired_position.x - 0.5*PSL, desired_position.y + 0.5*PSL}};
 
         auto des_span = nonstd::span<MapCoord>(std::begin(des_v), std::end(des_v));
-        args.get_desired_pos_front()->remake(des_span);
+        args.get_sole_desired_pos()->remake(des_span);
     } else {
         args.set_move_intent(MoveIntent::StayAtCurrentPos);
     }

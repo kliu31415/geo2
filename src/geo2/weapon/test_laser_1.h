@@ -6,9 +6,10 @@ namespace geo2 { namespace weapon {
 
 class TestLaser1 final: public Weapon
 {
-    int ammo;
     double reload_counter;
+    int ammo;
 public:
+    TestLaser1(const std::shared_ptr<map_obj::MapObject> &owner_);
     void run(const WeaponRunArgs &args) override;
 };
 

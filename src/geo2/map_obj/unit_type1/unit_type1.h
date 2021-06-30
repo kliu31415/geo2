@@ -7,12 +7,12 @@ namespace geo2 { namespace map_obj {
 class Unit_Type1: public MapObject
 {
 protected:
-    int team;
     MapCoord position;
     MapCoord desired_position;
     double collision_damage;
+    Team team;
 
-    Unit_Type1(int team_, MapCoord position_, double collision_damage_=0);
+    Unit_Type1(Team team_, MapCoord position_, double collision_damage_=0);
 public:
     virtual ~Unit_Type1() = default;
 
@@ -22,7 +22,6 @@ public:
     HANDLE_COLLISION_FUNC_DECLARATION(Projectile_Type1) override;
 
     MapCoord get_pos() const;
-    int get_team() const;
 };
 
 }}

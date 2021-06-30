@@ -4,7 +4,7 @@
 namespace geo2 { namespace map_obj {
 
 Pig_1::Pig_1(MapCoord position_):
-    Unit_Type1(2, position_, 2.0)
+    Unit_Type1(Team::Enemy, position_, 2.0)
 {}
 
 void Pig_1::run1_mt([[maybe_unused]] const MapObjRun1Args &args)

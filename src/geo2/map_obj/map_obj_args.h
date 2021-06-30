@@ -32,13 +32,13 @@ public:
     {
         data->add_desired_pos(std::move(polygon));
     }
-    inline Polygon *get_current_pos_front() const
+    inline Polygon *get_sole_current_pos() const
     {
-        return data->get_current_pos_front();
+        return data->get_sole_current_pos();
     }
-    inline Polygon *get_desired_pos_front() const
+    inline Polygon *get_sole_desired_pos() const
     {
-        return data->get_desired_pos_front();
+        return data->get_sole_desired_pos();
     }
     inline void set_move_intent(MoveIntent new_intent) const
     {
@@ -84,13 +84,13 @@ public:
         map_objs_to_add->push_back(std::move(obj));
     }
 
-    inline const Polygon *get_current_pos_front() const
+    inline const Polygon *get_sole_current_pos() const
     {
-        return (*ceng_data)[idx].get_current_pos_front();
+        return (*ceng_data)[idx].get_sole_current_pos();
     }
-    inline const Polygon *get_desired_pos_front() const
+    inline const Polygon *get_sole_desired_pos() const
     {
-        return (*ceng_data)[idx].get_desired_pos_front();
+        return (*ceng_data)[idx].get_sole_desired_pos();
     }
     inline MoveIntent get_move_intent() const
     {
@@ -116,13 +116,13 @@ public:
     {
         (*ceng_data)[idx].add_desired_pos(std::move(polygon));
     }
-    inline Polygon *get_current_pos_front() const
+    inline Polygon *get_sole_current_pos() const
     {
-        return (*ceng_data)[idx].get_current_pos_front();
+        return (*ceng_data)[idx].get_sole_current_pos();
     }
-    inline Polygon *get_desired_pos_front() const
+    inline Polygon *get_sole_desired_pos() const
     {
-        return (*ceng_data)[idx].get_desired_pos_front();
+        return (*ceng_data)[idx].get_sole_desired_pos();
     }
     inline void set_move_intent(MoveIntent new_intent) const
     {
@@ -262,10 +262,5 @@ public:
         cam_h_inv = 1.0f / camera.h;
     }
 };
-
-inline bool are_teams_enemies(int team1, int team2)
-{
-    return team1 != team2;
-}
 
 }}

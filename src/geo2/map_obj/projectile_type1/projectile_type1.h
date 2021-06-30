@@ -7,10 +7,10 @@ namespace geo2 { namespace map_obj {
 class Projectile_Type1: public MapObject
 {
 protected:
-    std::weak_ptr<Unit_Type1> owner;
-    int team;
+    std::weak_ptr<MapObject> owner;
+    Team team;
 
-    Projectile_Type1(const std::shared_ptr<Unit_Type1> &owner_);
+    Projectile_Type1(const std::shared_ptr<MapObject> &owner_);
 public:
     virtual ~Projectile_Type1() = default;
 

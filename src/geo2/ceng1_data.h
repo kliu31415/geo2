@@ -2,6 +2,10 @@
 
 #include "geo2/geometry.h"
 
+#include <memory>
+#include <vector>
+#include <cstring>
+
 namespace geo2 {
 
 namespace map_obj
@@ -10,47 +14,79 @@ namespace map_obj
     class CEng1DataMutatorAttorney;
 }
 
-/** The vast majority of the time, there will be only one shape, so a linked
- *  list is used, which is efficient in the case of there being only 1 polygon.
+/** The vast majority of the time, there will be only one shape, so this case
+ *  is optimized for
  */
 class CEng1Data final
 {
-    template<class T> struct LL_Node
+    struct PolygonData
     {
-        T val;
-        std::unique_ptr<LL_Node> next;
+        int num_polygons;
 
-        LL_Node(const T &val_):
-            val(val_),
-            next(nullptr)
-        {}
+        union
+        {
+            std::unique_ptr<Polygon> ptr;
+            std::vector<std::unique_ptr<Polygon>> vec;
+        };
 
-        LL_Node(T &&val_):
-            val(std::move(val_)),
-            next(nullptr)
+        PolygonData():
+            num_polygons(0)
         {}
+        PolygonData(PolygonData &&other)
+        {
+            //we copy the biggest member of the union; here we assume it's vec
+            static_assert(sizeof(vec) >= sizeof(ptr));
+
+            num_polygons = other.num_polygons;
+            other.num_polygons = 0;
+            std::memcpy((void*)&vec, (void*)&other.vec, sizeof(vec));
+        }
+        PolygonData &operator = (PolygonData &&other)
+        {
+            //we copy the biggest member of the union; here we assume it's vec
+            static_assert(sizeof(vec) >= sizeof(ptr));
+
+            num_polygons = other.num_polygons;
+            other.num_polygons = 0;
+            std::memcpy((void*)&vec, (void*)&other.vec, sizeof(vec));
+            return *this;
+        }
+        ~PolygonData()
+        {
+            if(num_polygons == 1)
+                ptr.~unique_ptr();
+            else if(num_polygons > 1)
+                vec.~vector();
+        }
+        void push_back(std::unique_ptr<Polygon> &&polygon)
+        {
+            if(num_polygons == 0) {
+                new (&ptr) decltype(ptr)(std::move(polygon));
+            } else if(num_polygons >= 1) {
+                if(num_polygons == 1) {
+                    auto tmp = std::move(ptr);
+                    new (&vec) decltype(vec)();
+                    vec.push_back(std::move(tmp));
+                }
+                vec.push_back(std::move(polygon));
+            }
+            num_polygons++;
+        }
     };
 
-    using LL_Node_Polygon = std::unique_ptr<LL_Node<std::unique_ptr<Polygon>>>;
-
-    LL_Node_Polygon cur;
-    LL_Node_Polygon des;
+    PolygonData cur;
+    PolygonData des;
 
     MoveIntent move_intent;
 
-    inline static void push_back(LL_Node_Polygon *node, std::unique_ptr<Polygon> &&polygon)
+    template<class Func> inline static void for_each(const PolygonData &data, Func func)
     {
-        while(*node != nullptr)
-            node = &(*node)->next;
-        *node = std::make_unique<LL_Node<std::unique_ptr<Polygon>>>(std::move(polygon));
-    }
-    template<class Func> inline static void for_each(LL_Node_Polygon *node, Func func)
-    {
-        int idx = 0;
-        while(*node != nullptr) {
-            func((*node)->val.get(), idx);
-            node = &(*node)->next;
-            idx++;
+        if(data.num_polygons == 1) {
+            func(data.ptr.get(), 0);
+        } else if(data.num_polygons > 1) {
+            for(size_t i=0; i<data.vec.size(); i++) {
+                func(data.vec[i].get(), i);
+            }
         }
     }
 public:
@@ -58,31 +94,31 @@ public:
 
     inline void add_current_pos(std::unique_ptr<Polygon> &&polygon)
     {
-        push_back(&cur, std::move(polygon));
+        cur.push_back(std::move(polygon));
     }
     inline void add_desired_pos(std::unique_ptr<Polygon> &&polygon)
     {
-        push_back(&des, std::move(polygon));
+        des.push_back(std::move(polygon));
     }
-    inline Polygon *get_current_pos_front()
+    inline Polygon *get_sole_current_pos()
     {
-        k_expects(cur != nullptr);
-        return cur->val.get();
+        k_expects(cur.num_polygons == 1);
+        return cur.ptr.get();
     }
-    inline const Polygon *get_current_pos_front() const
+    inline const Polygon *get_sole_current_pos() const
     {
-        k_expects(cur != nullptr);
-        return cur->val.get();
+        k_expects(cur.num_polygons == 1);
+        return cur.ptr.get();
     }
-    inline Polygon *get_desired_pos_front()
+    inline Polygon *get_sole_desired_pos()
     {
-        k_expects(des != nullptr);
-        return des->val.get();
+        k_expects(des.num_polygons == 1);
+        return des.ptr.get();
     }
-    inline const Polygon *get_desired_pos_front() const
+    inline const Polygon *get_sole_desired_pos() const
     {
-        k_expects(des != nullptr);
-        return des->val.get();
+        k_expects(des.num_polygons == 1);
+        return des.ptr.get();
     }
     inline MoveIntent get_move_intent() const
     {
@@ -94,16 +130,16 @@ public:
     }
     template<class Func> inline void for_each_cur(Func func)
     {
-        for_each(&cur, func);
+        for_each(cur, func);
     }
     template<class Func> inline void for_each_des(Func func)
     {
-        for_each(&des, func);
+        for_each(des, func);
     }
     template<class Func> inline void for_each(Func func)
     {
-        for_each(&cur, func);
-        for_each(&des, func);
+        for_each(cur, func);
+        for_each(des, func);
     }
 
     ///TODO: add support for multiple shapes and deleting

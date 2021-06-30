@@ -40,6 +40,7 @@ class Game final
 
     Level::Name cur_level;
     int64_t cur_level_tick;
+    double cur_level_time;
     double cur_level_time_left;
 
     std::shared_ptr<class ThreadPool> thread_pool;
@@ -55,7 +56,7 @@ class Game final
     void process_added_map_objs();
     void run1(double tick_len);
     void run_collision_engine();
-    void advance_one_tick(double tick_len);
+    void advance_one_tick(double tick_len, int render_w, int render_h);
 
     void apply_bloom_and_hdr(kx::gfx::KWindowRunning *kwin_r,
                              kx::gfx::Texture *texture,

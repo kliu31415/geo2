@@ -4,7 +4,7 @@
 
 namespace geo2 { namespace map_obj {
 
-Projectile_Type1::Projectile_Type1(const std::shared_ptr<Unit_Type1> &owner_):
+Projectile_Type1::Projectile_Type1(const std::shared_ptr<MapObject> &owner_):
     owner(owner_),
     team(owner_->get_team())
 {}
@@ -21,15 +21,14 @@ void Projectile_Type1::handle_collision([[maybe_unused]] const Wall_Type1 &other
 void Projectile_Type1::handle_collision(const Unit_Type1 &other,
                                         [[maybe_unused]] const HandleCollisionArgs &args)
 {
-    if(are_teams_enemies(team, other.get_team())) {
+    if(are_enemies(team, other.get_team())) {
         args.set_move_intent(MoveIntent::Delete);
     }
-    args.set_move_intent(MoveIntent::GoToDesiredPos);
 }
 void Projectile_Type1::handle_collision([[maybe_unused]] const Projectile_Type1 &other,
                                         [[maybe_unused]] const HandleCollisionArgs &args)
 {
-    args.set_move_intent(MoveIntent::GoToDesiredPos);
+
 }
 
 }}

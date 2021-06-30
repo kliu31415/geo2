@@ -8,19 +8,14 @@ class SimpleProj_1: public Projectile_Type1
 {
 protected:
     double life_left;
-    MoveIntent move_intent;
-    MapCoord cur_pos;
+    MapCoord current_pos;
     MapCoord desired_pos;
     MapVec velocity;
 
-    std::unique_ptr<Polygon> cur_shape;
-    std::unique_ptr<Polygon> des_shape;
-
-    SimpleProj_1(const std::shared_ptr<Unit_Type1> &owner_,
+    SimpleProj_1(const std::shared_ptr<MapObject> &owner_,
                  double lifespan,
                  MapCoord pos_,
-                 MapVec velocity_,
-                 std::unique_ptr<Polygon> &&shape);
+                 MapVec velocity_);
 public:
     virtual ~SimpleProj_1() = default;
 

@@ -98,6 +98,13 @@ struct _gfx
     }
 };
 
+//on a 1920x1080 screen, we want 25x25 tiles, which corresponds to roughly 2820 on the screen
+//2125 corresponds to 24x24 tiles on a 1600x900 screen
+//it's somewhat important to make tiles have roughly integer pixel dimensions to
+//minimize artifacting around the edges
+constexpr float TILES_PER_SCREEN = 2125;
+constexpr double MENU_OFFSET = 0.85;
+
 void Game::generate_and_start_level(Level::Name level_name)
 {
     using namespace kx;
@@ -135,6 +142,7 @@ void Game::generate_and_start_level(Level::Name level_name)
     map_objs_to_add.push_back(player);
     process_added_map_objs();
     cur_level_time_left = level.time_to_complete;
+    cur_level_time = 0;
     cur_level_tick = 0;
     cur_level = level_name;
     player->set_position({level.player_start_x, level.player_start_y}, {});
@@ -154,13 +162,14 @@ void Game::process_added_map_objs()
 }
 void Game::run1(double tick_len)
 {
+    for(auto &cdata: ceng_data)
+        cdata.set_move_intent(MoveIntent::NotSet);
+
     //single threaded version takes ~300us
     /*map_obj::MapObjRun1Args run1_args({});
     run1_args.set_tick_len(tick_len);
     run1_args.set_ceng_data(&ceng_data);
     run1_args.set_map_objs_to_add(&map_objs_to_add);
-    for(auto &cdata: ceng_data)
-        cdata.set_move_intent(MoveIntent::NotSet);
 
     //don't use an enhanced for loop here because we might modify map_objs
     for(size_t i=0; i<map_objs.size(); i++) {
@@ -177,8 +186,6 @@ void Game::run1(double tick_len)
     int num_map_objs = map_objs.size();
 
     map_objs_to_add_lt.resize(num_threads);
-    for(auto &i: map_objs_to_add_lt)
-        i.clear();
 
     for(int t=num_threads-1; t>=0; t--) {
         int idx1 = (num_map_objs * (uint64_t)t) / num_threads;
@@ -205,8 +212,10 @@ void Game::run1(double tick_len)
     for(int t=1; t<num_threads; t++)
         is_done_futures[t].get();
 
-    for(const auto &i: map_objs_to_add_lt)
+    for(auto &i: map_objs_to_add_lt) {
         map_objs_to_add.insert(map_objs_to_add.end(), i.begin(), i.end());
+        i.clear();
+    }
 }
 void Game::run_collision_engine()
 {
@@ -222,9 +231,6 @@ void Game::run_collision_engine()
     collision_engine->reset();
     collision_engine->set_ceng_data(&ceng_data);
     collision_engine->set2(&map_objs, std::move(collision_could_matter));
-
-    //~100us on Test2(40, 40)
-    collision_engine->precompute();
 
     //~500-550us on Test2(40, 40)
     auto collisions = collision_engine->find_collisions();
@@ -254,7 +260,7 @@ void Game::run_collision_engine()
         collision_engine->update_intent(idx2, prev_intent2, &collisions);
     }
 }
-void Game::advance_one_tick(double tick_len)
+void Game::advance_one_tick(double tick_len, int render_w, int render_h)
 {
     /** Standard sequence:
      *  -Call run1_mt() on everything in parallel. All objects insert shapes representing
@@ -271,18 +277,33 @@ void Game::advance_one_tick(double tick_len)
      *   perform a more complicated operation.
      */
     //process input
-    map_obj::PlayerInputArgs player_input;
-    player_input.tick_len = tick_len;
-    player_input.mouse_x = kx::gfx::get_mouse_x();
-    player_input.mouse_y = kx::gfx::get_mouse_y();
+    map_obj::PlayerRunSpecialArgs player_args;
+    player_args.tick_len = tick_len;
+    auto mouse_x = kx::gfx::get_mouse_x();
+    auto mouse_y = kx::gfx::get_mouse_y();
+    player_args.mouse_x = mouse_x;
+    player_args.mouse_y = mouse_y;
 
     auto keystate = kx::gfx::get_keyboard_state();
-    player_input.left_pressed = keystate[SDL_SCANCODE_A];
-    player_input.right_pressed = keystate[SDL_SCANCODE_D];
-    player_input.up_pressed = keystate[SDL_SCANCODE_W];
-    player_input.down_pressed = keystate[SDL_SCANCODE_S];
+    player_args.left_pressed = keystate[SDL_SCANCODE_A];
+    player_args.right_pressed = keystate[SDL_SCANCODE_D];
+    player_args.up_pressed = keystate[SDL_SCANCODE_W];
+    player_args.down_pressed = keystate[SDL_SCANCODE_S];
 
-    player->process_input(player_input);
+    weapon::WeaponRunArgs weapon_args;
+    weapon_args.set_map_objs_to_add(&map_objs_to_add);
+    float tile_len = std::sqrt(render_w * MENU_OFFSET * render_h / TILES_PER_SCREEN);
+    auto offset = MapVec(mouse_x - 0.5f*MENU_OFFSET*render_w,
+                         mouse_y - 0.5f*render_h)
+                         / tile_len;
+    weapon_args.set_owner_info(weapon::WeaponOwnerInfo(player->get_pos(), 0.5f));
+    weapon_args.set_cursor_pos(player->get_pos() + offset);
+    weapon_args.set_tick_len(tick_len);
+    weapon_args.set_cur_level_time(cur_level_time);
+    weapon_args.set_mouse_state(kx::gfx::get_mouse_state());
+    player_args.weapon_run_args = weapon_args;
+
+    player->run_special(player_args, {});
 
     //~400us on Test2(40, 40)
     run1(tick_len);
@@ -302,7 +323,6 @@ void Game::advance_one_tick(double tick_len)
     }
 
     //remove all map objects that want to be removed
-    //...(not yet implemented)...
     size_t after_idx = 0;
     for(size_t i=0; i<map_objs.size(); i++) {
         if(ceng_data[i].get_move_intent() != MoveIntent::Delete) {
@@ -313,11 +333,14 @@ void Game::advance_one_tick(double tick_len)
             after_idx++;
         }
     }
+    ceng_data.resize(after_idx);
+    map_objs.resize(after_idx);
 
     //everything in map_objs_to_add is moved to map_objs
     process_added_map_objs();
 
     //move forward a tick
+    cur_level_time += tick_len;
     cur_level_time_left -= tick_len;
     cur_level_tick++;
 }
@@ -447,7 +470,7 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
     }
     float w = render_w;
     float h = render_h;
-    int map_render_w = w * 0.85;
+    int map_render_w = w * MENU_OFFSET;
     int map_render_h = h;
     auto map_texture = rdr->make_texture_target(map_render_w,
                                                 map_render_h,
@@ -462,12 +485,6 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
     map_obj::MapObjRenderArgs render_args;
     render_args.set_renderer(kwin_r->rdr());
     render_args.shaders = &gfx->render_op_list->shaders;
-
-    //on a 1920x1080 screen, we want 25x25 tiles, which corresponds to roughly 2820 on the screen
-    //2125 corresponds to 24x24 tiles on a 1600x900 screen
-    //it's somewhat important to make tiles have roughly integer pixel dimensions to
-    //minimize artifacting around the edges
-    constexpr float TILES_PER_SCREEN = 2125;
 
     float tile_len = std::sqrt(map_render_w * map_render_h / TILES_PER_SCREEN);
 
@@ -531,7 +548,7 @@ std::shared_ptr<kx::gfx::Texture> Game::run(kx::gfx::KWindowRunning *kwin_r,
     constexpr int TICKS_PER_FRAME = 10;
     for(int i=0; i<TICKS_PER_FRAME; i++) {
         //~1300us on Test2(40, 40)
-        advance_one_tick(1.0 / 1440.0);
+        advance_one_tick(1.0 / 1440.0, render_w, render_h);
     }
 
     //~500us (integrated GPU, no MSAA, 1600x900, TILES_PER_SCREEN=2125) on Test2(40, 40)

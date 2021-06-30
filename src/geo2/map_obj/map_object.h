@@ -4,17 +4,25 @@
 
 namespace geo2 { namespace map_obj {
 
+enum class Team {
+    NotSet, Neutral, Ally, Enemy
+};
+
+static inline bool are_enemies(Team t1, Team t2)
+{
+    return t1 != t2;
+}
+
 class MapObjInitArgs;
 class MapObjRun1Args;
 class MapObjRun2Args;
 class MapObjRenderArgs;
 class HandleCollisionArgs;
-class CosmeticMapObj;
 
 #define HANDLE_COLLISION_FUNC_DECLARATION(T) \
     void handle_collision(const class T &other, const HandleCollisionArgs &args)
 
-class MapObject
+class MapObject: public std::enable_shared_from_this<MapObject>
 {
 public:
     virtual ~MapObject() = default;
@@ -38,6 +46,8 @@ public:
     virtual HANDLE_COLLISION_FUNC_DECLARATION(Wall_Type1) = 0;
     virtual HANDLE_COLLISION_FUNC_DECLARATION(Unit_Type1) = 0;
     virtual HANDLE_COLLISION_FUNC_DECLARATION(Projectile_Type1) = 0;
+
+    virtual Team get_team() const;
 };
 
 /** Note that cosmetic map objects CAN collide with things; it's just that something

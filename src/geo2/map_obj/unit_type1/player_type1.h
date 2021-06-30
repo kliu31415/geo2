@@ -1,10 +1,11 @@
 #include "geo2/map_obj/unit_type1/unit_type1.h"
+#include "geo2/weapon/weapon.h"
 
 namespace geo2 {class RenderOpGroup; class RenderOpShader; class Game;}
 
 namespace geo2 { namespace map_obj {
 
-struct PlayerInputArgs final
+struct PlayerRunSpecialArgs final
 {
     double tick_len;
 
@@ -15,6 +16,8 @@ struct PlayerInputArgs final
     bool right_pressed;
     bool up_pressed;
     bool down_pressed;
+
+    weapon::WeaponRunArgs weapon_run_args;
 };
 
 class Player_Type1 final: public Unit_Type1
@@ -31,9 +34,12 @@ class Player_Type1 final: public Unit_Type1
     nonstd::span<float> op_iu2;
 
     MapVec velocity;
+
+    std::vector<std::shared_ptr<weapon::Weapon>> weapons;
+    int cur_weapon_idx;
 public:
     Player_Type1();
-    void process_input(const PlayerInputArgs &args);
+    void run_special(const PlayerRunSpecialArgs &args, kx::Passkey<Game>);
     void init(const MapObjInitArgs &args) override;
     void run1_mt(const MapObjRun1Args &args) override;
     void run2_st(const MapObjRun2Args &args) override;

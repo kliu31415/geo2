@@ -18,9 +18,13 @@ bool MapObject::collision_could_matter([[maybe_unused]] const MapObject &other) 
     return true;
 }
 void MapObject::handle_collision([[maybe_unused]] const CosmeticMapObj &other,
-                                 const HandleCollisionArgs &args)
+                                 [[maybe_unused]] const HandleCollisionArgs &args)
 {
-    args.set_move_intent(MoveIntent::StayAtCurrentPos);
+
+}
+Team MapObject::get_team() const
+{
+    return Team::NotSet;
 }
 
 //CosmeticMapObj
@@ -31,17 +35,17 @@ void CosmeticMapObj::handle_collision(MapObject *other, const HandleCollisionArg
 void CosmeticMapObj::handle_collision([[maybe_unused]] const Wall_Type1 &other,
                                       [[maybe_unused]] const HandleCollisionArgs &args)
 {
-    args.set_move_intent(MoveIntent::StayAtCurrentPos);
+
 }
 void CosmeticMapObj::handle_collision([[maybe_unused]] const Unit_Type1 &other,
                                       [[maybe_unused]] const HandleCollisionArgs &args)
 {
-    args.set_move_intent(MoveIntent::StayAtCurrentPos);
+
 }
 void CosmeticMapObj::handle_collision([[maybe_unused]] const Projectile_Type1 &other,
                                       [[maybe_unused]] const HandleCollisionArgs &args)
 {
-    args.set_move_intent(MoveIntent::StayAtCurrentPos);
+
 }
 
 }}

@@ -131,7 +131,6 @@ public:
     void set2(const std::vector<std::shared_ptr<map_obj::MapObject>> *map_objs_,
               std::function<bool(const map_obj::MapObject&,
                                const map_obj::MapObject&)> collision_could_matter_);
-    void precompute(); ///depends on set_cur_des, but not set2
     std::vector<CEng1Collision> find_collisions();
     void update_intent(int idx, MoveIntent intent, std::vector<CEng1Collision> *add_to);
 };

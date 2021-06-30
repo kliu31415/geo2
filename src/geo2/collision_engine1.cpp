@@ -160,39 +160,40 @@ void CollisionEngine1::set2(const std::vector<std::shared_ptr<map_obj::MapObject
 
     k_expects(map_objs->size() == ceng_data->size());
 }
-void CollisionEngine1::precompute()
+std::vector<CEng1Collision> CollisionEngine1::find_collisions()
 {
-    auto get_AABB_dim = [this](const Polygon *polygon, int) -> void
-                                {
-                                    const auto &aabb = polygon->get_AABB();
-                                    max_AABB_w = std::max(max_AABB_w, aabb.x2 - aabb.x1);
-                                    max_AABB_h = std::max(max_AABB_h, aabb.y2 - aabb.y1);
-                                };
-
+    //calculate the global AABB and the max AABB width/height
     max_AABB_w = 0.0f;
     max_AABB_h = 0.0f;
-    for(auto &cdata: *ceng_data)
-        cdata.for_each(get_AABB_dim);
 
     //we grid things based on their top left corner, so calculate the global
     //AABB based on top left corners only.
     global_AABB = AABB::make_maxbad_AABB();
 
-    auto calc_global_AABB = [this](const Polygon *polygon, int) -> void
+    auto calc_global_AABB_and_get_dim = [this](const Polygon *polygon, int) -> void
     {
+        const auto &aabb = polygon->get_AABB();
+        max_AABB_w = std::max(max_AABB_w, aabb.x2 - aabb.x1);
+        max_AABB_h = std::max(max_AABB_h, aabb.y2 - aabb.y1);
+
         global_AABB.x1 = std::min(global_AABB.x1, polygon->get_AABB().x1);
         global_AABB.x2 = std::max(global_AABB.x2, polygon->get_AABB().x1);
         global_AABB.y1 = std::min(global_AABB.y1, polygon->get_AABB().y1);
         global_AABB.y2 = std::max(global_AABB.y2, polygon->get_AABB().y1);
     };
-    for(auto &cdata: *ceng_data)
-        cdata.for_each(calc_global_AABB);
+
+    for(auto &cdata: *ceng_data) {
+        if(cdata.get_move_intent()==MoveIntent::StayAtCurrentPos ||
+           cdata.get_move_intent()==MoveIntent::GoToDesiredPos)
+        {
+            cdata.for_each(calc_global_AABB_and_get_dim);
+        }
+    }
 
     grid_rect_w = (global_AABB.x2 - global_AABB.x1) / GRID_LEN;
     grid_rect_h = (global_AABB.y2 - global_AABB.y1) / GRID_LEN;
-}
-std::vector<CEng1Collision> CollisionEngine1::find_collisions()
-{
+
+    //make a list of the active objects and put them in a spatial partition grid
     active_objs.clear();
 
     //~300-350us on Test2(40, 40), which adding to the grid takes ~200us
@@ -229,8 +230,8 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
     //consist of the same number of objects. Empirically, using a power of ~0.75
     //results in the best runtime.
     for(size_t i=0; i<num_threads; i++) {
-        size_t idx1 = ceng_data->size() * std::pow(i / (double)num_threads, 0.75);
-        size_t idx2 = ceng_data->size() * std::pow((i+1) / (double)num_threads, 0.75);
+        size_t idx1 = active_objs.size() * std::pow(i / (double)num_threads, 0.75);
+        size_t idx2 = active_objs.size() * std::pow((i+1) / (double)num_threads, 0.75);
         tasks[i] = [num_threads, i, idx1, idx2, this, &collisions]
                     {
                         for(size_t j=idx1; j<idx2; j++)
@@ -263,6 +264,7 @@ void CollisionEngine1::update_intent(int idx, MoveIntent prev_intent, std::vecto
 {
     //if the intent didn't change, do nothing
     auto new_intent = (*ceng_data)[idx].get_move_intent();
+    k_expects(new_intent != MoveIntent::NotSet);
     if(new_intent == prev_intent)
         return;
 
