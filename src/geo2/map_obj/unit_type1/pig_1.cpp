@@ -32,8 +32,8 @@ void Pig_1::handle_collision([[maybe_unused]] const Projectile_Type1 &other,
 void Pig_1::add_render_objs(const MapObjRenderArgs &args)
 {
     if(op == nullptr) {
-        op_group = std::make_shared<RenderOpGroup>(2000.0);
-        op = std::make_shared<RenderOpShader>(*args.shaders->pig_1);
+        op_group = std::make_shared<RenderOpGroup>(args.get_NPC_render_priority());
+        op = std::make_shared<RenderOpShader>(*args.get_shaders()->pig_1);
         op_group->add_op(op);
 
         auto iu_map = op->map_instance_uniform(0);

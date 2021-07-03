@@ -5,7 +5,7 @@
 
 namespace geo2 {
 
-const std::string PATH = "geo2_data/shaders/map_objs/";
+const std::string PATH = "geo2_data/shaders/";
 
 void make_shader_vf_1ub(std::unique_ptr<GShader> *shader,
                         kx::gfx::Renderer *rdr,
@@ -33,7 +33,7 @@ void GameRenderOpList::Shaders::init(kx::gfx::Renderer *rdr, kx::Passkey<GameRen
 
     using DM = kx::gfx::DrawMode;
 
-    make_shader_vf_1ub(&test_terrain_1, rdr, "floor_type1/test_terrain1",
+    make_shader_vf_1ub(&test_terrain_1, rdr, "map_objs/floor_type1/test_terrain1",
                        128, DM::TriangleStrip, 4,
                        "block1", 0, 8*sizeof(float));
 
@@ -41,20 +41,24 @@ void GameRenderOpList::Shaders::init(kx::gfx::Renderer *rdr, kx::Passkey<GameRen
                        204, DM::Triangles, 3,
                        "block1", 0, 20*sizeof(float));
 
-    make_shader_vf_1ub(&monoc_wall_1, rdr, "wall_type1/monochromatic_wall_1",
+    make_shader_vf_1ub(&monoc_wall_1, rdr, "map_objs/wall_type1/monochromatic_wall_1",
                        512, DM::TriangleStrip, 4,
                        "block1", 0, 8*sizeof(float));
 
-    make_shader_vf_1ub(&monoc_floor_1, rdr, "floor_type1/monochromatic_floor_1",
+    make_shader_vf_1ub(&monoc_floor_1, rdr, "map_objs/floor_type1/monochromatic_floor_1",
                        512, DM::TriangleStrip, 4,
                        "block1", 0, 8*sizeof(float));
 
-    make_shader_vf_1ub(&pig_1, rdr, "unit_type1/pig_1",
+    make_shader_vf_1ub(&pig_1, rdr, "map_objs/unit_type1/pig_1",
                        113, DM::TriangleStrip, 8,
                        "block1", 0, 9*4*sizeof(float));
 
-    make_shader_vf_1ub(&laser_proj_1, rdr, "proj_type1/laser_proj_1",
+    make_shader_vf_1ub(&laser_proj_1, rdr, "map_objs/proj_type1/laser_proj_1",
                        256, DM::Triangles, 3,
+                       "block1", 0, 4*4*sizeof(float));
+
+    make_shader_vf_1ub(&laser_1, rdr, "weapons/laser_1",
+                       256, DM::TriangleStrip, 4,
                        "block1", 0, 4*4*sizeof(float));
 }
 

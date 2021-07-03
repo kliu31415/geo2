@@ -5,10 +5,12 @@
 namespace geo2 { namespace map_obj {
 
 SimpleProj_1::SimpleProj_1(const std::shared_ptr<MapObject> &owner_,
+                           double damage_,
                            double lifespan_,
                            MapCoord pos_,
                            MapVec velocity_):
     Projectile_Type1(owner_),
+    damage(damage_),
     life_left(lifespan_),
     current_pos(pos_),
     velocity(velocity_)

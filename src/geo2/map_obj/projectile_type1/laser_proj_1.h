@@ -14,7 +14,8 @@ class LaserProj_1 final: public SimpleProj_1
     std::unique_ptr<Polygon> base_shape;
 public:
     LaserProj_1(const std::shared_ptr<MapObject> &owner_,
-                double lifespan,
+                double damage_,
+                double lifespan_,
                 MapCoord pos_,
                 MapVec velocity_,
                 double rot);

@@ -1,6 +1,6 @@
 #include "geo2/map_obj/unit_type1/player_type1.h"
 #include "geo2/map_obj/map_obj_args.h"
-#include "geo2/weapon/test_laser_1.h"
+#include "geo2/weapon/laser_1.h"
 
 #include <iostream>
 
@@ -157,6 +157,7 @@ void Player_Type1::run_special(const PlayerRunSpecialArgs &args, kx::Passkey<Gam
 
     k_expects(cur_weapon_idx < (int)weapons.size());
     weapons[cur_weapon_idx]->run(args.weapon_run_args);
+    weapon_angle = args.weapon_run_args.get_angle();
 }
 void Player_Type1::init([[maybe_unused]] const MapObjInitArgs &args)
 {
@@ -206,11 +207,9 @@ void Player_Type1::run2_st([[maybe_unused]] const MapObjRun2Args &args)
 void Player_Type1::add_render_objs(const MapObjRenderArgs &args)
 {
     if(op1 == nullptr) {
-        op_group = std::make_shared<RenderOpGroup>(3000.0);
-        op1 = std::make_shared<RenderOpShader>(*args.shaders->outlined_tri);
-        op_group->add_op(op1);
-        op2 = std::make_shared<RenderOpShader>(*args.shaders->outlined_tri);
-        op_group->add_op(op2);
+        op_group = std::make_shared<RenderOpGroup>(args.get_player_render_priority());
+        op1 = std::make_shared<RenderOpShader>(*args.get_shaders()->outlined_tri);
+        op2 = std::make_shared<RenderOpShader>(*args.get_shaders()->outlined_tri);
         auto iu_map = op1->map_instance_uniform(0);
         op_iu1 = {(float*)iu_map.begin(), (float*)iu_map.end()};
         iu_map = op2->map_instance_uniform(0);
@@ -260,6 +259,18 @@ void Player_Type1::add_render_objs(const MapObjRenderArgs &args)
     op_iu2[5] = op_iu1[5];
 
     args.add_op_group(op_group);
+    op_group->clear();
+    op_group->add_op(op1);
+    op_group->add_op(op2);
+
+    weapon::WeaponRenderArgs weapon_render_args;
+    weapon_render_args.set_render_args((RenderArgs)args);
+    weapon_render_args.set_op_group(op_group);
+    weapon_render_args.set_owner_info(weapon::WeaponOwnerInfo(position, WEAPON_OFFSET));
+    weapon_render_args.set_angle(weapon_angle);
+    weapon_render_args.set_render_priority(args.get_player_render_priority());
+
+    weapons[cur_weapon_idx]->render(weapon_render_args);
 }
 void Player_Type1::set_position(MapCoord pos, kx::Passkey<Game>)
 {

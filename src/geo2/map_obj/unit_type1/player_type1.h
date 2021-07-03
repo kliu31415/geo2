@@ -35,9 +35,13 @@ class Player_Type1 final: public Unit_Type1
 
     MapVec velocity;
 
+    double weapon_angle;
+
     std::vector<std::shared_ptr<weapon::Weapon>> weapons;
     int cur_weapon_idx;
 public:
+    static constexpr float WEAPON_OFFSET = 0.5f;
+
     Player_Type1();
     void run_special(const PlayerRunSpecialArgs &args, kx::Passkey<Game>);
     void init(const MapObjInitArgs &args) override;

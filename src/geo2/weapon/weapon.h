@@ -2,9 +2,12 @@
 
 #include "geo2/geometry.h"
 #include "geo2/map_obj/map_object.h"
+#include "geo2/game_render_op_list.h"
+#include "geo2/render_args.h"
 
 #include <SDL2/SDL_mouse.h>
 #include <cmath>
+#include <memory>
 
 namespace geo2 { namespace weapon {
 
@@ -27,6 +30,7 @@ class WeaponRunArgs final
     MapCoord cursor_pos;
     double tick_len;
     double cur_level_time;
+    double angle;
     Uint32 mouse_state;
 public:
     inline bool is_lmb_down() const
@@ -48,6 +52,14 @@ public:
     inline WeaponOwnerInfo get_owner_info() const
     {
         return owner_info;
+    }
+    inline void set_angle(double a)
+    {
+        angle = a;
+    }
+    inline double get_angle() const
+    {
+        return angle;
     }
     inline void set_mouse_state(Uint32 state)
     {
@@ -83,6 +95,56 @@ public:
     }
 };
 
+/** Take care when rendering a weapon; you have to clear RenderOpGroup every
+ *  time! This is because Weapon modifies the RenderOpGroups you give it,
+ *  so you can't just cache the RenderOpGroup and keep reusing it.
+ *
+ */
+class WeaponRenderArgs final: public RenderArgs
+{
+    std::shared_ptr<RenderOpGroup> op_group;
+    WeaponOwnerInfo owner_info;
+    double angle;
+    float priority;
+public:
+    inline void set_op_group(const std::shared_ptr<RenderOpGroup> &group)
+    {
+        op_group = group;
+    }
+    inline void add_render_op(const std::shared_ptr<RenderOpShader> &op) const
+    {
+        op_group->add_op(op);
+    }
+    inline void set_render_priority(float priority_)
+    {
+        priority = priority_;
+    }
+    inline float get_render_priority() const
+    {
+        return priority;
+    }
+    inline void set_render_args(const RenderArgs &args)
+    {
+        *static_cast<RenderArgs*>(this) = args;
+    }
+    inline void set_owner_info(WeaponOwnerInfo info)
+    {
+        owner_info = info;
+    }
+    inline WeaponOwnerInfo get_owner_info() const
+    {
+        return owner_info;
+    }
+    inline void set_angle(double a)
+    {
+        angle = a;
+    }
+    inline double get_angle() const
+    {
+        return angle;
+    }
+};
+
 class WeaponSwapInArgs final
 {
 public:
@@ -102,6 +164,7 @@ public:
     virtual ~Weapon() = default;
 
     virtual void run(const WeaponRunArgs &args) = 0;
+    virtual void render(const WeaponRenderArgs &args) = 0;
     virtual void swap_in(const WeaponSwapInArgs &args);
     virtual void swap_out(const WeaponSwapOutArgs &args);
 };

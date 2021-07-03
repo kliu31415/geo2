@@ -7,13 +7,15 @@ namespace geo2 { namespace map_obj {
 class SimpleProj_1: public Projectile_Type1
 {
 protected:
+    double damage;
     double life_left;
     MapCoord current_pos;
     MapCoord desired_pos;
     MapVec velocity;
 
     SimpleProj_1(const std::shared_ptr<MapObject> &owner_,
-                 double lifespan,
+                 double damage_,
+                 double lifespan_,
                  MapCoord pos_,
                  MapVec velocity_);
 public:

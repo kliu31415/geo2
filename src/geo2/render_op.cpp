@@ -157,6 +157,10 @@ void RenderOpGroup::add_op(const std::shared_ptr<RenderOp> &op)
     }
     ops.push_back(op);
 }
+void RenderOpGroup::clear()
+{
+    ops.clear();
+}
 bool RenderOpGroup::empty() const
 {
     return ops.empty();

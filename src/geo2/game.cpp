@@ -296,11 +296,14 @@ void Game::advance_one_tick(double tick_len, int render_w, int render_h)
     auto offset = MapVec(mouse_x - 0.5f*MENU_OFFSET*render_w,
                          mouse_y - 0.5f*render_h)
                          / tile_len;
-    weapon_args.set_owner_info(weapon::WeaponOwnerInfo(player->get_pos(), 0.5f));
-    weapon_args.set_cursor_pos(player->get_pos() + offset);
+    auto player_pos = player->get_pos();
+    weapon_args.set_owner_info(weapon::WeaponOwnerInfo(player_pos, map_obj::Player_Type1::WEAPON_OFFSET));
+    auto cursor_pos = player_pos + offset;
+    weapon_args.set_cursor_pos(cursor_pos);
     weapon_args.set_tick_len(tick_len);
     weapon_args.set_cur_level_time(cur_level_time);
     weapon_args.set_mouse_state(kx::gfx::get_mouse_state());
+    weapon_args.set_angle(std::atan2(cursor_pos.y - player_pos.y, cursor_pos.x - player_pos.x));
     player_args.weapon_run_args = weapon_args;
 
     player->run_special(player_args, {});
@@ -484,7 +487,7 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
     //render the map and things on it
     map_obj::MapObjRenderArgs render_args;
     render_args.set_renderer(kwin_r->rdr());
-    render_args.shaders = &gfx->render_op_list->shaders;
+    render_args.set_shaders(&gfx->render_op_list->shaders);
 
     float tile_len = std::sqrt(map_render_w * map_render_h / TILES_PER_SCREEN);
 

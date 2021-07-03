@@ -108,13 +108,41 @@ void CollisionEngine1::find_and_add_collisions_neq(std::vector<CEng1Collision> *
 void CollisionEngine1::find_and_add_collisions_gt(std::vector<CEng1Collision> *add_to,
                                                   const CEng1Obj &ceng_obj) const
 {
+    //Only look for collisions to the right! Break ties by x.
     const auto &aabb = ceng_obj.polygon->get_AABB();
-    int x1 = x_to_grid_x(aabb.x1 - max_AABB_w);
+    int x1 = x_to_grid_x(aabb.x1);
     int x2 = x_to_grid_x(aabb.x2);
     int y1 = y_to_grid_y(aabb.y1 - max_AABB_h);
     int y2 = y_to_grid_y(aabb.y2);
 
-    for(int x=x1; x<=x2; x++) {
+    //to optimize for performance, break this into two cases:
+    //(1) same x grid value
+    for(int y=y1; y<=y2; y++) {
+        for(const auto &other: grid.get_const_ref(x1, y)) {
+            auto other_AABB = other.polygon->get_AABB();
+
+            //only consider other objects with AABBs to the right, breaking ties by index
+            if(aabb.x1 < other_AABB.x1)
+                continue;
+            if(aabb.x1 == other_AABB.x1 && ceng_obj.idx <= other.idx)
+                continue;
+
+            if(ceng_obj.idx != other.idx &&
+               aabb.overlaps(other_AABB) &&
+               collision_could_matter(*(*map_objs)[ceng_obj.idx], *(*map_objs)[other.idx]))
+            {
+                if(ceng_obj.polygon->has_collision(*other.polygon)) {
+                    CEng1Collision collision;
+                    collision.idx1 = ceng_obj.idx;
+                    collision.idx2 = other.idx;
+                    add_to->push_back(collision);
+                }
+            }
+        }
+    }
+
+    //(2) higher x grid value
+    for(int x=x1+1; x<=x2; x++) {
         for(int y=y1; y<=y2; y++) {
             for(const auto &other: grid.get_const_ref(x, y)) {
                 //filter out a potential collision if:
@@ -124,9 +152,8 @@ void CollisionEngine1::find_and_add_collisions_gt(std::vector<CEng1Collision> *a
 
                 //note that we assume the grid cells are ordered, so we can break
                 //and move on to the next cell if our idx isn't greater than the other's idx
-                if(ceng_obj.idx <= other.idx)
-                    break;
-                if(aabb.overlaps(other.polygon->get_AABB()) &&
+                if(ceng_obj.idx != other.idx &&
+                   aabb.overlaps(other.polygon->get_AABB()) &&
                    collision_could_matter(*(*map_objs)[ceng_obj.idx], *(*map_objs)[other.idx]))
                 {
                     if(ceng_obj.polygon->has_collision(*other.polygon)) {

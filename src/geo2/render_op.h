@@ -102,6 +102,7 @@ public:
 
     RenderOpGroup(float priority_);
     void add_op(const std::shared_ptr<RenderOp> &op);
+    void clear();
     bool empty() const;
 };
 

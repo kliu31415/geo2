@@ -18,6 +18,7 @@ public:
         std::unique_ptr<GShader> monoc_floor_1;
         std::unique_ptr<GShader> pig_1;
         std::unique_ptr<GShader> laser_proj_1;
+        std::unique_ptr<GShader> laser_1;
 
         void init(kx::gfx::Renderer *rdr, kx::Passkey<GameRenderOpList>);
     };

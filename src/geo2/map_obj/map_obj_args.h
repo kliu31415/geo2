@@ -1,12 +1,10 @@
 #pragma once
 
 #include "geo2/map_obj/map_object.h"
+#include "geo2/render_args.h"
 #include "geo2/ceng1_data.h"
-
 #include "geo2/ceng1_obj.h"
-#include "geo2/game_render_op_list.h"
 
-#include "kx/gfx/renderer.h"
 #include "kx/fixed_size_array.h"
 
 namespace geo2 {class Game;}
@@ -183,13 +181,9 @@ public:
     MapObjRun2Args & operator = (MapObjRun2Args&&) = delete;
 };
 
-class MapObjRenderArgs final: public CEng1DataMutatorAttorney
+class MapObjRenderArgs final: public CEng1DataMutatorAttorney, public RenderArgs
 {
     std::vector<std::shared_ptr<RenderOpGroup>> *op_groups;
-    const kx::gfx::Renderer *rdr;
-    kx::gfx::Rect camera;
-    float cam_w_inv;
-    float cam_h_inv;
 
     /*inline kx::gfx::Rect to_cam_nc(const MapRect &rect) const
     {
@@ -201,8 +195,6 @@ class MapObjRenderArgs final: public CEng1DataMutatorAttorney
         return ret;
     }*/
 public:
-    const GameRenderOpList::Shaders *shaders;
-
     MapObjRenderArgs() = default;
 
     MapObjRenderArgs(const MapObjRenderArgs&) = delete;
@@ -210,39 +202,6 @@ public:
     MapObjRenderArgs(MapObjRenderArgs&&) = delete;
     MapObjRenderArgs & operator = (MapObjRenderArgs&&) = delete;
 
-    inline bool is_x_line_ndc_in_view(float x1, float x2) const
-    {
-        return rdr->is_x_line_ndc_in_view(x1, x2);
-    }
-    inline bool is_y_line_ndc_in_view(float y1, float y2) const
-    {
-        return rdr->is_y_line_ndc_in_view(y1, y2);
-    }
-    inline bool is_x_ndc_in_view(float x) const
-    {
-        return rdr->is_x_ndc_in_view(x);
-    }
-    inline bool is_y_ndc_in_view(float y) const
-    {
-        return rdr->is_y_ndc_in_view(y);
-    }
-    inline bool is_coord_ndc_in_view(float x, float y) const
-    {
-        return is_x_ndc_in_view(x) && is_y_ndc_in_view(y);
-    }
-    inline float x_to_ndc(float x) const
-    {
-        return rdr->x_nc_to_ndc((x - camera.x) * cam_w_inv);
-    }
-    inline float y_to_ndc(float y) const
-    {
-        return rdr->y_nc_to_ndc((y - camera.y) * cam_h_inv);
-    }
-    inline bool is_AABB_in_view(const AABB &aabb) const
-    {
-        return is_x_line_ndc_in_view(x_to_ndc(aabb.x1), x_to_ndc(aabb.x2)) &&
-               is_y_line_ndc_in_view(y_to_ndc(aabb.y1), y_to_ndc(aabb.y2));
-    }
     inline void add_op_group(const std::shared_ptr<RenderOpGroup> &op_group) const
     {
         op_groups->push_back(op_group);
@@ -251,15 +210,25 @@ public:
     {
         op_groups = op_groups_;
     }
-    inline void set_renderer(kx::gfx::Renderer *renderer)
+    inline float get_proj_render_priority() const
     {
-        rdr = renderer;
+        return 5000;
     }
-    inline void set_camera(kx::gfx::Rect camera_)
+    inline float get_player_render_priority() const
     {
-        camera = camera_;
-        cam_w_inv = 1.0f / camera.w;
-        cam_h_inv = 1.0f / camera.h;
+        return 4000;
+    }
+    inline float get_NPC_render_priority() const
+    {
+        return 3000;
+    }
+    inline float get_wall_render_priority() const
+    {
+        return 2000;
+    }
+    inline float get_floor_render_priority() const
+    {
+        return 1000;
     }
 };
 

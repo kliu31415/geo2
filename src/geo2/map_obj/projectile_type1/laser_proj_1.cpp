@@ -15,11 +15,12 @@ const std::unique_ptr<Polygon> BASE_SHAPE = Polygon::make(
                        0.0              , -SIDE_LEN * 2.0 / 3.0 * std::sqrt(3.0) / 2.0});
 
 LaserProj_1::LaserProj_1(const std::shared_ptr<MapObject> &owner_,
-                         double lifespan,
+                         double damage_,
+                         double lifespan_,
                          MapCoord pos_,
                          MapVec velocity_,
                          double rot):
-    SimpleProj_1(owner_, lifespan, pos_, velocity_),
+    SimpleProj_1(owner_, damage_, lifespan_, pos_, velocity_),
     base_shape([rot]()
                 {
                     auto ret = BASE_SHAPE->copy();
@@ -55,8 +56,8 @@ void LaserProj_1::run1_mt(const MapObjRun1Args &args)
 void LaserProj_1::add_render_objs(const MapObjRenderArgs &args)
 {
     if(op == nullptr) {
-        op_group = std::make_shared<RenderOpGroup>(1000.0);
-        op = std::make_shared<RenderOpShader>(*args.shaders->laser_proj_1);
+        op_group = std::make_shared<RenderOpGroup>(args.get_proj_render_priority());
+        op = std::make_shared<RenderOpShader>(*args.get_shaders()->laser_proj_1);
         op_group->add_op(op);
 
         auto iu_map = op->map_instance_uniform(0);
@@ -84,7 +85,6 @@ void LaserProj_1::add_render_objs(const MapObjRenderArgs &args)
             op_iu[i*2] = args.x_to_ndc(v.x);
             op_iu[i*2 + 1] = args.y_to_ndc(v.y);
         }
-
         args.add_op_group(op_group);
     }
 }

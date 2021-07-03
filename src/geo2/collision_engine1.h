@@ -29,8 +29,6 @@ class CollisionEngine1
     constexpr static int GRID_LEN = 128; //power of 2 is faster cuz mult turns into bitshift
 
     //fastish spatial partition grid
-    //NOTE: All buckets should be sorted by CEng1Obj.idx when find_and_add_collisions_gt
-    //is called; this doesn't have to hold true for find_and_add_collisions_neq
     template<class T> class Grid
     {
         std::unique_ptr<std::vector<T>[]> vals;
@@ -52,7 +50,6 @@ class CollisionEngine1
         {
             return vals[a*GRID_LEN + b];
         }
-        //this DOESN'T preserve ordering! Don't call this before find_and_add_collisions_gt.
         inline void remove_one_with_idx(int x, int y, int idx)
         {
             auto &grid_xy = get_ref(x, y);

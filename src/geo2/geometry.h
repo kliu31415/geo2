@@ -11,6 +11,7 @@
 #include <optional>
 #include <cmath>
 #include <vector>
+#include <array>
 
 namespace geo2 {
 
@@ -23,7 +24,7 @@ template<class T> struct _MapVec
     T y;
 
     _MapVec() {}
-    _MapVec(T x_, T y_):
+    constexpr _MapVec(T x_, T y_):
         x(x_),
         y(y_)
     {}
@@ -83,8 +84,40 @@ template<class T> struct _MapCoord
     {
         return _MapCoord(x + other.x, y + other.y);
     }
+    template<class U> T dot_prod(U v1, U v2) const
+    {
+        return x*v1 + y*v2;
+    }
+    inline static MapVec ORIGIN()
+    {
+        return MapVec(0, 0);
+    }
 };
 using MapCoord = _MapCoord<double>;
+
+template<class T> struct _Matrix2
+{
+    static_assert(std::is_floating_point<T>::value);
+
+    std::array<std::array<T, 2>, 2> vals;
+
+    template<class U> _MapVec<U> operator * (const _MapVec<U> &vec) const
+    {
+        U x = vals[0][0]*vec.x + vals[0][1]*vec.y;
+        U y = vals[1][0]*vec.x + vals[1][1]*vec.y;
+        return _MapVec<U>(x, y);
+    }
+    inline static _Matrix2 make_rotation_matrix(T theta)
+    {
+        _Matrix2 ret;
+        ret.vals[0][0] = std::cos(theta);
+        ret.vals[1][0] = std::sin(theta);
+        ret.vals[0][1] = -ret.vals[1][0];
+        ret.vals[1][1] = ret.vals[0][0];
+        return ret;
+    }
+};
+using Matrix2 = _Matrix2<double>;
 
 template<class T> struct _MapRect
 {
