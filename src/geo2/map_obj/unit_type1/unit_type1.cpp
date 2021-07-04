@@ -4,7 +4,7 @@
 namespace geo2 { namespace map_obj {
 
 Unit_Type1::Unit_Type1(Team team_, MapCoord position_, double collision_damage_):
-    position(position_),
+    current_position(position_),
     collision_damage(collision_damage_),
     team(team_)
 {}
@@ -31,7 +31,7 @@ void Unit_Type1::handle_collision([[maybe_unused]] const Projectile_Type1 &other
 }
 MapCoord Unit_Type1::get_pos() const
 {
-    return position;
+    return current_position;
 }
 
 }}

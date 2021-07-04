@@ -541,7 +541,7 @@ Game::Game():
     thread_pool(std::make_shared<ThreadPool>(std::thread::hardware_concurrency() - 1)),
     collision_engine(std::make_unique<CollisionEngine1>(thread_pool))
 {
-    generate_and_start_level(Level::Name::Test2);
+    generate_and_start_level(Level::Name::Test3);
 }
 Game::~Game()
 {}

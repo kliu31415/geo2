@@ -400,7 +400,7 @@
 1602827240 d:\code\cbprojects\geo2\src\kx\sdl_deleter.h
 	<memory>
 
-1623038947 d:\code\cbprojects\geo2\src\kx\gfx\renderer_types.h
+1625374547 d:\code\cbprojects\geo2\src\kx\gfx\renderer_types.h
 	"kx/sdl_deleter.h"
 	<SDL2/SDL_rect.h>
 	"glad/glad.h"
@@ -528,7 +528,7 @@
 	<vector>
 	<cstdint>
 
-1625286212 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
+1625374623 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
 	"geo2/map_obj/floor_type1/test_terrain1.h"
 	"geo2/game_render_op_list.h"
 	"geo2/game.h"
@@ -615,7 +615,7 @@
 	<string>
 	<variant>
 
-1625293093 source:d:\code\cbprojects\geo2\src\geo2\game_render_op_list.cpp
+1625358035 source:d:\code\cbprojects\geo2\src\geo2\game_render_op_list.cpp
 	"geo2/game_render_op_list.h"
 	"kx/gfx/kwindow.h"
 	"kx/gfx/renderer.h"
@@ -636,7 +636,7 @@
 	<array>
 	<vector>
 
-1625347799 d:\code\cbprojects\geo2\src\geo2\geometry.h
+1625378012 d:\code\cbprojects\geo2\src\geo2\geometry.h
 	<immintrin.h>
 	"kx/fixed_size_array.h"
 	"span_lite.h"
@@ -780,7 +780,7 @@
 	"geo2/map_obj/unit_type1/unit_type1.h"
 	"geo2/weapon/weapon.h"
 
-1624945977 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\unit_type1.h
+1625376557 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\unit_type1.h
 	"geo2/map_obj/map_object.h"
 
 1624942916 d:\code\cbprojects\geo2\src\geo2\map_obj\map_object.h
@@ -804,9 +804,10 @@
 	"geo2/map_obj/floor_type1/floor_type1.h"
 	"kx/gfx/renderer_types.h"
 
-1624605341 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\pig_1.h
+1625376717 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\pig_1.h
 	"geo2/map_obj/unit_type1/unit_type1.h"
 	"geo2/game_render_op_list.h"
+	<array>
 
 1624335856 source:d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\floor_type1.cpp
 	"geo2/map_obj/floor_type1/floor_type1.h"
@@ -831,11 +832,11 @@
 	"kx/io.h"
 	<cmath>
 
-1625285996 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\pig_1.cpp
+1625376912 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\pig_1.cpp
 	"geo2/map_obj/unit_type1/pig_1.h"
 	"geo2/map_obj/map_obj_args.h"
 
-1625350193 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\player_type1.cpp
+1625376706 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\player_type1.cpp
 	"geo2/map_obj/unit_type1/player_type1.h"
 	"geo2/map_obj/map_obj_args.h"
 	"geo2/weapon/laser_1.h"
@@ -849,7 +850,7 @@
 	"geo2/map_obj/wall_type1/wall_type1.h"
 	"geo2/map_obj/map_obj_args.h"
 
-1625031099 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\unit_type1.cpp
+1625376685 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\unit_type1.cpp
 	"geo2/map_obj/unit_type1/unit_type1.h"
 	"geo2/map_obj/map_obj_args.h"
 
@@ -889,15 +890,15 @@
 1625284060 d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\simple_proj_1.h
 	"geo2/map_obj/projectile_type1/projectile_type1.h"
 
-1625293034 source:d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\laser_proj_1.cpp
+1625376656 source:d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\laser_proj_1.cpp
 	"geo2/map_obj/projectile_type1/laser_proj_1.h"
 	"geo2/map_obj/map_obj_args.h"
 	"geo2/render_op.h"
 	<cmath>
 	<vector>
 
-1625278578 d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\laser_proj_1.h
-	"geo2/map_obj/projectile_type1/simple_proj_1.h"
+1625374906 d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\laser_proj_1.h
+	"geo2/map_obj/projectile_type1/basic_proj_1.h"
 
 1624601388 d:\code\cbprojects\geo2\src\geo2\ceng1_obj.h
 	"geo2/geometry.h"
@@ -920,11 +921,19 @@
 	"kx/gfx/renderer.h"
 	"geo2/game_render_op_list.h"
 
-1625350362 source:d:\code\cbprojects\geo2\src\geo2\weapon\laser_1.cpp
+1625374738 source:d:\code\cbprojects\geo2\src\geo2\weapon\laser_1.cpp
 	"geo2/weapon/laser_1.h"
 	"geo2/map_obj/projectile_type1/laser_proj_1.h"
 
 1625288583 d:\code\cbprojects\geo2\src\geo2\weapon\laser_1.h
 	"geo2/weapon/weapon.h"
 	<array>
+
+1625376567 d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\basic_proj_1.h
+	"geo2/map_obj/projectile_type1/projectile_type1.h"
+
+1625376617 source:d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\basic_proj_1.cpp
+	"geo2/map_obj/projectile_type1/basic_proj_1.h"
+	"geo2/map_obj/unit_type1/unit_type1.h"
+	"geo2/map_obj/map_obj_args.h"
 

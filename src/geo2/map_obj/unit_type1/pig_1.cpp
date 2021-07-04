@@ -7,9 +7,53 @@ Pig_1::Pig_1(MapCoord position_):
     Unit_Type1(Team::Enemy, position_, 2.0)
 {}
 
+const kx::gfx::LinearColor INNER_COLOR(1.0f, 0.3f, 0.3f, 1.0f);
+const kx::gfx::LinearColor BORDER_COLOR(0.0f, 0.0f, 0.0f, 1.0f);
+constexpr float BORDER_THICKNESS = 0.1f;
+
+constexpr float PART_W[]{2.0f, 0.7f, 0.3f, 0.15f, 0.15f};
+constexpr float PART_H[]{1.5f, 1.0f, 0.4f, 0.15f, 0.15f};
+constexpr MapVec v0[]{{-1.5f, -0.75f},
+                      {0.5f - BORDER_THICKNESS, -0.5f},
+                      {1.2f - BORDER_THICKNESS*2, -0.2f},
+                      {0.85f - BORDER_THICKNESS, -0.3f},
+                      {0.85f - BORDER_THICKNESS, 0.15f}};
+
+//starts at the bottom left and goes CCW
+const std::unique_ptr<Polygon> BASE_SHAPE = Polygon::make(
+    std::vector<float>{v0[0].x, v0[0].y + PART_H[0],
+                       v0[1].x, v0[0].y + PART_H[0],
+                       v0[1].x, v0[1].y + PART_H[1],
+                       v0[2].x, v0[1].y + PART_H[1],
+                       v0[2].x, v0[2].y + PART_H[2],
+                       v0[2].x + PART_W[2], v0[2].y + PART_H[2],
+                       v0[2].x + PART_W[2], v0[2].y,
+                       v0[2].x, v0[2].y,
+                       v0[2].x, v0[1].y,
+                       v0[1].x, v0[1].y,
+                       v0[1].x, v0[0].y,
+                       v0[0].x, v0[0].y});
+
+void Pig_1::init(const MapObjInitArgs &args)
+{
+     args.add_current_pos(Polygon::make_with_num_sides(12));
+     args.add_desired_pos(Polygon::make_with_num_sides(12));
+}
 void Pig_1::run1_mt([[maybe_unused]] const MapObjRun1Args &args)
 {
+    desired_position = current_position;
 
+    auto cur = args.get_sole_current_pos();
+    cur->copy_from(BASE_SHAPE.get());
+    //cur->rotate_about_origin(0.7);
+    cur->translate(current_position.x, current_position.y);
+
+    auto des = args.get_sole_desired_pos();
+    des->copy_from(BASE_SHAPE.get());
+    //des->rotate_about_origin(0.7);
+    des->translate(desired_position.x, desired_position.y);
+
+    args.set_move_intent(MoveIntent::GoToDesiredPos);
 }
 
 void Pig_1::handle_collision([[maybe_unused]] const Wall_Type1 &other,
@@ -29,78 +73,51 @@ void Pig_1::handle_collision([[maybe_unused]] const Projectile_Type1 &other,
     //deal damage? apply effects?
     //move_intent remains unchanged
 }
+
 void Pig_1::add_render_objs(const MapObjRenderArgs &args)
 {
-    if(op == nullptr) {
+    if(op_group == nullptr) {
         op_group = std::make_shared<RenderOpGroup>(args.get_NPC_render_priority());
-        op = std::make_shared<RenderOpShader>(*args.get_shaders()->pig_1);
-        op_group->add_op(op);
+        for(int i=0; i<5; i++) {
+            ops[i] = std::make_shared<RenderOpShader>(*args.get_shaders()->pig_1);
+            op_group->add_op(ops[i]);
+            auto iu_map = ops[i]->map_instance_uniform(0);
+            op_ius[i] = {(float*)iu_map.begin(), (float*)iu_map.end()};
 
-        auto iu_map = op->map_instance_uniform(0);
-        op_iu = {(float*)iu_map.begin(), (float*)iu_map.end()};
+            *reinterpret_cast<kx::gfx::LinearColor*>(&op_ius[i][12]) = INNER_COLOR;
+            *reinterpret_cast<kx::gfx::LinearColor*>(&op_ius[i][16]) = BORDER_COLOR;
+        }
 
-        //interior color
-        op_iu[4] = 1.0f;
-        op_iu[5] = 0.25f;
-        op_iu[6] = 0.3f;
-        op_iu[7] = 1.0f;
+        for(int i=0; i<5; i++) {
+            op_ius[i][8] = -0.5f * PART_W[i];
+            op_ius[i][9] = -0.5f * PART_H[i];
+            op_ius[i][10] = 0.5f * PART_W[i];
+            op_ius[i][11] = 0.5f * PART_H[i];
 
-        //border color
-        op_iu[8] = 0.0f;
-        op_iu[9] = 0.0f;
-        op_iu[10] = 0.0f;
-        op_iu[11] = 1.0f;
+            op_ius[i][6] = op_ius[i][10] - BORDER_THICKNESS;
+            op_ius[i][7] = op_ius[i][11] - BORDER_THICKNESS;
+        }
 
-        //eye color
-        op_iu[12] = 0.02f;
-        op_iu[13] = 0.02f;
-        op_iu[14] = 0.02f;
-        op_iu[15] = 1.0f;
-
-        //rotation center
-        op_iu[18] = 0.5f;
-        op_iu[19] = 0.5f;
-
-        //eye center
-        op_iu[20] = 0.85f;
-        op_iu[21] = 0.4f;
-
-        //eye radius squared
-        op_iu[22] = std::pow(0.15f, 2);
-
-        //border thickness
-        op_iu[23] = 0.03f;
-
-        //pig shape
-        op_iu[28] = 0.0f;
-        op_iu[29] = 0.8f;
-
-        op_iu[30] = 0.3f;
-        op_iu[31] = 1.0f;
-
-        op_iu[32] = 0.65f;
-        op_iu[33] = 1.0f;
-
-        op_iu[34] = 1.0f;
-        op_iu[35] = 0.7f;
+        //the entire eye is the border color
+        for(int i=3; i<=4; i++) {
+            op_ius[i][6] = -1;
+            op_ius[i][7] = -1;
+        }
     }
 
+    auto rot_mat = Matrix2::make_rotation_matrix(0.0f);
+    for(int i=0; i<5; i++) {
+        auto v0_rot = current_position + rot_mat * (v0[i]);
+        auto v1_rot = current_position + rot_mat * (v0[i] + MapVec(PART_W[i], 0));
+        auto v2_rot = current_position + rot_mat * (v0[i] + MapVec(0, PART_H[i]));
 
-    constexpr float PIG_W = 3.5f;
-    constexpr float PIG_H = 2.0f;
-
-    //position
-    op_iu[0] = args.x_to_ndc(position.x - 0.5f*PIG_W);
-    op_iu[1] = args.y_to_ndc(position.y - 0.5f*PIG_H);
-    op_iu[2] = std::fabs(args.x_to_ndc(position.x + 0.5f*PIG_W) - op_iu[0]);
-    op_iu[3] = std::fabs(args.y_to_ndc(position.y + 0.5f*PIG_H) - op_iu[1]);
-
-    //rotation values
-    op_iu[16] = 1.0f;
-    op_iu[17] = 0.0f;
-
-    op_iu[24] = PIG_W;
-    op_iu[25] = PIG_H;
+        op_ius[i][0] = args.x_to_ndc(v0_rot.x);
+        op_ius[i][1] = args.y_to_ndc(v0_rot.y);
+        op_ius[i][2] = args.x_to_ndc(v1_rot.x);
+        op_ius[i][3] = args.y_to_ndc(v1_rot.y);
+        op_ius[i][4] = args.x_to_ndc(v2_rot.x);
+        op_ius[i][5] = args.y_to_ndc(v2_rot.y);
+    }
 
     args.add_op_group(op_group);
 }

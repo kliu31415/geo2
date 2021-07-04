@@ -265,3 +265,15 @@ enum class _BufferType {
 #else
 #error "No renderer defined!"
 #endif
+
+static_assert(sizeof(kx::gfx::SRGB_Color) == 16);
+static_assert(offsetof(kx::gfx::SRGB_Color, r) == 0);
+static_assert(offsetof(kx::gfx::SRGB_Color, g) == 4);
+static_assert(offsetof(kx::gfx::SRGB_Color, b) == 8);
+static_assert(offsetof(kx::gfx::SRGB_Color, a) == 12);
+
+static_assert(sizeof(kx::gfx::LinearColor) == 16);
+static_assert(offsetof(kx::gfx::LinearColor, r) == 0);
+static_assert(offsetof(kx::gfx::LinearColor, g) == 4);
+static_assert(offsetof(kx::gfx::LinearColor, b) == 8);
+static_assert(offsetof(kx::gfx::LinearColor, a) == 12);

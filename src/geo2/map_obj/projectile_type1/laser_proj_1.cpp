@@ -20,7 +20,7 @@ LaserProj_1::LaserProj_1(const std::shared_ptr<MapObject> &owner_,
                          MapCoord pos_,
                          MapVec velocity_,
                          double rot):
-    SimpleProj_1(owner_, damage_, lifespan_, pos_, velocity_),
+    BasicProj_1(owner_, damage_, lifespan_, pos_, velocity_),
     base_shape([rot]()
                 {
                     auto ret = BASE_SHAPE->copy();
@@ -42,14 +42,14 @@ void LaserProj_1::run1_mt(const MapObjRun1Args &args)
         return;
     }
 
-    desired_pos = current_pos + velocity*args.get_tick_len();
+    desired_position = current_position + velocity*args.get_tick_len();
 
     auto cur = args.get_sole_current_pos();
     cur->copy_from(base_shape.get());
-    cur->translate(current_pos.x, current_pos.y);
+    cur->translate(current_position.x, current_position.y);
     auto des = args.get_sole_desired_pos();
     des->copy_from(base_shape.get());
-    des->translate(desired_pos.x, desired_pos.y);
+    des->translate(desired_position.x, desired_position.y);
 
     args.set_move_intent(MoveIntent::GoToDesiredPos);
 }
@@ -77,7 +77,7 @@ void LaserProj_1::add_render_objs(const MapObjRenderArgs &args)
     }
 
     auto cur_shape = base_shape->copy();
-    cur_shape->translate(current_pos.x, current_pos.y);
+    cur_shape->translate(current_position.x, current_position.y);
     if(args.is_AABB_in_view(cur_shape->get_AABB())) {
         //position
         for(size_t i=0; i<3; i++) {

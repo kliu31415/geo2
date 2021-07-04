@@ -11,11 +11,11 @@ layout(std140) uniform block1
 };
 
 flat in int idx;
-in vec3 bary_coord;
+in vec2 pos;
 
 out vec4 frag_color;
 
 void main()
 {
-    frag_color = mix(data[idx+2], data[idx+3], dot(bary_coord, bary_coord));
+    frag_color = mix(data[idx+2], data[idx+3], 0.5*dot(pos, pos));
 }

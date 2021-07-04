@@ -409,14 +409,14 @@ public:
         auto this_d_len = get_d_len(this_n);
         auto other_d_len = get_d_len(other_n);
 
-        //could be faster to do it the other way
+        //check if it is faster to do it the other way
         if(this_n * other_d_len > other_n * this_d_len)
             return other.has_collision(*this);
 
         const __m256 mm0 = _mm256_set1_ps(0);
         const __m256 mm1 = _mm256_set1_ps(1);
 
-        for(int i=1; i<this_n; i++) {
+        for(int i=1; i<=this_n; i++) {
 
             __m256 Px = _mm256_set1_ps(vals[i-1]);
             __m256 Py = _mm256_set1_ps(vals[this_d_len + i-1]);
@@ -439,25 +439,27 @@ public:
                 __m256 Sy = p1_Sy - p2_Sy;
 
                 __m256 part3 = _mm256_fmsub_ps(Rx, Sy, Ry_times_Sx);
-                __m256 part3_rcp = _mm256_rcp_ps(part3);
 
                 __m256 part1y = Qy - Py;
                 __m256 part1x = Qx - Px;
 
+                //multiplying by the reciprocal causes some edge cases to misbehave,
+                //so we have to use division (which is slow)
                 __m256 part1y_times_Sx = part1y * Sx;
                 __m256 t_part1 = _mm256_fmsub_ps(part1x, Sy, part1y_times_Sx);
-                __m256 t = t_part1 * part3_rcp;
+                __m256 t = t_part1 / part3;
 
                 __m256 part1y_times_Rx = part1y * Rx;
                 __m256 u_part1 = _mm256_fmsub_ps(part1x, Ry, part1y_times_Rx);
-                __m256 u = u_part1 * part3_rcp;
+                __m256 u = u_part1 / part3;
 
-                //use GE and LE to avoid having to test for parallel lines in
-                //polygons; the tips of segments count for intersections with GE/LE
-                __m256 t_ge_0 = _mm256_cmp_ps(t, mm0, _CMP_GE_OQ);
-                __m256 t_le_1 = _mm256_cmp_ps(t, mm1, _CMP_LE_OQ);
-                __m256 u_ge_0 = _mm256_cmp_ps(u, mm0, _CMP_GE_OQ);
-                __m256 u_le_1 = _mm256_cmp_ps(u, mm1, _CMP_LE_OQ);
+                //use GE and LE to avoid having weird cases like when you're
+                //walking along a wall in one direction, but suddenly stop
+                //being able to
+                __m256 t_ge_0 = _mm256_cmp_ps(t, mm0, _CMP_GT_OQ);
+                __m256 t_le_1 = _mm256_cmp_ps(t, mm1, _CMP_LT_OQ);
+                __m256 u_ge_0 = _mm256_cmp_ps(u, mm0, _CMP_GT_OQ);
+                __m256 u_le_1 = _mm256_cmp_ps(u, mm1, _CMP_LT_OQ);
 
                 __m256 t_good = _mm256_and_ps(t_ge_0, t_le_1);
                 __m256 u_good = _mm256_and_ps(u_ge_0, u_le_1);

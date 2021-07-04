@@ -1,0 +1,27 @@
+#pragma once
+
+#include "geo2/map_obj/projectile_type1/projectile_type1.h"
+
+namespace geo2 { namespace map_obj {
+
+class BasicProj_1: public Projectile_Type1
+{
+protected:
+    double damage;
+    double life_left;
+    MapCoord current_position;
+    MapCoord desired_position;
+    MapVec velocity;
+
+    BasicProj_1(const std::shared_ptr<MapObject> &owner_,
+                double damage_,
+                double lifespan_,
+                MapCoord pos_,
+                MapVec velocity_);
+public:
+    virtual ~BasicProj_1() = default;
+
+    void run2_st(const MapObjRun2Args &args) override;
+};
+
+}}

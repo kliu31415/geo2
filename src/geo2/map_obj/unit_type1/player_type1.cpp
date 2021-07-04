@@ -174,18 +174,18 @@ void Player_Type1::run1_mt(const MapObjRun1Args &args)
 {
     constexpr auto PSL = PLAYER_SIDE_LEN;
 
-    MapCoord cur_v[]{{position.x - 0.5*PSL, position.y - 0.5*PSL},
-                     {position.x + 0.5*PSL, position.y - 0.5*PSL},
-                     {position.x + 0.5*PSL, position.y + 0.5*PSL},
-                     {position.x - 0.5*PSL, position.y + 0.5*PSL}};
+    MapCoord cur_v[]{{current_position.x - 0.5*PSL, current_position.y - 0.5*PSL},
+                     {current_position.x + 0.5*PSL, current_position.y - 0.5*PSL},
+                     {current_position.x + 0.5*PSL, current_position.y + 0.5*PSL},
+                     {current_position.x - 0.5*PSL, current_position.y + 0.5*PSL}};
     auto cur_span = nonstd::span<MapCoord>(std::begin(cur_v), std::end(cur_v));
 
     args.get_sole_current_pos()->remake(cur_span);
 
     if(velocity.x!=0 || velocity.y!=0) {
         args.set_move_intent(MoveIntent::GoToDesiredPos);
-        desired_position.x = position.x + velocity.x * args.get_tick_len();
-        desired_position.y = position.y + velocity.y * args.get_tick_len();
+        desired_position.x = current_position.x + velocity.x * args.get_tick_len();
+        desired_position.y = current_position.y + velocity.y * args.get_tick_len();
 
         MapCoord des_v[]{{desired_position.x - 0.5*PSL, desired_position.y - 0.5*PSL},
                          {desired_position.x + 0.5*PSL, desired_position.y - 0.5*PSL},
@@ -201,7 +201,7 @@ void Player_Type1::run1_mt(const MapObjRun1Args &args)
 void Player_Type1::run2_st([[maybe_unused]] const MapObjRun2Args &args)
 {
     if(args.get_move_intent() == MoveIntent::GoToDesiredPos) {
-        position = desired_position;
+        current_position = desired_position;
     }
 }
 void Player_Type1::add_render_objs(const MapObjRenderArgs &args)
@@ -244,17 +244,17 @@ void Player_Type1::add_render_objs(const MapObjRenderArgs &args)
         op_iu2[19] = 0.9f;
     }
 
-    op_iu1[0] = args.x_to_ndc(position.x - 0.5*PLAYER_SIDE_LEN);
-    op_iu1[1] = args.y_to_ndc(position.y + 0.5*PLAYER_SIDE_LEN);
-    op_iu1[2] = args.x_to_ndc(position.x - 0.5*PLAYER_SIDE_LEN);
-    op_iu1[3] = args.y_to_ndc(position.y - 0.5*PLAYER_SIDE_LEN);
-    op_iu1[4] = args.x_to_ndc(position.x + 0.5*PLAYER_SIDE_LEN);
-    op_iu1[5] = args.y_to_ndc(position.y - 0.5*PLAYER_SIDE_LEN);
+    op_iu1[0] = args.x_to_ndc(current_position.x - 0.5*PLAYER_SIDE_LEN);
+    op_iu1[1] = args.y_to_ndc(current_position.y + 0.5*PLAYER_SIDE_LEN);
+    op_iu1[2] = args.x_to_ndc(current_position.x - 0.5*PLAYER_SIDE_LEN);
+    op_iu1[3] = args.y_to_ndc(current_position.y - 0.5*PLAYER_SIDE_LEN);
+    op_iu1[4] = args.x_to_ndc(current_position.x + 0.5*PLAYER_SIDE_LEN);
+    op_iu1[5] = args.y_to_ndc(current_position.y - 0.5*PLAYER_SIDE_LEN);
 
     op_iu2[0] = op_iu1[0];
     op_iu2[1] = op_iu1[1];
-    op_iu2[2] = args.x_to_ndc(position.x + 0.5*PLAYER_SIDE_LEN);
-    op_iu2[3] = args.y_to_ndc(position.y + 0.5*PLAYER_SIDE_LEN);
+    op_iu2[2] = args.x_to_ndc(current_position.x + 0.5*PLAYER_SIDE_LEN);
+    op_iu2[3] = args.y_to_ndc(current_position.y + 0.5*PLAYER_SIDE_LEN);
     op_iu2[4] = op_iu1[4];
     op_iu2[5] = op_iu1[5];
 
@@ -266,7 +266,7 @@ void Player_Type1::add_render_objs(const MapObjRenderArgs &args)
     weapon::WeaponRenderArgs weapon_render_args;
     weapon_render_args.set_render_args((RenderArgs)args);
     weapon_render_args.set_op_group(op_group);
-    weapon_render_args.set_owner_info(weapon::WeaponOwnerInfo(position, WEAPON_OFFSET));
+    weapon_render_args.set_owner_info(weapon::WeaponOwnerInfo(current_position, WEAPON_OFFSET));
     weapon_render_args.set_angle(weapon_angle);
     weapon_render_args.set_render_priority(args.get_player_render_priority());
 
@@ -274,7 +274,7 @@ void Player_Type1::add_render_objs(const MapObjRenderArgs &args)
 }
 void Player_Type1::set_position(MapCoord pos, kx::Passkey<Game>)
 {
-    position = pos;
+    current_position = pos;
 }
 
 }}

@@ -1,12 +1,12 @@
 #pragma once
 
-#include "geo2/map_obj/projectile_type1/simple_proj_1.h"
+#include "geo2/map_obj/projectile_type1/basic_proj_1.h"
 
 namespace geo2 {class RenderOpShader; class RenderOpGroup;}
 
 namespace geo2 { namespace map_obj {
 
-class LaserProj_1 final: public SimpleProj_1
+class LaserProj_1 final: public BasicProj_1
 {
     std::shared_ptr<RenderOpShader> op;
     std::shared_ptr<RenderOpGroup> op_group;

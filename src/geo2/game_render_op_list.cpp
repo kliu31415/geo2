@@ -50,8 +50,8 @@ void GameRenderOpList::Shaders::init(kx::gfx::Renderer *rdr, kx::Passkey<GameRen
                        "block1", 0, 8*sizeof(float));
 
     make_shader_vf_1ub(&pig_1, rdr, "map_objs/unit_type1/pig_1",
-                       113, DM::TriangleStrip, 8,
-                       "block1", 0, 9*4*sizeof(float));
+                       204, DM::TriangleStrip, 4,
+                       "block1", 0, 5*4*sizeof(float));
 
     make_shader_vf_1ub(&laser_proj_1, rdr, "map_objs/proj_type1/laser_proj_1",
                        256, DM::Triangles, 3,
