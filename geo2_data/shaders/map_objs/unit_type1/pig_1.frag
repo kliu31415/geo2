@@ -18,7 +18,8 @@ out vec4 frag_color;
 
 void main()
 {   
-    if(abs(bary_coord.x) > data[idx+1][2] || abs(bary_coord.y) > data[idx+1][3])
+    //if(abs(bary_coord.x) > data[idx+1][2] || abs(bary_coord.y) > data[idx+1][3])
+    if(greaterThan(abs(bary_coord), data[idx+1].zw) != bvec2(0, 0))
         frag_color = data[idx+4];
     else
         frag_color = data[idx+3];

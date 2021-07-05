@@ -241,7 +241,7 @@
 	<cmath>
 	<utility>
 
-1622865223 source:d:\code\cbprojects\geo2\src\kx\gfx\kwindow.cpp
+1625518558 source:d:\code\cbprojects\geo2\src\kx\gfx\kwindow.cpp
 	"kx/gfx/kwindow.h"
 	"kx/gfx/renderer.h"
 	"kx/util.h"
@@ -323,7 +323,7 @@
 	"kx/gfx/gl_renderer.h"
 	"kx/gfx/vk_renderer.h"
 
-1625468169 source:d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.cpp
+1625522782 source:d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.cpp
 	"kx/gfx/renderer.h"
 	"kx/gfx/renderer.h"
 	"kx/io.h"
@@ -406,7 +406,7 @@
 	"glad/glad.h"
 	<SDL2/SDL_pixels.h>
 
-1625468149 d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.h
+1625522773 d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.h
 	"kx/gfx/font.h"
 	"kx/gfx/renderer_types.h"
 	"kx/sdl_deleter.h"
@@ -529,7 +529,7 @@
 	<vector>
 	<cstdint>
 
-1625468928 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
+1625520059 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
 	"geo2/map_obj/floor_type1/test_terrain1.h"
 	"geo2/game_render_op_list.h"
 	"geo2/game.h"
@@ -551,7 +551,7 @@
 	"geo2/game.h"
 	"kx/gfx/kwindow.h"
 
-1625453287 source:d:\code\cbprojects\geo2\src\geo2\master_instance.cpp
+1625518619 source:d:\code\cbprojects\geo2\src\geo2\master_instance.cpp
 	"geo2/master_instance.h"
 	"kx/gfx/renderer.h"
 
@@ -600,7 +600,7 @@
 	<tuple>
 	<tuple>
 
-1625293006 source:d:\code\cbprojects\geo2\src\geo2\render_op.cpp
+1625522589 source:d:\code\cbprojects\geo2\src\geo2\render_op.cpp
 	"geo2/render_op.h"
 	"kx/gfx/renderer.h"
 	"kx/gfx/kwindow.h"
@@ -787,7 +787,7 @@
 1624942916 d:\code\cbprojects\geo2\src\geo2\map_obj\map_object.h
 	"geo2/geometry.h"
 
-1624605285 d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\test_terrain1.h
+1625519874 d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\test_terrain1.h
 	"geo2/map_obj/floor_type1/floor_type1.h"
 	"span_lite.h"
 
@@ -813,13 +813,13 @@
 1624335856 source:d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\floor_type1.cpp
 	"geo2/map_obj/floor_type1/floor_type1.h"
 
-1625284830 source:d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\monochromatic_floor_1.cpp
+1625520195 source:d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\monochromatic_floor_1.cpp
 	"geo2/map_obj/floor_type1/monochromatic_floor_1.h"
 	"geo2/map_obj/map_obj_args.h"
 	"geo2/game_render_op_list.h"
 	"geo2/render_op.h"
 
-1625286033 source:d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\test_terrain1.cpp
+1625519884 source:d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\test_terrain1.cpp
 	"geo2/map_obj/floor_type1/test_terrain1.h"
 	"geo2/game_render_op_list.h"
 	"geo2/map_obj/map_obj_args.h"

@@ -18,9 +18,9 @@ void TestTerrain1::add_render_objs(const MapObjRenderArgs &args)
 {
     using namespace kx::gfx;
 
-    /*Rect dst(pos.x, pos.y, 1, 1);
+    /*Rect dst(position.x, position.y, 1, 1);
     dst = args.to_cam_nc(dst);
-    args.rdr->set_color(LinearColor(10 * pos.x, 10 * pos.y, 0.0, 1.0));
+    args.rdr->set_color(LinearColor(10 * position.x, 10 * position.y, 0.0, 1.0));
     args.rdr->fill_rect_nc(dst);*/
 
     if(op == nullptr) {
@@ -31,7 +31,7 @@ void TestTerrain1::add_render_objs(const MapObjRenderArgs &args)
         op_iu = {(float*)iu_map.begin(), (float*)iu_map.end()};
     }
 
-    Rect dst(pos.x, pos.y, 1.0f, 1.0f);
+    Rect dst(position.x, position.y, 1.0f, 1.0f);
 
     op_iu[0] = args.x_to_ndc(dst.x);
     op_iu[1] = args.y_to_ndc(dst.y);

@@ -462,6 +462,19 @@ template<_BufferType T> void Buffer<T>::buffer_sub_data(GLintptr offset, void *d
     else
         k_assert(false);
 }
+template<_BufferType T> void *Buffer<T>::map_range(GLintptr offset,
+                                                   GLsizeiptr len,
+                                                   BufferRangeAccess access)
+{
+    return glMapNamedBufferRange(buffer.id, offset, len, (GLenum)access);
+}
+template<_BufferType T> void Buffer<T>::unmap()
+{
+    //GL_FALSE indicates an error has occurred, which should almost never happen;
+    //apparently, it can happen in Windows XP and below, but Windows Vista and
+    //later versions fix it. Idk about Linux/Mac.
+    k_assert(glUnmapNamedBuffer(buffer.id) != GL_FALSE);
+}
 template<_BufferType T> void Buffer<T>::invalidate()
 {
     glInvalidateBufferData(buffer.id);

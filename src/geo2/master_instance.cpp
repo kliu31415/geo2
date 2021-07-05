@@ -8,6 +8,7 @@ constexpr int SCREEN_H = 1080;
 
 void run()
 {
+
     using namespace kx;
 
     auto instance = std::make_shared<MasterInstance>(gfx::Rect(0, 0, SCREEN_W, SCREEN_H));

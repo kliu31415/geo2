@@ -19,9 +19,10 @@ public:
         idx = 0;
         UBOs.clear();
         for(int i=0; i<MAX_RO_NUM_UBOS; i++) {
-            UBOs.push_back(rdr->make_UBO());
-            rdr->bind_UBO(*UBOs.back());
-            UBOs.back()->buffer_data(nullptr, MAX_RO_UBO_SIZE);
+            auto ubo = rdr->make_UBO();
+            rdr->bind_UBO(*ubo);
+            ubo->buffer_data(nullptr, MAX_RO_UBO_SIZE);
+            UBOs.emplace_back(std::move(ubo));
         }
     }
     kx::gfx::UBO *get_UBO()
@@ -82,34 +83,34 @@ void GShader::render(UBO_Allocator *ubo_allocator,
                      kx::gfx::KWindowRunning *kwin_r,
                      kx::Passkey<class RenderOpList>) const
 {
-    size_t num_instances = instance_uniform_data.size();
-    size_t num_instance_uniforms = UBs.size();
-    ByteFSA2D grouped_iu_data(num_instance_uniforms);
-    for(size_t i=0; i<num_instance_uniforms; i++) {
-        auto usize = get_instance_uniform_size_bytes(i);
-        grouped_iu_data[i] = kx::FixedSizeArray<uint8_t>(usize * num_instances);
-    }
-    size_t idx = 0;
-    for(const auto &single_iu_data: instance_uniform_data) {
-        for(size_t i=0; i<num_instance_uniforms; i++) {
-            auto usize = get_instance_uniform_size_bytes(i);
-            k_expects((*single_iu_data)[i].size() == (size_t)usize);
-            std::copy_n((*single_iu_data)[i].begin(), usize, grouped_iu_data[i].begin() + idx*usize);
-        }
-        idx++;
-    }
 
     auto rdr = kwin_r->rdr();
     rdr->prepare_for_custom_shader();
     rdr->use_shader_program(*program);
-    for(size_t i=0; i<UBs.size(); i++) {
+
+    size_t num_instances = instance_uniform_data.size();
+    size_t num_instance_uniforms = UBs.size();
+
+    k_expects(num_instance_uniforms <= MAX_RO_NUM_UBOS);
+
+    for(size_t i=0; i<num_instance_uniforms; i++) {
         auto usize = get_instance_uniform_size_bytes(i);
         auto ubo = ubo_allocator->get_UBO();
         rdr->bind_UBO(*ubo);
-        ubo->buffer_sub_data(UBs[i].global_data_size, grouped_iu_data[i].begin(), usize*num_instances);
+
+        kx::FixedSizeArray<uint8_t> data(usize*num_instances);
+
+        size_t idx = 0;
+        for(const auto &single_iu_data: instance_uniform_data) {
+            k_expects((*single_iu_data)[i].size() == (size_t)usize);
+            std::copy_n((*single_iu_data)[i].begin(), usize, data.begin() + idx*usize);
+            idx++;
+        }
+        ubo->buffer_sub_data(UBs[i].global_data_size, data.begin(), usize*num_instances);
         rdr->bind_UB_base(i, *ubo);
         program->bind_UB(UBs[i].index, i);
     }
+
     rdr->draw_arrays_instanced(draw_mode, 0, count, num_instances);
 }
 

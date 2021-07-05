@@ -19,17 +19,17 @@ void main()
     idx = gl_InstanceID*5;
 
     if(gl_VertexID == 0) {
-        gl_Position = vec4(data[idx][0], data[idx][1], 0.0, 1.0);
-        bary_coord = vec2(data[idx+2][0], data[idx+2][1]);
+        gl_Position = vec4(data[idx].xy, 0.0, 1.0);
+        bary_coord = data[idx+2].xy;
     } else if(gl_VertexID == 1) {
-        gl_Position = vec4(data[idx][2], data[idx][3], 0.0, 1.0);
-        bary_coord = vec2(data[idx+2][2], data[idx+2][1]);
+        gl_Position = vec4(data[idx].zw, 0.0, 1.0);
+        bary_coord = vec2(data[idx+2].zy);
     } else if(gl_VertexID == 2) {
-        gl_Position = vec4(data[idx+1][0], data[idx+1][1], 0.0, 1.0);
-        bary_coord = vec2(data[idx+2][0], data[idx+2][3]);
+        gl_Position = vec4(data[idx+1].xy, 0.0, 1.0);
+        bary_coord = vec2(data[idx+2].xw);
     } else {
         gl_Position = vec4(data[idx+1][0] + data[idx][2] - data[idx][0],
                            data[idx+1][1] + data[idx][3] - data[idx][1], 0.0, 1.0);
-        bary_coord = vec2(data[idx+2][2], data[idx+2][3]);
+        bary_coord = vec2(data[idx+2].zw);
     }
 }

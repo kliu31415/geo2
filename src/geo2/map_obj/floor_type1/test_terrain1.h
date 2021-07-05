@@ -10,7 +10,6 @@ namespace geo2 { namespace map_obj {
 
 class TestTerrain1 final: public Floor_Type1
 {
-    MapCoord pos;
     std::shared_ptr<class RenderOpShader> op;
     std::shared_ptr<class RenderOpGroup> op_group;
     nonstd::span<float> op_iu;

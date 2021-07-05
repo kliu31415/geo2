@@ -125,6 +125,7 @@ KWindow::Status KWindow::run()
         auto render_rect = items[i]->obj->get_render_rect();
         rdr()->draw_texture(*item_textures[i], render_rect);
     }
+
     rdr()->refresh();
     return Status::Running;
 }

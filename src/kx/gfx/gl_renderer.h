@@ -185,6 +185,10 @@ public:
     void bind_UB(UBIndex ub_index, GLuint binding);
 };
 
+enum class BufferRangeAccess {Read = GL_MAP_READ_BIT,
+                              Write = GL_MAP_WRITE_BIT,
+                              ReadWrite = (GL_MAP_READ_BIT | GL_MAP_WRITE_BIT)};
+
 template<_BufferType T> class Buffer final
 {
     friend class VAO;
@@ -198,6 +202,8 @@ public:
     void ensure_active();
     void buffer_data(void *data, GLuint n);
     void buffer_sub_data(GLintptr offset, void *data, GLuint n);
+    void *map_range(GLintptr offset, GLsizeiptr len, BufferRangeAccess access);
+    void unmap();
     void invalidate();
 };
 

@@ -268,7 +268,7 @@ void Game::generate_and_start_level(Level::Name level_name)
     case Level::Name::Test1: {
         for(int i=0; i<200; i++) {
             for(int j=0; j<200; j++) {
-                MapCoord pos(i*0.2 + 1, j*0.2 + 1);
+                MapCoord pos(0.1*i, 0.1*j);
                 level.map_objs.push_back(std::make_shared<TestTerrain1>(pos));
             }
         }
@@ -427,6 +427,7 @@ void Game::advance_one_tick(double tick_len, int render_w, int render_h)
      *   their position. Objects that require sole access to data to update will likely
      *   perform a more complicated operation.
      */
+
     //process input
     map_obj::PlayerRunSpecialArgs player_args;
     player_args.tick_len = tick_len;
@@ -459,10 +460,10 @@ void Game::advance_one_tick(double tick_len, int render_w, int render_h)
 
     player->run_special(player_args, {});
 
-    //~400us on Test2(40, 40)
+    //~100us on Test2(40, 40)
     run1(tick_len);
 
-    //~750us on Test2(40, 40)
+    //~400us on Test2(40, 40)
     run_collision_engine();
 
     //second run
@@ -477,6 +478,7 @@ void Game::advance_one_tick(double tick_len, int render_w, int render_h)
     }
 
     //remove all map objects that want to be removed
+    //~50-100us on Test2(40, 40)
     size_t after_idx = 0;
     for(size_t i=0; i<map_objs.size(); i++) {
         if(ceng_data[i].get_move_intent() != MoveIntent::Delete) {
@@ -587,7 +589,7 @@ Game::Game():
     rngs(thread_pool->size() + 1),
     collision_engine(std::make_unique<CollisionEngine1>(thread_pool))
 {
-    generate_and_start_level(Level::Name::Test3);
+    generate_and_start_level(Level::Name::Test1);
 }
 Game::~Game()
 {}
@@ -600,11 +602,8 @@ std::shared_ptr<kx::gfx::Texture> Game::run(kx::gfx::KWindowRunning *kwin_r,
         advance_one_tick(1.0 / 1440.0, render_w, render_h);
     }
 
-    //~500us (integrated GPU, no MSAA, 1600x900, TILES_PER_SCREEN=2125) on Test2(40, 40)
-    Timer t;
-    t.start();
+    //a few hundred ms (integrated GPU, 1920x1080, Test3)
     auto ret = render(kwin_r, render_w, render_h);
-    kx::log_info(kx::to_str(t.elapsed_us()));
     return ret;
 }
 }
