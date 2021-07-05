@@ -21,9 +21,46 @@
 
 namespace geo2 {
 
+class LazyInitTextureTarget
+{
+    std::shared_ptr<kx::gfx::Texture> texture;
+    kx::gfx::Renderer *owner;
+public:
+    std::shared_ptr<kx::gfx::Texture> get(kx::gfx::Renderer *rdr,
+                                          int w,
+                                          int h,
+                                          kx::gfx::Texture::Format format,
+                                          bool is_srgb,
+                                          int num_samples = 1)
+    {
+        if(texture == nullptr ||
+           rdr != owner ||
+           texture->get_w()!=w ||
+           texture->get_h()!=h ||
+           texture->get_format()!=format ||
+           texture->is_srgb() != is_srgb ||
+           texture->get_num_samples() != num_samples)
+        {
+            owner = rdr;
+            texture = rdr->make_texture_target(w,
+                                               h,
+                                               format,
+                                               is_srgb,
+                                               num_samples);
+        }
+        return texture;
+    }
+};
+
 struct _gfx
 {
     kx::gfx::Renderer *cur_renderer;
+
+    LazyInitTextureTarget render_func_return_texture;
+    LazyInitTextureTarget render_func_map_texture;
+    LazyInitTextureTarget resolve_ms_func_texture;
+    LazyInitTextureTarget bloom_func_tex1;
+    LazyInitTextureTarget bloom_func_tex2;
 
     std::unique_ptr<GameRenderOpList> render_op_list;
 
@@ -85,16 +122,129 @@ struct _gfx
         hdr_vao->enable_vertex_attrib_array(0);
         hdr_vao->enable_vertex_attrib_array(1);
     }
-    void resolve_multisamples(kx::gfx::Renderer *rdr, std::unique_ptr<kx::gfx::Texture> *tex)
+    std::shared_ptr<kx::gfx::Texture> resolve_multisamples(kx::gfx::Texture *tex)
     {
-        auto no_ms_tex = rdr->make_texture_target((*tex)->get_w(),
-                                                  (*tex)->get_h(),
-                                                  (*tex)->get_format(),
-                                                  (*tex)->is_srgb(),
-                                                  1);
-        rdr->set_target(no_ms_tex.get());
-        rdr->draw_texture_ms(**tex, kx::gfx::Rect(0, 0, (*tex)->get_w(), (*tex)->get_h()), {});
-        *tex = std::move(no_ms_tex);
+        auto no_ms_tex = resolve_ms_func_texture.get(cur_renderer,
+                                                     tex->get_w(),
+                                                     tex->get_h(),
+                                                     tex->get_format(),
+                                                     tex->is_srgb(),
+                                                     1);
+        cur_renderer->set_target(no_ms_tex.get());
+        cur_renderer->draw_texture_ms(*tex, kx::gfx::Rect(0, 0, tex->get_w(), tex->get_h()), {});
+        return no_ms_tex;
+    }
+    void apply_bloom_and_hdr(kx::gfx::Texture *texture, double bloom_radius_sd)
+    {
+        using namespace kx::gfx;
+
+        auto rdr = cur_renderer;
+        k_expects(!texture->is_srgb());
+        auto cur_target = rdr->get_target();
+        kx::ScopeGuard sg([=]() -> void {rdr->set_target(cur_target);});
+
+        int w = texture->get_w();
+        int h = texture->get_h();
+
+        full_target[0] = rdr->x_nc_to_ndc(0.0);
+        full_target[1] = rdr->y_nc_to_ndc(0.0);
+        full_target[2] = rdr->x_nc_to_tex_coord(0.0, w);
+        full_target[3] = rdr->y_nc_to_tex_coord(0.0, h);
+
+        full_target[4] = rdr->x_nc_to_ndc(1.0);
+        full_target[5] = rdr->y_nc_to_ndc(0.0);
+        full_target[6] = rdr->x_nc_to_tex_coord(1.0, w);
+        full_target[7] = rdr->y_nc_to_tex_coord(0.0, h);
+
+        full_target[8] = rdr->x_nc_to_ndc(0.0);
+        full_target[9] = rdr->y_nc_to_ndc(1.0);
+        full_target[10] = rdr->x_nc_to_tex_coord(0.0, w);
+        full_target[11] = rdr->y_nc_to_tex_coord(1.0, h);
+
+        full_target[12] = rdr->x_nc_to_ndc(1.0);
+        full_target[13] = rdr->y_nc_to_ndc(1.0);
+        full_target[14] = rdr->x_nc_to_tex_coord(1.0, w);
+        full_target[15] = rdr->y_nc_to_tex_coord(1.0, h);
+
+        rdr->bind_VBO(*full_target_vbo);
+        full_target_vbo->buffer_data(&full_target[0],
+                                     full_target.size() * sizeof(full_target[0]));
+
+        //the bloom shaders assume linear interpolation to speed things up,
+        //so make sure linear interpolation is set. If it's not set, it'll be buggy.
+        auto tex1 = bloom_func_tex1.get(rdr, w, h, Texture::Format::RGB16F, false);
+        tex1->set_min_filter(Texture::FilterAlgo::Linear);
+        tex1->set_mag_filter(Texture::FilterAlgo::Linear);
+        auto tex2 = bloom_func_tex2.get(rdr, w, h, Texture::Format::RGB16F, false);
+        tex2->set_min_filter(Texture::FilterAlgo::Linear);
+        tex2->set_mag_filter(Texture::FilterAlgo::Linear);
+
+        rdr->prepare_for_custom_shader();
+        rdr->set_active_texture(0);
+
+        //extract bright colors
+        rdr->use_shader_program(*bloom1);
+        bloom1->set_uniform1i(bloom1->get_uniform_loc("texture_in"), 0);
+        rdr->bind_VAO(*bloom1_vao);
+        rdr->bind_texture(*texture);
+        rdr->set_target(tex1.get());
+        rdr->set_color(SRGB_Color(0.0, 0.0, 0.0, 0.0));
+        rdr->clear();
+        rdr->draw_arrays(DrawMode::TriangleStrip, 0, 4);
+
+        //blur (horizontal, then vertical)
+        rdr->use_shader_program(*bloom2);
+        constexpr int MAX_ITER = 49; //IMPORTANT: must be half - 1 of sw's size in the frag shader
+        constexpr double RADIUS_SDs = 3.5;
+        int num_iter = std::min(MAX_ITER, (int)std::ceil(bloom_radius_sd * (RADIUS_SDs / 2.0)));
+        kx::FixedSizeArray<float> sw(num_iter*2 + 2);
+        sw[0] = kx::stats::normal_cdf(0.5, 0.0, bloom_radius_sd) -
+                kx::stats::normal_cdf(-0.5, 0.0, bloom_radius_sd);
+        sw[1] = 0; //doesn't actually need to be set
+        for(int i=1; i<=num_iter; i++) {
+            float w1 = kx::stats::normal_cdf(i*2 - 0.5, 0.0, bloom_radius_sd) -
+                       kx::stats::normal_cdf(i*2 - 1.5, 0.0, bloom_radius_sd);
+            float w2 = kx::stats::normal_cdf(i*2 + 0.5, 0.0, bloom_radius_sd) -
+                       kx::stats::normal_cdf(i*2 - 0.5, 0.0, bloom_radius_sd);
+            sw[2*i] = w1 + w2;
+            sw[2*i + 1] = i*2 - w1 / (w1 + w2);
+        }
+        bloom2->set_uniform1i(bloom2->get_uniform_loc("texture_in"), 0);
+        bloom2->set_uniform1fv(bloom2->get_uniform_loc("sw"), {sw.begin(), sw.end()});
+        bloom2->set_uniform1i(bloom2->get_uniform_loc("num_iter"), num_iter);
+        bloom2->set_uniform1i(bloom2->get_uniform_loc("is_horizontal"), true);
+
+        rdr->bind_VAO(*bloom2_vao);
+        rdr->bind_texture(*tex1);
+        rdr->set_target(tex2.get());
+        rdr->set_color(SRGB_Color(0.0, 0.0, 0.0, 0.0));
+        rdr->clear();
+        rdr->draw_arrays(DrawMode::TriangleStrip, 0, 4);
+
+        rdr->bind_texture(*tex2);
+        rdr->set_target(tex1.get());
+        rdr->set_color(SRGB_Color(0.0, 0.0, 0.0, 0.0));
+        rdr->clear();
+        bloom2->set_uniform1i(bloom2->get_uniform_loc("is_horizontal"), false);
+        rdr->draw_arrays(DrawMode::TriangleStrip, 0, 4);
+
+        //sum the textures
+        rdr->set_target(tex2.get());
+        rdr->set_color(SRGB_Color(0.0, 0.0, 0.0, 0.0));
+        rdr->clear();
+        rdr->set_blend_factors(BlendFactor::SrcAlpha, BlendFactor::One);
+        rdr->draw_texture_nc(*texture, Rect(0.0, 0.0, 1.0, 1.0));
+        rdr->draw_texture_nc(*tex1, Rect(0.0, 0.0, 1.0, 1.0));
+        rdr->set_blend_factors(BlendFactor::SrcAlpha, BlendFactor::OneMinusSrcAlpha);
+
+        //apply HDR
+        rdr->prepare_for_custom_shader();
+        rdr->set_target(texture);
+        rdr->bind_texture(*tex2);
+        rdr->use_shader_program(*hdr);
+        hdr->set_uniform1i(hdr->get_uniform_loc("texture_in"), 0);
+        rdr->bind_VAO(*hdr_vao);
+        rdr->draw_arrays(DrawMode::TriangleStrip, 0, 4);
     }
 };
 
@@ -169,6 +319,7 @@ void Game::run1(double tick_len)
     run1_args.set_tick_len(tick_len);
     run1_args.set_ceng_data(&ceng_data);
     run1_args.set_map_objs_to_add(&map_objs_to_add);
+    run1_args.set_rng(&rngs[0]);
 
     //don't use an enhanced for loop here because we might modify map_objs
     for(size_t i=0; i<map_objs.size(); i++) {
@@ -195,6 +346,7 @@ void Game::run1(double tick_len)
             run1_args.set_tick_len(tick_len);
             run1_args.set_ceng_data(&ceng_data);
             run1_args.set_map_objs_to_add(&map_objs_to_add_lt[t]);
+            run1_args.set_rng(&rngs[t]);
 
             for(int i=idx1; i<idx2; i++) {
                 run1_args.set_index(i);
@@ -346,120 +498,6 @@ void Game::advance_one_tick(double tick_len, int render_w, int render_h)
     cur_level_time_left -= tick_len;
     cur_level_tick++;
 }
-void Game::apply_bloom_and_hdr(kx::gfx::KWindowRunning *kwin_r,
-                               kx::gfx::Texture *texture,
-                               double bloom_radius_sd)
-{
-    using namespace kx::gfx;
-
-    auto rdr = kwin_r->rdr();
-    k_expects(!texture->is_srgb());
-    auto cur_target = rdr->get_target();
-    kx::ScopeGuard sg([=]() -> void {rdr->set_target(cur_target);});
-
-    int w = texture->get_w();
-    int h = texture->get_h();
-
-    gfx->full_target[0] = rdr->x_nc_to_ndc(0.0);
-    gfx->full_target[1] = rdr->y_nc_to_ndc(0.0);
-    gfx->full_target[2] = rdr->x_nc_to_tex_coord(0.0, w);
-    gfx->full_target[3] = rdr->y_nc_to_tex_coord(0.0, h);
-
-    gfx->full_target[4] = rdr->x_nc_to_ndc(1.0);
-    gfx->full_target[5] = rdr->y_nc_to_ndc(0.0);
-    gfx->full_target[6] = rdr->x_nc_to_tex_coord(1.0, w);
-    gfx->full_target[7] = rdr->y_nc_to_tex_coord(0.0, h);
-
-    gfx->full_target[8] = rdr->x_nc_to_ndc(0.0);
-    gfx->full_target[9] = rdr->y_nc_to_ndc(1.0);
-    gfx->full_target[10] = rdr->x_nc_to_tex_coord(0.0, w);
-    gfx->full_target[11] = rdr->y_nc_to_tex_coord(1.0, h);
-
-    gfx->full_target[12] = rdr->x_nc_to_ndc(1.0);
-    gfx->full_target[13] = rdr->y_nc_to_ndc(1.0);
-    gfx->full_target[14] = rdr->x_nc_to_tex_coord(1.0, w);
-    gfx->full_target[15] = rdr->y_nc_to_tex_coord(1.0, h);
-
-    rdr->bind_VBO(*gfx->full_target_vbo);
-    gfx->full_target_vbo->buffer_data(&gfx->full_target[0],
-                                      gfx->full_target.size() * sizeof(gfx->full_target[0]));
-
-    //the bloom shaders assume linear interpolation to speed things up,
-    //so make sure linear interpolation is set. If it's not set, it'll be buggy.
-    auto tex1 = rdr->make_texture_target(w, h, Texture::Format::RGB16F, false);
-    tex1->set_min_filter(Texture::FilterAlgo::Linear);
-    tex1->set_mag_filter(Texture::FilterAlgo::Linear);
-    auto tex2 = rdr->make_texture_target(w, h, Texture::Format::RGB16F, false);
-    tex2->set_min_filter(Texture::FilterAlgo::Linear);
-    tex2->set_mag_filter(Texture::FilterAlgo::Linear);
-
-    rdr->prepare_for_custom_shader();
-    rdr->set_active_texture(0);
-
-    //extract bright colors
-    rdr->use_shader_program(*gfx->bloom1);
-    gfx->bloom1->set_uniform1i(gfx->bloom1->get_uniform_loc("texture_in"), 0);
-    rdr->bind_VAO(*gfx->bloom1_vao);
-    rdr->bind_texture(*texture);
-    rdr->set_target(tex1.get());
-    rdr->set_color(SRGB_Color(0.0, 0.0, 0.0, 0.0));
-    rdr->clear();
-    rdr->draw_arrays(DrawMode::TriangleStrip, 0, 4);
-
-    //blur (horizontal, then vertical)
-    rdr->use_shader_program(*gfx->bloom2);
-    constexpr int MAX_ITER = 49; //IMPORTANT: must be half - 1 of sw's size in the frag shader
-    constexpr double RADIUS_SDs = 3.5;
-    int num_iter = std::min(MAX_ITER, (int)std::ceil(bloom_radius_sd * (RADIUS_SDs / 2.0)));
-    kx::FixedSizeArray<float> sw(num_iter*2 + 2);
-    sw[0] = kx::stats::normal_cdf(0.5, 0.0, bloom_radius_sd) -
-            kx::stats::normal_cdf(-0.5, 0.0, bloom_radius_sd);
-    sw[1] = 0; //doesn't actually need to be set
-    for(int i=1; i<=num_iter; i++) {
-        float w1 = kx::stats::normal_cdf(i*2 - 0.5, 0.0, bloom_radius_sd) -
-                   kx::stats::normal_cdf(i*2 - 1.5, 0.0, bloom_radius_sd);
-        float w2 = kx::stats::normal_cdf(i*2 + 0.5, 0.0, bloom_radius_sd) -
-                   kx::stats::normal_cdf(i*2 - 0.5, 0.0, bloom_radius_sd);
-        sw[2*i] = w1 + w2;
-        sw[2*i + 1] = i*2 - w1 / (w1 + w2);
-    }
-    gfx->bloom2->set_uniform1i(gfx->bloom2->get_uniform_loc("texture_in"), 0);
-    gfx->bloom2->set_uniform1fv(gfx->bloom2->get_uniform_loc("sw"), {sw.begin(), sw.end()});
-    gfx->bloom2->set_uniform1i(gfx->bloom2->get_uniform_loc("num_iter"), num_iter);
-    gfx->bloom2->set_uniform1i(gfx->bloom2->get_uniform_loc("is_horizontal"), true);
-
-    rdr->bind_VAO(*gfx->bloom2_vao);
-    rdr->bind_texture(*tex1);
-    rdr->set_target(tex2.get());
-    rdr->set_color(SRGB_Color(0.0, 0.0, 0.0, 0.0));
-    rdr->clear();
-    rdr->draw_arrays(DrawMode::TriangleStrip, 0, 4);
-
-    rdr->bind_texture(*tex2);
-    rdr->set_target(tex1.get());
-    rdr->set_color(SRGB_Color(0.0, 0.0, 0.0, 0.0));
-    rdr->clear();
-    gfx->bloom2->set_uniform1i(gfx->bloom2->get_uniform_loc("is_horizontal"), false);
-    rdr->draw_arrays(DrawMode::TriangleStrip, 0, 4);
-
-    //sum the textures
-    rdr->set_target(tex2.get());
-    rdr->set_color(SRGB_Color(0.0, 0.0, 0.0, 0.0));
-    rdr->clear();
-    rdr->set_blend_factors(BlendFactor::SrcAlpha, BlendFactor::One);
-    rdr->draw_texture_nc(*texture, Rect(0.0, 0.0, 1.0, 1.0));
-    rdr->draw_texture_nc(*tex1, Rect(0.0, 0.0, 1.0, 1.0));
-    rdr->set_blend_factors(BlendFactor::SrcAlpha, BlendFactor::OneMinusSrcAlpha);
-
-    //apply HDR
-    rdr->prepare_for_custom_shader();
-    rdr->set_target(texture);
-    rdr->bind_texture(*tex2);
-    rdr->use_shader_program(*gfx->hdr);
-    gfx->hdr->set_uniform1i(gfx->hdr->get_uniform_loc("texture_in"), 0);
-    rdr->bind_VAO(*gfx->hdr_vao);
-    rdr->draw_arrays(DrawMode::TriangleStrip, 0, 4);
-}
 std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
                                                int render_w, int render_h)
 {
@@ -474,11 +512,15 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
     float h = render_h;
     int map_render_w = w * MENU_OFFSET;
     int map_render_h = h;
-    auto map_texture = rdr->make_texture_target(map_render_w,
-                                                map_render_h,
-                                                Texture::Format::RGB16F,
-                                                false,
-                                                1);
+
+    auto map_texture = gfx->render_func_map_texture.get(rdr,
+                                                        map_render_w,
+                                                        map_render_h,
+                                                        Texture::Format::RGB16F,
+                                                        false,
+                                                        1);
+
+
     rdr->set_target(map_texture.get());
     rdr->set_color(Color::BLACK);
     rdr->clear();
@@ -506,29 +548,32 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
         map_objs[i]->add_render_objs(render_args);
     }
 
+
     gfx->render_op_list->add_op_groups(op_groups);
     gfx->render_op_list->render(*this, kwin_r, map_render_w, map_render_h);
     gfx->render_op_list->clear();
 
-
     //if we have a multisample texture, resolve it into a 1-sample texture
     if(map_texture->is_multisample()) {
-        gfx->resolve_multisamples(rdr, &map_texture);
+        map_texture = gfx->resolve_multisamples(map_texture.get());
     }
 
-    apply_bloom_and_hdr(kwin_r, map_texture.get(), 0.1*tile_len);
+    gfx->apply_bloom_and_hdr(map_texture.get(), 0.1*tile_len);
 
     //add the menu bar and other stuff here
     //(code goes here)
 
     //combine the two textures
-    auto return_texture = rdr->make_texture_target((int)w,
-                                                   (int)h,
-                                                   Texture::Format::RGB16F,
-                                                   false);
+    auto return_texture = gfx->render_func_return_texture.get(rdr,
+                                                              (int)w,
+                                                              (int)h,
+                                                              Texture::Format::RGB16F,
+                                                              false);
+
     map_texture->set_min_filter(Texture::FilterAlgo::Nearest);
     map_texture->set_mag_filter(Texture::FilterAlgo::Nearest);
     rdr->set_target(return_texture.get());
+
     rdr->draw_texture(*map_texture, Rect(0, 0, map_render_w, map_render_h));
 
     return return_texture;
@@ -539,6 +584,7 @@ Game::Game():
     gfx(std::make_unique<_gfx>()),
     player(std::make_unique<map_obj::Player_Type1>()),
     thread_pool(std::make_shared<ThreadPool>(std::thread::hardware_concurrency() - 1)),
+    rngs(thread_pool->size() + 1),
     collision_engine(std::make_unique<CollisionEngine1>(thread_pool))
 {
     generate_and_start_level(Level::Name::Test3);
@@ -555,6 +601,10 @@ std::shared_ptr<kx::gfx::Texture> Game::run(kx::gfx::KWindowRunning *kwin_r,
     }
 
     //~500us (integrated GPU, no MSAA, 1600x900, TILES_PER_SCREEN=2125) on Test2(40, 40)
-    return render(kwin_r, render_w, render_h);
+    Timer t;
+    t.start();
+    auto ret = render(kwin_r, render_w, render_h);
+    kx::log_info(kx::to_str(t.elapsed_us()));
+    return ret;
 }
 }

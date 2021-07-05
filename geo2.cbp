@@ -108,6 +108,9 @@
 		<Unit filename="src/geo2/rng.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="src/geo2/rng_args.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="src/geo2/test.cpp" />
 		<Unit filename="src/geo2/test.h" />
 		<Unit filename="src/geo2/timer.h">

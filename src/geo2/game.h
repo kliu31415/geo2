@@ -3,6 +3,7 @@
 #include "geo2/map_obj/unit_type1/player_type1.h"
 #include "geo2/ceng1_obj.h"
 #include "geo2/ceng1_data.h"
+#include "geo2/rng.h"
 
 #include "kx/gfx/renderer.h"
 #include "kx/gfx/kwindow.h"
@@ -45,6 +46,8 @@ class Game final
 
     std::shared_ptr<class ThreadPool> thread_pool;
 
+    std::vector<Xorshift64RNG> rngs;
+
     //these persistent across run() calls to save memory allocations
     std::vector<std::shared_ptr<map_obj::MapObject>> map_objs_to_add;
     std::vector<std::vector<std::shared_ptr<map_obj::MapObject>>> map_objs_to_add_lt;
@@ -58,9 +61,6 @@ class Game final
     void run_collision_engine();
     void advance_one_tick(double tick_len, int render_w, int render_h);
 
-    void apply_bloom_and_hdr(kx::gfx::KWindowRunning *kwin_r,
-                             kx::gfx::Texture *texture,
-                             double bloom_radius_sd);
     std::shared_ptr<kx::gfx::Texture> render(kx::gfx::KWindowRunning *kwin_r,
                                              int render_w, int render_h);
 public:

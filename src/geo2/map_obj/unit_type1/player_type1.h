@@ -22,6 +22,9 @@ struct PlayerRunSpecialArgs final
 
 class Player_Type1 final: public Unit_Type1
 {
+    MapCoord desired_position;
+    MapVec velocity;
+
     int left_pressed_tick_count;
     int right_pressed_tick_count;
     int up_pressed_tick_count;
@@ -32,8 +35,6 @@ class Player_Type1 final: public Unit_Type1
     std::shared_ptr<RenderOpGroup> op_group;
     nonstd::span<float> op_iu1;
     nonstd::span<float> op_iu2;
-
-    MapVec velocity;
 
     double weapon_angle;
 

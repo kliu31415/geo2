@@ -1,10 +1,13 @@
 #include "geo2/map_obj/unit_type1/pig_1.h"
 #include "geo2/map_obj/map_obj_args.h"
 
+#include <random>
+
 namespace geo2 { namespace map_obj {
 
 Pig_1::Pig_1(MapCoord position_):
-    Unit_Type1(Team::Enemy, position_, 2.0)
+    Unit_Type1(Team::Enemy, position_, 2.0),
+    current_angle(0)
 {}
 
 const kx::gfx::LinearColor INNER_COLOR(1.0f, 0.3f, 0.3f, 1.0f);
@@ -41,18 +44,28 @@ void Pig_1::init(const MapObjInitArgs &args)
 void Pig_1::run1_mt([[maybe_unused]] const MapObjRun1Args &args)
 {
     desired_position = current_position;
+    double max_dtheta = std::sqrt(args.get_tick_len());
+    double dtheta = std::uniform_real_distribution<double>(-max_dtheta, max_dtheta)(*args.get_rng());
+    desired_angle = current_angle + dtheta;
 
     auto cur = args.get_sole_current_pos();
     cur->copy_from(BASE_SHAPE.get());
-    //cur->rotate_about_origin(0.7);
+    cur->rotate_about_origin(current_angle);
     cur->translate(current_position.x, current_position.y);
 
     auto des = args.get_sole_desired_pos();
     des->copy_from(BASE_SHAPE.get());
-    //des->rotate_about_origin(0.7);
+    des->rotate_about_origin(desired_angle);
     des->translate(desired_position.x, desired_position.y);
 
     args.set_move_intent(MoveIntent::GoToDesiredPos);
+}
+void Pig_1::run2_st([[maybe_unused]] const MapObjRun2Args &args)
+{
+    if(args.get_move_intent() == MoveIntent::GoToDesiredPos) {
+        current_position = desired_position;
+        current_angle = desired_angle;
+    }
 }
 
 void Pig_1::handle_collision([[maybe_unused]] const Wall_Type1 &other,
@@ -122,7 +135,7 @@ void Pig_1::add_render_objs(const MapObjRenderArgs &args)
         }
     }
 
-    auto rot_mat = Matrix2::make_rotation_matrix(0.0f);
+    auto rot_mat = Matrix2::make_rotation_matrix(current_angle);
     for(int i=0; i<=2; i++) {
         auto v0_rot = current_position + rot_mat * (v0[i]);
         auto v1_rot = current_position + rot_mat * (v0[i] + MapVec(PART_W[i], 0));

@@ -4,6 +4,7 @@
 #include "geo2/render_args.h"
 #include "geo2/ceng1_data.h"
 #include "geo2/ceng1_obj.h"
+#include "geo2/rng_args.h"
 
 #include "kx/fixed_size_array.h"
 
@@ -142,7 +143,7 @@ public:
     }
 };
 
-class MapObjRun1Args final: public CEng1DataMutatorAttorney, public MapObjRunArgs
+class MapObjRun1Args final: public CEng1DataMutatorAttorney, public MapObjRunArgs, public RNG_Args
 {
 public:
     MapObjRun1Args() = default;

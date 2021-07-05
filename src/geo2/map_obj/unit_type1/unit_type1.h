@@ -8,7 +8,6 @@ class Unit_Type1: public MapObject
 {
 protected:
     MapCoord current_position;
-    MapCoord desired_position;
     double collision_damage;
     Team team;
 

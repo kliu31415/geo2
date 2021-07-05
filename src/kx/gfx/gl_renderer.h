@@ -118,6 +118,7 @@ public:
     int get_h() const;
     Format get_format() const;
     bool is_srgb() const;
+    int get_num_samples() const;
     bool is_multisample() const;
 
     void make_targetable();

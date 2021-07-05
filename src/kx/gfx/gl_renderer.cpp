@@ -268,6 +268,10 @@ bool Texture::is_srgb() const
 {
     return is_srgb_;
 }
+int Texture::get_num_samples() const
+{
+    return samples;
+}
 bool Texture::is_multisample() const
 {
     return binding_point == GL_TEXTURE_2D_MULTISAMPLE;

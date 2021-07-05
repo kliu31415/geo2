@@ -8,11 +8,11 @@ namespace geo2 { namespace map_obj {
 
 Player_Type1::Player_Type1():
     Unit_Type1(Team::Ally, {}),
+    velocity(MapVec(0, 0)),
     left_pressed_tick_count(0),
     right_pressed_tick_count(0),
     up_pressed_tick_count(0),
-    down_pressed_tick_count(0),
-    velocity(MapVec(0, 0))
+    down_pressed_tick_count(0)
 {
 
 }
