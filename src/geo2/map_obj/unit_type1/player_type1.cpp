@@ -215,9 +215,11 @@ void Player_Type1::add_render_objs(const MapObjRenderArgs &args)
         iu_map = op2->map_instance_uniform(0);
         op_iu2 = {(float*)iu_map.begin(), (float*)iu_map.end()};
 
-        op_iu1[8] = 0.07f;
+        float BORDER_SIZE = args.to_whole_pixels(0.07f * PLAYER_SIDE_LEN) / PLAYER_SIDE_LEN;
+
+        op_iu1[8] = BORDER_SIZE;
         op_iu1[9] = -1.0f;
-        op_iu1[10] = 0.07f;
+        op_iu1[10] = BORDER_SIZE;
 
         op_iu1[12] = 0.2f;
         op_iu1[13] = 0.3f;
@@ -229,9 +231,9 @@ void Player_Type1::add_render_objs(const MapObjRenderArgs &args)
         op_iu1[18] = 0.05f;
         op_iu1[19] = 0.9f;
 
-        op_iu2[8] = 0.07f;
+        op_iu2[8] = BORDER_SIZE;
         op_iu2[9] = -1.0f;
-        op_iu2[10] = 0.07f;
+        op_iu2[10] = BORDER_SIZE;
 
         op_iu2[12] = 0.2f;
         op_iu2[13] = 0.3f;

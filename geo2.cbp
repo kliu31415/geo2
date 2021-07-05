@@ -75,12 +75,12 @@
 		</Unit>
 		<Unit filename="src/geo2/map_obj/map_object.cpp" />
 		<Unit filename="src/geo2/map_obj/map_object.h" />
+		<Unit filename="src/geo2/map_obj/projectile_type1/basic_proj_1.cpp" />
+		<Unit filename="src/geo2/map_obj/projectile_type1/basic_proj_1.h" />
 		<Unit filename="src/geo2/map_obj/projectile_type1/laser_proj_1.cpp" />
 		<Unit filename="src/geo2/map_obj/projectile_type1/laser_proj_1.h" />
 		<Unit filename="src/geo2/map_obj/projectile_type1/projectile_type1.cpp" />
 		<Unit filename="src/geo2/map_obj/projectile_type1/projectile_type1.h" />
-		<Unit filename="src/geo2/map_obj/projectile_type1/simple_proj_1.cpp" />
-		<Unit filename="src/geo2/map_obj/projectile_type1/simple_proj_1.h" />
 		<Unit filename="src/geo2/map_obj/unit_type1/pig_1.cpp" />
 		<Unit filename="src/geo2/map_obj/unit_type1/pig_1.h" />
 		<Unit filename="src/geo2/map_obj/unit_type1/player_type1.cpp" />
@@ -98,8 +98,14 @@
 		<Unit filename="src/geo2/multithread/thread_pool.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="src/geo2/render_args.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="src/geo2/render_op.cpp" />
 		<Unit filename="src/geo2/render_op.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="src/geo2/rng.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/geo2/test.cpp" />
@@ -107,8 +113,8 @@
 		<Unit filename="src/geo2/timer.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="src/geo2/weapon/test_laser_1.cpp" />
-		<Unit filename="src/geo2/weapon/test_laser_1.h">
+		<Unit filename="src/geo2/weapon/laser_1.cpp" />
+		<Unit filename="src/geo2/weapon/laser_1.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/geo2/weapon/weapon.cpp" />

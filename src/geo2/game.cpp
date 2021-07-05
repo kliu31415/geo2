@@ -98,11 +98,10 @@ struct _gfx
     }
 };
 
-//on a 1920x1080 screen, we want 25x25 tiles, which corresponds to roughly 2820 on the screen
-//2125 corresponds to 24x24 tiles on a 1600x900 screen
+//3060 corresponds to 16x16 tiles on a 1280x720 screen
 //it's somewhat important to make tiles have roughly integer pixel dimensions to
 //minimize artifacting around the edges
-constexpr float TILES_PER_SCREEN = 2125;
+constexpr float TILES_PER_SCREEN = 3060;
 constexpr double MENU_OFFSET = 0.85;
 
 void Game::generate_and_start_level(Level::Name level_name)
@@ -498,6 +497,7 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
     camera.x = player_pos.x - 0.5f * camera.w;
     camera.y = player_pos.y - 0.5f * camera.h;
     render_args.set_camera(camera);
+    render_args.set_pixels_per_tile_len(tile_len);
 
     std::vector<std::shared_ptr<RenderOpGroup>> op_groups;
     render_args.set_op_groups_vec(&op_groups);

@@ -369,8 +369,9 @@ public:
 
     void translate(float dx, float dy)
     {
+        //use d_len, not n, as we have to move duplicated vertices too
         auto d_len = get_d_len(n);
-        for(int i=0; i<n; i++) {
+        for(int i=0; i<d_len; i++) {
             vals[i] += dx;
             vals[d_len + i] += dy;
         }
@@ -379,12 +380,13 @@ public:
     }
     void rotate_about_origin(float theta)
     {
+        //use d_len, not n, as we have to move duplicated vertices too
         auto v0 = std::cos(theta);
         auto v1 = std::sin(theta);
 
         auto d_len = get_d_len(n);
 
-        for(int i=0; i<n; i++) {
+        for(int i=0; i<d_len; i++) {
             auto cur_x = vals[i];
             auto cur_y = vals[d_len + i];
             vals[i] = cur_x * v0 - cur_y * v1;

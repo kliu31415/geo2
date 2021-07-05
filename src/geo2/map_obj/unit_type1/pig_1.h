@@ -12,6 +12,11 @@ class Pig_1 final: public Unit_Type1
     std::array<std::shared_ptr<RenderOpShader>, 5> ops;
     std::array<nonstd::span<float>, 5> op_ius;
     std::shared_ptr<RenderOpGroup> op_group;
+
+    float eye_w;
+    float eye_h;
+    float eye_x_offset;
+    float eye_y_offset;
 public:
     Pig_1(MapCoord position_);
 

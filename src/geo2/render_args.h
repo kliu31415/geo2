@@ -12,6 +12,7 @@ class RenderArgs
     float cam_w_inv;
     float cam_h_inv;
     const GameRenderOpList::Shaders *shaders;
+    float pixels_per_tile_len;
 public:
     inline void set_renderer(kx::gfx::Renderer *renderer)
     {
@@ -30,6 +31,20 @@ public:
     inline void set_shaders(GameRenderOpList::Shaders *shaders_)
     {
         shaders = shaders_;
+    }
+    inline void set_pixels_per_tile_len(float v)
+    {
+        pixels_per_tile_len = v;
+    }
+    inline float get_pixels_per_tile_len() const
+    {
+        return pixels_per_tile_len;
+    }
+    ///-this rounds down len to make it roughly correspond to a whole number of pixels
+    ///-this can reduce aliasing and make things seem less laggy
+    inline float to_whole_pixels(float len) const
+    {
+        return ((int)(len * pixels_per_tile_len)) / pixels_per_tile_len;
     }
     inline bool is_x_line_ndc_in_view(float x1, float x2) const
     {

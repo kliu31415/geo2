@@ -3,16 +3,19 @@
 
 namespace geo2 {
 
+constexpr int SCREEN_W = 1920;
+constexpr int SCREEN_H = 1080;
+
 void run()
 {
     using namespace kx;
 
-    auto instance = std::make_shared<MasterInstance>(gfx::Rect(0, 0, 1600, 900));
+    auto instance = std::make_shared<MasterInstance>(gfx::Rect(0, 0, SCREEN_W, SCREEN_H));
 
     auto window = gfx::KWindow::create("geo2",
                                        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                       1600, 900,
-                                       SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+                                       SCREEN_W, SCREEN_H,
+                                       SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_FULLSCREEN);
     gfx::AbstractWindow::RendererAtny::show_fps(window.get(), true);
     gfx::AbstractWindow::RendererAtny::set_fps_color(window.get(), gfx::Color::CYAN);
     window->add_item_front(instance);
@@ -28,8 +31,8 @@ void run()
 MasterInstance::MasterInstance(const kx::gfx::Rect &render_rect_):
     KItem(render_rect_),
     state(State::InGame),
-    render_w(1600),
-    render_h(900),
+    render_w(SCREEN_W),
+    render_h(SCREEN_H),
     game(std::make_unique<Game>())
 {
 

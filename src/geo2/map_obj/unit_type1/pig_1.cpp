@@ -11,13 +11,12 @@ const kx::gfx::LinearColor INNER_COLOR(1.0f, 0.3f, 0.3f, 1.0f);
 const kx::gfx::LinearColor BORDER_COLOR(0.0f, 0.0f, 0.0f, 1.0f);
 constexpr float BORDER_THICKNESS = 0.1f;
 
-constexpr float PART_W[]{2.0f, 0.7f, 0.3f, 0.15f, 0.15f};
-constexpr float PART_H[]{1.5f, 1.0f, 0.4f, 0.15f, 0.15f};
-constexpr MapVec v0[]{{-1.5f, -0.75f},
-                      {0.5f - BORDER_THICKNESS, -0.5f},
-                      {1.2f - BORDER_THICKNESS*2, -0.2f},
-                      {0.85f - BORDER_THICKNESS, -0.3f},
-                      {0.85f - BORDER_THICKNESS, 0.15f}};
+constexpr float PART_W[]{2.625f, 1.125f, 0.375f};
+constexpr float PART_H[]{2.0f, 1.5f, 0.5f};
+constexpr float X_BEGIN = -2.0f;
+constexpr MapVec v0[]{{X_BEGIN, -0.5f*PART_H[0]},
+                      {X_BEGIN + PART_W[0], -0.5f*PART_H[1]},
+                      {X_BEGIN + PART_W[0] + PART_W[1], -0.5f*PART_H[2]}};
 
 //starts at the bottom left and goes CCW
 const std::unique_ptr<Polygon> BASE_SHAPE = Polygon::make(
@@ -88,25 +87,43 @@ void Pig_1::add_render_objs(const MapObjRenderArgs &args)
             *reinterpret_cast<kx::gfx::LinearColor*>(&op_ius[i][16]) = BORDER_COLOR;
         }
 
-        for(int i=0; i<5; i++) {
+        auto adjusted_border_thickness = args.to_whole_pixels(BORDER_THICKNESS);
+
+        for(int i=0; i<3; i++) {
             op_ius[i][8] = -0.5f * PART_W[i];
             op_ius[i][9] = -0.5f * PART_H[i];
             op_ius[i][10] = 0.5f * PART_W[i];
             op_ius[i][11] = 0.5f * PART_H[i];
 
-            op_ius[i][6] = op_ius[i][10] - BORDER_THICKNESS;
-            op_ius[i][7] = op_ius[i][11] - BORDER_THICKNESS;
+            op_ius[i][6] = op_ius[i][10] - adjusted_border_thickness;
+            op_ius[i][7] = op_ius[i][11] - adjusted_border_thickness;
         }
 
-        //the entire eye is the border color
+        //cheesy workaround to prevent the head and snout from having a left border
+        for(int i=1; i<=2; i++) {
+            op_ius[i][10] = 1.5f * PART_W[i];
+            op_ius[i][6] = op_ius[i][10] - 2.0f*adjusted_border_thickness;
+        }
+
+        //eyes
+        eye_w = args.to_whole_pixels(0.21f);
+        eye_h = args.to_whole_pixels(0.21f);
+        eye_x_offset = args.to_whole_pixels(0.7f);
+        eye_y_offset = args.to_whole_pixels(0.25f);
         for(int i=3; i<=4; i++) {
-            op_ius[i][6] = -1;
-            op_ius[i][7] = -1;
+            op_ius[i][8] = -0.5f * eye_w;
+            op_ius[i][9] = -0.5f * eye_h;
+            op_ius[i][10] = 0.5f * eye_w;
+            op_ius[i][11] = 0.5f * eye_h;
+
+            //the entire eye is the border color (any number <0 should suffice)
+            op_ius[i][6] = -1.0f;
+            op_ius[i][7] = -1.0f;
         }
     }
 
     auto rot_mat = Matrix2::make_rotation_matrix(0.0f);
-    for(int i=0; i<5; i++) {
+    for(int i=0; i<=2; i++) {
         auto v0_rot = current_position + rot_mat * (v0[i]);
         auto v1_rot = current_position + rot_mat * (v0[i] + MapVec(PART_W[i], 0));
         auto v2_rot = current_position + rot_mat * (v0[i] + MapVec(0, PART_H[i]));
@@ -117,6 +134,36 @@ void Pig_1::add_render_objs(const MapObjRenderArgs &args)
         op_ius[i][3] = args.y_to_ndc(v1_rot.y);
         op_ius[i][4] = args.x_to_ndc(v2_rot.x);
         op_ius[i][5] = args.y_to_ndc(v2_rot.y);
+    }
+
+    //upper eye
+    {
+        MapVec eye_v0(X_BEGIN + PART_W[0] + eye_x_offset, -eye_y_offset);
+        auto v0_rot = current_position + rot_mat * (eye_v0);
+        auto v1_rot = current_position + rot_mat * (eye_v0 + MapVec(eye_w, 0));
+        auto v2_rot = current_position + rot_mat * (eye_v0 + MapVec(0, -eye_h));
+
+        op_ius[3][0] = args.x_to_ndc(v0_rot.x);
+        op_ius[3][1] = args.y_to_ndc(v0_rot.y);
+        op_ius[3][2] = args.x_to_ndc(v1_rot.x);
+        op_ius[3][3] = args.y_to_ndc(v1_rot.y);
+        op_ius[3][4] = args.x_to_ndc(v2_rot.x);
+        op_ius[3][5] = args.y_to_ndc(v2_rot.y);
+    }
+
+    //lower eye
+    {
+        MapVec eye_v0(X_BEGIN + PART_W[0] + eye_x_offset, eye_y_offset);
+        auto v0_rot = current_position + rot_mat * (eye_v0);
+        auto v1_rot = current_position + rot_mat * (eye_v0 + MapVec(eye_w, 0));
+        auto v2_rot = current_position + rot_mat * (eye_v0 + MapVec(0, eye_h));
+
+        op_ius[4][0] = args.x_to_ndc(v0_rot.x);
+        op_ius[4][1] = args.y_to_ndc(v0_rot.y);
+        op_ius[4][2] = args.x_to_ndc(v1_rot.x);
+        op_ius[4][3] = args.y_to_ndc(v1_rot.y);
+        op_ius[4][4] = args.x_to_ndc(v2_rot.x);
+        op_ius[4][5] = args.y_to_ndc(v2_rot.y);
     }
 
     args.add_op_group(op_group);
