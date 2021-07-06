@@ -38,7 +38,8 @@ void LaserProj_1::run1_mt(const MapObjRun1Args &args)
     life_left -= args.get_tick_len();
 
     if(life_left < 0) {
-        args.set_move_intent(MoveIntent::Delete);
+        args.set_move_intent(MoveIntent::RemoveShapes);
+        args.delete_me();
         return;
     }
 

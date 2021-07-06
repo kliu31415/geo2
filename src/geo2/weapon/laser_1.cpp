@@ -1,6 +1,8 @@
 #include "geo2/weapon/laser_1.h"
 #include "geo2/map_obj/projectile_type1/laser_proj_1.h"
 
+#include <random>
+
 namespace geo2 { namespace weapon {
 
 TestLaser1::TestLaser1(const std::shared_ptr<map_obj::MapObject> &owner_):
@@ -12,7 +14,9 @@ TestLaser1::TestLaser1(const std::shared_ptr<map_obj::MapObject> &owner_):
 constexpr double FIRE_INTERVAL = 0.0015;
 constexpr double DAMAGE = 0.1;
 constexpr double LIFESPAN = 0.5;
-constexpr double PROJ_SPEED = 80;
+constexpr double PROJ_SPEED = 100;
+
+constexpr double PI = 3.1415926535897932;
 
 void TestLaser1::run(const WeaponRunArgs &args)
 {
@@ -34,7 +38,7 @@ void TestLaser1::run(const WeaponRunArgs &args)
                              LIFESPAN,
                              owner_info.pos + MapVec(dx, dy) * (owner_info.offset + 0.35),
                              MapVec(dx, dy) * PROJ_SPEED,
-                             100*args.get_cur_level_time());
+                             std::uniform_real_distribution<double>(0, 2*PI)(*args.get_rng()));
 
             args.add_map_obj(std::move(proj));
             reload_counter += FIRE_INTERVAL;

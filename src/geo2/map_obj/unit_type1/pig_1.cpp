@@ -36,10 +36,16 @@ const std::unique_ptr<Polygon> BASE_SHAPE = Polygon::make(
                        v0[1].x, v0[0].y,
                        v0[0].x, v0[0].y});
 
+void Pig_1::recalc_movement()
+{
+
+}
 void Pig_1::init(const MapObjInitArgs &args)
 {
-     args.add_current_pos(Polygon::make_with_num_sides(12));
-     args.add_desired_pos(Polygon::make_with_num_sides(12));
+    args.add_current_pos(Polygon::make_with_num_sides(12));
+    args.add_desired_pos(Polygon::make_with_num_sides(12));
+
+    recalc_movement();
 }
 void Pig_1::run1_mt([[maybe_unused]] const MapObjRun1Args &args)
 {

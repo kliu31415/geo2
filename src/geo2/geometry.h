@@ -193,7 +193,7 @@ template<class T> struct _AABB
 using AABB = _AABB<float>;
 
 enum class MoveIntent: uint8_t {
-    NotSet, Delete, StayAtCurrentPos, GoToDesiredPos,
+    NotSet, RemoveShapes, StayAtCurrentPos, GoToDesiredPos,
 };
 
 /*

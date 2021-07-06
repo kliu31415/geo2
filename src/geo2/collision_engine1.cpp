@@ -189,6 +189,7 @@ void CollisionEngine1::set2(const std::vector<std::shared_ptr<map_obj::MapObject
 }
 std::vector<CEng1Collision> CollisionEngine1::find_collisions()
 {
+    //this until processing the active objects takes ~80us on Test2(40, 40)
     //calculate the global AABB and the max AABB width/height
     max_AABB_w = 0.0f;
     max_AABB_h = 0.0f;
@@ -223,7 +224,7 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
     //make a list of the active objects and put them in a spatial partition grid
     active_objs.clear();
 
-    //~300-350us on Test2(40, 40), which adding to the grid takes ~200us
+    //~150us on Test2(40, 40), which adding to the grid takes ~200us
     for(size_t i=0; i<ceng_data->size(); i++) {
         auto add_active_obj = [this, i](const Polygon *polygon, int shape_idx) -> void
                             {
@@ -265,7 +266,7 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
                             find_and_add_collisions_gt(&collisions[i], active_objs[j]);
                     };
     }
-    //the multithreaded version ~200-250us on Test2(40, 40)
+    //the multithreaded version ~160us on Test2(40, 40)
     for(size_t i=1; i<tasks.size(); i++)
         is_done[i] = thread_pool->add_task(tasks[i]);
     tasks[0]();
@@ -279,7 +280,7 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
 
     /*
     //single threaded version
-    //takes ~700-800us on Test2(40, 40)
+    //tprobably takes ~500us on Test2(40, 40) (haven't benchmarked most recent version)
     std::vector<CEng1Collision> collisions;
     for(size_t i=0; i<active_objs.size(); i++) {
         find_and_add_collisions_gt(&collisions, active_objs[i]);
@@ -302,7 +303,7 @@ void CollisionEngine1::update_intent(int idx, MoveIntent prev_intent, std::vecto
             k_assert(false);
 
         add_cur_to_grid(idx, add_to);
-    } else if(new_intent == MoveIntent::Delete) {
+    } else if(new_intent == MoveIntent::RemoveShapes) {
         if(prev_intent == MoveIntent::GoToDesiredPos)
             remove_des_from_grid(idx);
         else if(prev_intent == MoveIntent::StayAtCurrentPos)

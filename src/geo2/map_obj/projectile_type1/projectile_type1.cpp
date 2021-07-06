@@ -16,13 +16,17 @@ void Projectile_Type1::handle_collision(MapObject *other, const HandleCollisionA
 void Projectile_Type1::handle_collision([[maybe_unused]] const Wall_Type1 &other,
                                         [[maybe_unused]] const HandleCollisionArgs &args)
 {
-    args.set_move_intent(MoveIntent::Delete);
+    if(args.get_move_intent() != MoveIntent::RemoveShapes) {
+        args.set_move_intent(MoveIntent::RemoveShapes);
+        args.delete_me();
+    }
 }
 void Projectile_Type1::handle_collision(const Unit_Type1 &other,
                                         [[maybe_unused]] const HandleCollisionArgs &args)
 {
-    if(are_enemies(team, other.get_team())) {
-        args.set_move_intent(MoveIntent::Delete);
+    if(args.get_move_intent()!=MoveIntent::RemoveShapes && are_enemies(team, other.get_team())) {
+        args.set_move_intent(MoveIntent::RemoveShapes);
+        args.delete_me();
     }
 }
 void Projectile_Type1::handle_collision([[maybe_unused]] const Projectile_Type1 &other,

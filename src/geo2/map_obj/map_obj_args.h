@@ -54,7 +54,17 @@ class CEng1DataReaderAttorney
 protected:
     std::vector<CEng1Data> *ceng_data;
     std::vector<std::shared_ptr<MapObject>> *map_objs_to_add;
-    size_t idx;
+    std::vector<int> *idx_to_delete;
+    int idx;
+
+    //it's a bit messy to put this here, but this is the quickest fix
+    inline void delete_me() const
+    {
+        //duplicates won't cause errors (yet, at least), but we really should
+        //tried to avoid them because they're messy
+        k_expects(idx_to_delete->empty() || idx_to_delete->back()!=idx);
+        idx_to_delete->push_back(idx);
+    }
 public:
     CEng1DataReaderAttorney() = default;
 
@@ -71,11 +81,11 @@ public:
     {
         map_objs_to_add = to_add;
     }
-    inline void set_index(size_t idx_)
+    inline void set_index(int idx_)
     {
         //make sure ceng_data and map_objs_to_add are null before calling this function
         //so the k_expects doesn't crash
-        k_expects(idx_ < ceng_data->size());
+        k_expects(idx_ < (int)ceng_data->size());
         idx = idx_;
     }
     inline void add_map_obj(std::shared_ptr<MapObject> obj) const
@@ -94,6 +104,10 @@ public:
     inline MoveIntent get_move_intent() const
     {
         return (*ceng_data)[idx].get_move_intent();
+    }
+    inline void set_idx_to_delete(std::vector<int> *idx_to_delete_)
+    {
+        idx_to_delete = idx_to_delete_;
     }
 };
 
@@ -152,6 +166,8 @@ public:
     MapObjRun1Args & operator = (const MapObjRun1Args&) = delete;
     MapObjRun1Args(MapObjRun1Args&&) = delete;
     MapObjRun1Args & operator = (MapObjRun1Args&&) = delete;
+
+    using CEng1DataReaderAttorney::delete_me;
 };
 
 struct HandleCollisionArgs final: public CEng1DataReaderAttorney
@@ -169,6 +185,7 @@ struct HandleCollisionArgs final: public CEng1DataReaderAttorney
     {
         (*ceng_data)[idx].set_move_intent(new_intent);
     }
+    using CEng1DataReaderAttorney::delete_me;
 };
 
 class MapObjRun2Args final: public CEng1DataReaderAttorney, public MapObjRunArgs
@@ -180,6 +197,8 @@ public:
     MapObjRun2Args & operator = (const MapObjRun2Args&) = delete;
     MapObjRun2Args(MapObjRun2Args&&) = delete;
     MapObjRun2Args & operator = (MapObjRun2Args&&) = delete;
+
+    using CEng1DataReaderAttorney::delete_me;
 };
 
 class MapObjRenderArgs final: public CEng1DataMutatorAttorney, public RenderArgs

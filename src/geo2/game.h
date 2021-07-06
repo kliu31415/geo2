@@ -51,6 +51,8 @@ class Game final
     //these persistent across run() calls to save memory allocations
     std::vector<std::shared_ptr<map_obj::MapObject>> map_objs_to_add;
     std::vector<std::vector<std::shared_ptr<map_obj::MapObject>>> map_objs_to_add_lt;
+    std::vector<int> idx_to_delete;
+    std::vector<std::vector<int>> idx_to_delete_lt;
     std::vector<CEng1Data> ceng_data;
     std::unique_ptr<class CollisionEngine1> collision_engine;
 

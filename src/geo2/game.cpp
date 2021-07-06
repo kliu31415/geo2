@@ -21,7 +21,7 @@
 
 namespace geo2 {
 
-class LazyInitTextureTarget
+class PersistentTextureTarget
 {
     std::shared_ptr<kx::gfx::Texture> texture;
     kx::gfx::Renderer *owner;
@@ -56,11 +56,11 @@ struct _gfx
 {
     kx::gfx::Renderer *cur_renderer;
 
-    LazyInitTextureTarget render_func_return_texture;
-    LazyInitTextureTarget render_func_map_texture;
-    LazyInitTextureTarget resolve_ms_func_texture;
-    LazyInitTextureTarget bloom_func_tex1;
-    LazyInitTextureTarget bloom_func_tex2;
+    PersistentTextureTarget render_func_return_texture;
+    PersistentTextureTarget render_func_map_texture;
+    PersistentTextureTarget resolve_ms_func_texture;
+    PersistentTextureTarget bloom_func_tex1;
+    PersistentTextureTarget bloom_func_tex2;
 
     std::unique_ptr<GameRenderOpList> render_op_list;
 
@@ -336,6 +336,7 @@ void Game::run1(double tick_len)
     int num_map_objs = map_objs.size();
 
     map_objs_to_add_lt.resize(num_threads);
+    idx_to_delete_lt.resize(num_threads);
 
     for(int t=num_threads-1; t>=0; t--) {
         int idx1 = (num_map_objs * (uint64_t)t) / num_threads;
@@ -347,6 +348,7 @@ void Game::run1(double tick_len)
             run1_args.set_ceng_data(&ceng_data);
             run1_args.set_map_objs_to_add(&map_objs_to_add_lt[t]);
             run1_args.set_rng(&rngs[t]);
+            run1_args.set_idx_to_delete(&idx_to_delete_lt[t]);
 
             for(int i=idx1; i<idx2; i++) {
                 run1_args.set_index(i);
@@ -365,6 +367,10 @@ void Game::run1(double tick_len)
 
     for(auto &i: map_objs_to_add_lt) {
         map_objs_to_add.insert(map_objs_to_add.end(), i.begin(), i.end());
+        i.clear();
+    }
+    for(auto &i: idx_to_delete_lt) {
+        idx_to_delete.insert(idx_to_delete.end(), i.begin(), i.end());
         i.clear();
     }
 }
@@ -394,6 +400,7 @@ void Game::run_collision_engine()
         auto idx2 = collisions[i].idx2;
 
         map_obj::HandleCollisionArgs args;
+        args.set_idx_to_delete(&idx_to_delete);
         args.set_ceng_data(&ceng_data);
         args.collision_info = collisions[i];
         args.other = map_objs[idx1].get();
@@ -456,6 +463,7 @@ void Game::advance_one_tick(double tick_len, int render_w, int render_h)
     weapon_args.set_cur_level_time(cur_level_time);
     weapon_args.set_mouse_state(kx::gfx::get_mouse_state());
     weapon_args.set_angle(std::atan2(cursor_pos.y - player_pos.y, cursor_pos.x - player_pos.x));
+    weapon_args.set_rng(&rngs[0]);
     player_args.weapon_run_args = weapon_args;
 
     player->run_special(player_args, {});
@@ -471,6 +479,7 @@ void Game::advance_one_tick(double tick_len, int render_w, int render_h)
     run2_args.set_tick_len(tick_len);
     run2_args.set_ceng_data(&ceng_data);
     run2_args.set_map_objs_to_add(&map_objs_to_add);
+    run2_args.set_idx_to_delete(&idx_to_delete);
     //~150us on Test2(40, 40)
     for(size_t i=0; i<map_objs.size(); i++) {
         run2_args.set_index(i);
@@ -478,19 +487,27 @@ void Game::advance_one_tick(double tick_len, int render_w, int render_h)
     }
 
     //remove all map objects that want to be removed
-    //~50-100us on Test2(40, 40)
-    size_t after_idx = 0;
-    for(size_t i=0; i<map_objs.size(); i++) {
-        if(ceng_data[i].get_move_intent() != MoveIntent::Delete) {
-            if(i != after_idx) {
+    if(!idx_to_delete.empty()) {
+        int first_idx = std::numeric_limits<decltype(first_idx)>::max();
+        //note that duplicate indices won't cause bugs (yet), but they're messy
+        //so they're not recommended
+        for(const auto &idx: idx_to_delete) {
+            k_assert(idx < (int)map_objs.size());
+            map_objs[idx] = nullptr;
+            first_idx = std::min(first_idx, idx);
+        }
+        size_t after_idx = first_idx;
+        for(size_t i=first_idx+1; i<map_objs.size(); i++) {
+            if(map_objs[i] != nullptr) {
                 ceng_data[after_idx] = std::move(ceng_data[i]);
                 map_objs[after_idx] = std::move(map_objs[i]);
+                after_idx++;
             }
-            after_idx++;
         }
+        ceng_data.resize(after_idx);
+        map_objs.resize(after_idx);
+        idx_to_delete.clear();
     }
-    ceng_data.resize(after_idx);
-    map_objs.resize(after_idx);
 
     //everything in map_objs_to_add is moved to map_objs
     process_added_map_objs();
@@ -589,7 +606,7 @@ Game::Game():
     rngs(thread_pool->size() + 1),
     collision_engine(std::make_unique<CollisionEngine1>(thread_pool))
 {
-    generate_and_start_level(Level::Name::Test1);
+    generate_and_start_level(Level::Name::Test2);
 }
 Game::~Game()
 {}
@@ -597,6 +614,7 @@ std::shared_ptr<kx::gfx::Texture> Game::run(kx::gfx::KWindowRunning *kwin_r,
                                             int render_w, int render_h)
 {
     constexpr int TICKS_PER_FRAME = 10;
+
     for(int i=0; i<TICKS_PER_FRAME; i++) {
         //~1300us on Test2(40, 40)
         advance_one_tick(1.0 / 1440.0, render_w, render_h);

@@ -4,6 +4,7 @@
 #include "geo2/map_obj/map_object.h"
 #include "geo2/game_render_op_list.h"
 #include "geo2/render_args.h"
+#include "geo2/rng_args.h"
 
 #include <SDL2/SDL_mouse.h>
 #include <cmath>
@@ -23,7 +24,7 @@ struct WeaponOwnerInfo final
     {}
 };
 
-class WeaponRunArgs final
+class WeaponRunArgs final: public RNG_Args
 {
     std::vector<std::shared_ptr<map_obj::MapObject>> *map_objs_to_add;
     WeaponOwnerInfo owner_info;

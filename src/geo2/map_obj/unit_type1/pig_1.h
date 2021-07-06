@@ -10,8 +10,13 @@ namespace geo2 { namespace map_obj {
 class Pig_1 final: public Unit_Type1
 {
     MapCoord desired_position;
+    MapVec current_velocity;
+    MapVec desired_velocity;
+    double current_dangle;
+    double desired_dangle;
     double current_angle;
     double desired_angle;
+    int current_action;
 
     std::array<std::shared_ptr<RenderOpShader>, 5> ops;
     std::array<nonstd::span<float>, 5> op_ius;
@@ -21,6 +26,8 @@ class Pig_1 final: public Unit_Type1
     float eye_h;
     float eye_x_offset;
     float eye_y_offset;
+
+    void recalc_movement();
 public:
     Pig_1(MapCoord position_);
 
