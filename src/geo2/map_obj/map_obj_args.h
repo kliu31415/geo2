@@ -157,6 +157,18 @@ public:
     }
 };
 
+/** Note that only MapObjRun1Args inherits CEngMutatorAttorney; you generally
+ *  should not directly mutate collision engine data outside of run1. The
+ *  exception to this is in run2, you can also mutate collision engine objects,
+ *  albeit in a different way. However, 99.9% of the time you'll only want to
+ *  interact with the collision engine in run1; it is rare that map objs require
+ *  the more specialized (and more expensive) functions available in run2.
+ *
+ *  Example cases where interacting with the collision engine in run2 is necessary:
+ *  -Simulating teleportation
+ *  -Needing to move multiple times in a tick
+ *  -Needing to insert dummy shapes to scan for collisions in an area
+ */
 class MapObjRun1Args final: public CEng1DataMutatorAttorney, public MapObjRunArgs, public RNG_Args
 {
 public:

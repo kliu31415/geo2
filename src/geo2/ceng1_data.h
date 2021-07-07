@@ -26,7 +26,8 @@ class CEng1Data final
         union
         {
             std::unique_ptr<Polygon> ptr;
-            std::vector<std::unique_ptr<Polygon>> vec;
+            //use a pointer to save memory because we won't use this 99% of the time
+            std::unique_ptr<std::vector<std::unique_ptr<Polygon>>> vec;
         };
 
         PolygonData():
@@ -56,7 +57,7 @@ class CEng1Data final
             if(num_polygons == 1)
                 ptr.~unique_ptr();
             else if(num_polygons > 1)
-                vec.~vector();
+                vec.~unique_ptr();
         }
         void push_back(std::unique_ptr<Polygon> &&polygon)
         {
@@ -66,9 +67,9 @@ class CEng1Data final
                 if(num_polygons == 1) {
                     auto tmp = std::move(ptr);
                     new (&vec) decltype(vec)();
-                    vec.push_back(std::move(tmp));
+                    vec->push_back(std::move(tmp));
                 }
-                vec.push_back(std::move(polygon));
+                vec->push_back(std::move(polygon));
             }
             num_polygons++;
         }
@@ -84,8 +85,8 @@ class CEng1Data final
         if(data.num_polygons == 1) {
             func(data.ptr.get(), 0);
         } else if(data.num_polygons > 1) {
-            for(size_t i=0; i<data.vec.size(); i++) {
-                func(data.vec[i].get(), i);
+            for(size_t i=0; i<data.vec->size(); i++) {
+                func((*data.vec)[i].get(), i);
             }
         }
     }

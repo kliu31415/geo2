@@ -7,7 +7,7 @@ namespace geo2 {
 
 const std::string PATH = "geo2_data/shaders/";
 
-void make_shader_vf_1ub(std::unique_ptr<GShader> *shader,
+void make_shader_vf_1ub(std::unique_ptr<IShader> *shader,
                         kx::gfx::Renderer *rdr,
                         const std::string &path,
                         int max_instances,
@@ -20,7 +20,7 @@ void make_shader_vf_1ub(std::unique_ptr<GShader> *shader,
     auto vert = rdr->make_vert_shader(PATH + path + ".vert");
     auto frag = rdr->make_frag_shader(PATH + path + ".frag");
     auto program = rdr->make_shader_program(*vert, *frag);
-    *shader = std::make_unique<GShader>(std::move(program), max_instances, draw_mode, count);
+    *shader = std::make_unique<IShader>(std::move(program), max_instances, draw_mode, count);
     (*shader)->add_UB(ub_name, ub_offset, ub_size);
 }
 

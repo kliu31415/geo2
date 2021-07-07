@@ -1,4 +1,5 @@
 #include "geo2/render_op.h"
+#include "geo2/timer.h"
 
 #include "kx/gfx/renderer.h"
 #include "kx/gfx/kwindow.h"
@@ -35,7 +36,7 @@ public:
     }
 };
 
-GShader::GShader(const std::shared_ptr<kx::gfx::ShaderProgram> &program_,
+IShader::IShader(const std::shared_ptr<kx::gfx::ShaderProgram> &program_,
                  int max_instances_,
                  const kx::gfx::DrawMode draw_mode_,
                  int count_):
@@ -44,11 +45,11 @@ GShader::GShader(const std::shared_ptr<kx::gfx::ShaderProgram> &program_,
     draw_mode(draw_mode_),
     count(count_)
 {}
-std::unique_ptr<GShader> GShader::get_empty_gshader()
+std::unique_ptr<IShader> IShader::get_empty_IShader()
 {
-    return std::unique_ptr<GShader>(new GShader());
+    return std::unique_ptr<IShader>(new IShader());
 }
-void GShader::add_UB(const std::string &name, int global_data_sz, int instance_data_sz)
+void IShader::add_UB(const std::string &name, int global_data_sz, int instance_data_sz)
 {
     k_expects(global_data_sz + instance_data_sz*max_instances <= MAX_RO_UBO_SIZE);
     k_expects(UBs.size() < MAX_RO_NUM_UBOS);
@@ -59,15 +60,15 @@ void GShader::add_UB(const std::string &name, int global_data_sz, int instance_d
     ub.instance_data_size = instance_data_sz;
     UBs.push_back(std::move(ub));
 }
-size_t GShader::get_num_UBs() const
+size_t IShader::get_num_UBs() const
 {
     return UBs.size();
 }
-int GShader::get_instance_uniform_size_bytes(size_t idx) const
+int IShader::get_instance_uniform_size_bytes(size_t idx) const
 {
     return UBs[idx].instance_data_size;
 }
-int GShader::get_max_instances() const
+int IShader::get_max_instances() const
 {
     return max_instances;
 }
@@ -78,12 +79,11 @@ template<class T> nonstd::span<T> to_span(const kx::FixedSizeArray<uint8_t> &dat
 {
     return {(T*)data.begin(), (T*)data.end()};
 }
-void GShader::render(UBO_Allocator *ubo_allocator,
+void IShader::render(UBO_Allocator *ubo_allocator,
                      nonstd::span<const ByteFSA2D*> instance_uniform_data,
                      kx::gfx::KWindowRunning *kwin_r,
                      kx::Passkey<class RenderOpList>) const
 {
-
     auto rdr = kwin_r->rdr();
     rdr->prepare_for_custom_shader();
     rdr->use_shader_program(*program);
@@ -97,9 +97,9 @@ void GShader::render(UBO_Allocator *ubo_allocator,
         auto usize = get_instance_uniform_size_bytes(i);
         auto ubo = ubo_allocator->get_UBO();
         rdr->bind_UBO(*ubo);
+        ubo->invalidate();
 
         kx::FixedSizeArray<uint8_t> data(usize*num_instances);
-
         size_t idx = 0;
         for(const auto &single_iu_data: instance_uniform_data) {
             k_expects((*single_iu_data)[i].size() == (size_t)usize);
@@ -107,18 +107,20 @@ void GShader::render(UBO_Allocator *ubo_allocator,
             idx++;
         }
         ubo->buffer_sub_data(UBs[i].global_data_size, data.begin(), usize*num_instances);
+
         rdr->bind_UB_base(i, *ubo);
         program->bind_UB(UBs[i].index, i);
     }
 
     rdr->draw_arrays_instanced(draw_mode, 0, count, num_instances);
+
 }
 
 bool RenderOpShader::cmp_shader(const RenderOpShader &a, const RenderOpShader &b)
 {
     return a.shader < b.shader;
 }
-RenderOpShader::RenderOpShader(const GShader &shader_):
+RenderOpShader::RenderOpShader(const IShader &shader_):
     shader(&shader_),
     instance_uniform_data(shader->get_num_UBs())
 {
@@ -172,13 +174,9 @@ RenderOpList::RenderOpList():
 {}
 RenderOpList::~RenderOpList()
 {}
-void RenderOpList::add_op_group(const std::shared_ptr<RenderOpGroup> &op_group)
+void RenderOpList::set_op_groups(std::vector<std::shared_ptr<RenderOpGroup>> &&op_groups_)
 {
-    op_groups.push_back(op_group);
-}
-void RenderOpList::add_op_groups(const std::vector<std::shared_ptr<RenderOpGroup>> &op_groups_)
-{
-    op_groups.insert(op_groups.end(), op_groups_.begin(), op_groups_.end());
+    op_groups = std::move(op_groups_);
 }
 void RenderOpList::render_internal(kx::gfx::KWindowRunning *kwin_r,
                                    [[maybe_unused]] int render_w,
@@ -196,58 +194,52 @@ void RenderOpList::render_internal(kx::gfx::KWindowRunning *kwin_r,
         ubo_allocator->reserve_UBOs(rdr);
     }
 
-    //Remove all empty op groups. Sort groups by priority, and within each priority level,
-    //sort groups by shader if the group's first element is a shader. All groups with
-    //non-shaders as initial elements are put at the beginning.
-    op_groups.erase(std::remove_if(std::execution::par_unseq,
-                    op_groups.begin(),
-                    op_groups.end(),
-                    [](const std::shared_ptr<RenderOpGroup> &g) -> bool {return g->empty();}),
-                    op_groups.end());
-    std::sort(std::execution::par_unseq,
-              op_groups.begin(),
+    //sort groups by priority
+    std::sort(op_groups.begin(),
               op_groups.end(),
               RenderOpGroup::cmp_priority);
+
+    std::vector<const ByteFSA2D*> instance_uniform_data;
+    const IShader *cur_shader = nullptr;
     size_t prev_pos = 0;
-    std::vector<RenderOp*> ops_flattened;
+
+    int elapsed_us = 0;
     for(size_t i=1; i<=op_groups.size(); i++) {
         if(i==op_groups.size() || op_groups[i]->priority != op_groups[i-1]->priority) {
-            std::sort(std::execution::par_unseq,
-                      op_groups.begin() + prev_pos,
+            //within a priority level, sort by op to take advantage of batching
+            std::sort(op_groups.begin() + prev_pos,
                       op_groups.begin() + i,
                       RenderOpGroup::cmp_op);
+
+            //render all ops at this priority level
             for(size_t j=prev_pos; j<i; j++) {
                 for(const auto &op: op_groups[j]->ops) {
-                    ops_flattened.push_back(op.get());
+                    if(auto shader = dynamic_cast<RenderOpShader*>(op.get())) {
+                        if(cur_shader!=nullptr &&
+                           (instance_uniform_data.size()==(size_t)shader->shader->get_max_instances() ||
+                            cur_shader!=shader->shader))
+                        {
+                            cur_shader->render(ubo_allocator.get(), instance_uniform_data, kwin_r, {});
+                            instance_uniform_data.clear();
+                        }
+                        cur_shader = shader->shader;
+                        instance_uniform_data.push_back(&shader->instance_uniform_data);
+                    } else {
+                        kx::log_error("unknown RenderOp type");
+                    }
                 }
             }
             prev_pos = i;
         }
     }
-    //render everything
-    std::vector<const ByteFSA2D*> instance_uniform_data;
-    const GShader *cur_shader = nullptr;
-    for(const auto &op: ops_flattened) {
-        if(auto shader = dynamic_cast<RenderOpShader*>(op)) {
-            if(cur_shader!=nullptr &&
-               (instance_uniform_data.size()==(size_t)shader->shader->get_max_instances() ||
-                cur_shader!=shader->shader))
-            {
-                cur_shader->render(ubo_allocator.get(), instance_uniform_data, kwin_r, {});
-                instance_uniform_data.clear();
-            }
-            cur_shader = shader->shader;
-            instance_uniform_data.push_back(&shader->instance_uniform_data);
-        } else {
-            kx::log_error("unknown RenderOp value");
-        }
-    }
-    if(cur_shader!=nullptr)
+
+    //render any buffered data
+    if(cur_shader != nullptr)
         cur_shader->render(ubo_allocator.get(), instance_uniform_data, kwin_r, {});
 }
-void RenderOpList::clear()
+void RenderOpList::steal_op_groups_into(std::vector<std::shared_ptr<RenderOpGroup>> *op_groups_)
 {
-    op_groups.clear();
+    *op_groups_ = std::move(op_groups);
 }
 
 }

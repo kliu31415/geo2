@@ -29,7 +29,7 @@ void Unit_Type1::handle_collision([[maybe_unused]] const Projectile_Type1 &other
     //deal damage? apply effects?
     //move_intent stays the same
 }
-MapCoord Unit_Type1::get_pos() const
+MapCoord Unit_Type1::get_position() const
 {
     return current_position;
 }

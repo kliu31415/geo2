@@ -12,13 +12,13 @@ class GameRenderOpList final: public RenderOpList
 public:
     struct Shaders
     {
-        std::unique_ptr<GShader> test_terrain_1;
-        std::unique_ptr<GShader> outlined_tri;
-        std::unique_ptr<GShader> monoc_wall_1;
-        std::unique_ptr<GShader> monoc_floor_1;
-        std::unique_ptr<GShader> pig_1;
-        std::unique_ptr<GShader> laser_proj_1;
-        std::unique_ptr<GShader> laser_1;
+        std::unique_ptr<IShader> test_terrain_1;
+        std::unique_ptr<IShader> outlined_tri;
+        std::unique_ptr<IShader> monoc_wall_1;
+        std::unique_ptr<IShader> monoc_floor_1;
+        std::unique_ptr<IShader> pig_1;
+        std::unique_ptr<IShader> laser_proj_1;
+        std::unique_ptr<IShader> laser_1;
 
         void init(kx::gfx::Renderer *rdr, kx::Passkey<GameRenderOpList>);
     };

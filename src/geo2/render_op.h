@@ -25,7 +25,7 @@ constexpr int MAX_RO_UBO_SIZE = 1<<14;
 
 class UBO_Allocator;
 
-class GShader final
+class IShader final
 {
 private:
     template<class T> using FSA = kx::FixedSizeArray<T>;
@@ -43,14 +43,14 @@ private:
     kx::gfx::DrawMode draw_mode;
     int count;
     std::vector<UB> UBs;
-    GShader() = default;
+    IShader() = default;
 public:
-    GShader(const std::shared_ptr<kx::gfx::ShaderProgram> &program_,
+    IShader(const std::shared_ptr<kx::gfx::ShaderProgram> &program_,
             int max_instances_,
             const kx::gfx::DrawMode draw_mode_,
             int count_);
 
-    static std::unique_ptr<GShader> get_empty_gshader();
+    static std::unique_ptr<IShader> get_empty_IShader();
 
     void add_UB(const std::string &name, int global_data_sz, int instance_data_sz);
     size_t get_num_UBs() const;
@@ -62,8 +62,8 @@ public:
                 kx::Passkey<class RenderOpList>) const;
 
     ///nonmovable because things hold references to it
-    GShader(GShader&&) = delete;
-    GShader &operator = (GShader&&) = delete;
+    IShader(IShader&&) = delete;
+    IShader &operator = (IShader&&) = delete;
 };
 
 class RenderOp
@@ -77,12 +77,12 @@ class RenderOpShader final: public RenderOp
     friend class RenderOpList;
     friend class RenderOpGroup;
 
-    const GShader *shader;
+    const IShader *shader;
     kx::FixedSizeArray<kx::FixedSizeArray<uint8_t>> instance_uniform_data;
 public:
     static bool cmp_shader(const RenderOpShader &a, const RenderOpShader &b);
 
-    RenderOpShader(const GShader &shader_);
+    RenderOpShader(const IShader &shader_);
     void set_instance_uniform(size_t uniform_id, nonstd::span<uint8_t> data);
     nonstd::span<uint8_t> map_instance_uniform(size_t uniform_id);
 };
@@ -92,7 +92,7 @@ class RenderOpGroup final
     friend class RenderOpList;
 
     float priority;
-    const GShader *op_cmp; ///used to speed up sorting by op
+    const IShader *op_cmp; ///used to speed up sorting by op
     std::vector<std::shared_ptr<RenderOp>> ops;
 public:
     static bool cmp_priority(const std::shared_ptr<RenderOpGroup> &a,
@@ -116,9 +116,8 @@ protected:
 public:
     RenderOpList();
     virtual ~RenderOpList();
-    void add_op_group(const std::shared_ptr<RenderOpGroup> &op_group);
-    void add_op_groups(const std::vector<std::shared_ptr<RenderOpGroup>> &op_groups_);
-    void clear();
+    void set_op_groups(std::vector<std::shared_ptr<RenderOpGroup>> &&op_groups_);
+    void steal_op_groups_into(std::vector<std::shared_ptr<RenderOpGroup>> *op_groups_);
 };
 
 }

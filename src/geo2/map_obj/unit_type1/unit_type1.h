@@ -20,7 +20,7 @@ public:
     HANDLE_COLLISION_FUNC_DECLARATION(Unit_Type1) override;
     HANDLE_COLLISION_FUNC_DECLARATION(Projectile_Type1) override;
 
-    MapCoord get_pos() const;
+    MapCoord get_position() const;
 };
 
 }}

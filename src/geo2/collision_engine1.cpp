@@ -224,7 +224,7 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
     //make a list of the active objects and put them in a spatial partition grid
     active_objs.clear();
 
-    //~150us on Test2(40, 40), which adding to the grid takes ~200us
+    //~150us on Test2(40, 40)
     for(size_t i=0; i<ceng_data->size(); i++) {
         auto add_active_obj = [this, i](const Polygon *polygon, int shape_idx) -> void
                             {

@@ -56,6 +56,8 @@ struct _gfx
 {
     kx::gfx::Renderer *cur_renderer;
 
+    std::vector<std::shared_ptr<RenderOpGroup>> op_groups;
+
     PersistentTextureTarget render_func_return_texture;
     PersistentTextureTarget render_func_map_texture;
     PersistentTextureTarget resolve_ms_func_texture;
@@ -455,7 +457,7 @@ void Game::advance_one_tick(double tick_len, int render_w, int render_h)
     auto offset = MapVec(mouse_x - 0.5f*MENU_OFFSET*render_w,
                          mouse_y - 0.5f*render_h)
                          / tile_len;
-    auto player_pos = player->get_pos();
+    auto player_pos = player->get_position();
     weapon_args.set_owner_info(weapon::WeaponOwnerInfo(player_pos, map_obj::Player_Type1::WEAPON_OFFSET));
     auto cursor_pos = player_pos + offset;
     weapon_args.set_cursor_pos(cursor_pos);
@@ -486,7 +488,10 @@ void Game::advance_one_tick(double tick_len, int render_w, int render_h)
         map_objs[i]->run2_st(run2_args);
     }
 
-    //remove all map objects that want to be removed
+    //-remove all map objects that want to be removed
+    //-note that we should preserve the order to prevent rendering glitches
+    // (if two things have the same priority, then their order in map objs
+    // determines which one is on top, so we have to keep all relative orders).
     if(!idx_to_delete.empty()) {
         int first_idx = std::numeric_limits<decltype(first_idx)>::max();
         //note that duplicate indices won't cause bugs (yet), but they're messy
@@ -554,23 +559,22 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
     kx::gfx::Rect camera;
     camera.w = map_render_w / tile_len;
     camera.h = map_render_h / tile_len;
-    auto player_pos = player->get_pos();
+    auto player_pos = player->get_position();
     camera.x = player_pos.x - 0.5f * camera.w;
     camera.y = player_pos.y - 0.5f * camera.h;
     render_args.set_camera(camera);
     render_args.set_pixels_per_tile_len(tile_len);
 
-    std::vector<std::shared_ptr<RenderOpGroup>> op_groups;
-    render_args.set_op_groups_vec(&op_groups);
+    render_args.set_op_groups_vec(&gfx->op_groups);
 
     for(size_t i=0; i<map_objs.size(); i++) {
         map_objs[i]->add_render_objs(render_args);
     }
 
-
-    gfx->render_op_list->add_op_groups(op_groups);
+    gfx->render_op_list->set_op_groups(std::move(gfx->op_groups));
     gfx->render_op_list->render(*this, kwin_r, map_render_w, map_render_h);
-    gfx->render_op_list->clear();
+    gfx->render_op_list->steal_op_groups_into(&gfx->op_groups);
+    gfx->op_groups.clear();
 
     //if we have a multisample texture, resolve it into a 1-sample texture
     if(map_texture->is_multisample()) {
@@ -606,7 +610,7 @@ Game::Game():
     rngs(thread_pool->size() + 1),
     collision_engine(std::make_unique<CollisionEngine1>(thread_pool))
 {
-    generate_and_start_level(Level::Name::Test2);
+    generate_and_start_level(Level::Name::Test1);
 }
 Game::~Game()
 {}
