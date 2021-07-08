@@ -74,18 +74,18 @@ void Pig_1::run2_st([[maybe_unused]] const MapObjRun2Args &args)
     }
 }
 
-void Pig_1::handle_collision([[maybe_unused]] const Wall_Type1 &other,
+void Pig_1::handle_collision([[maybe_unused]] Wall_Type1 *other,
                              [[maybe_unused]] const HandleCollisionArgs &args)
 {
     args.set_move_intent(MoveIntent::StayAtCurrentPos);
 }
-void Pig_1::handle_collision([[maybe_unused]] const Unit_Type1 &other,
+void Pig_1::handle_collision([[maybe_unused]] Unit_Type1 *other,
                              [[maybe_unused]] const HandleCollisionArgs &args)
 {
     args.set_move_intent(MoveIntent::StayAtCurrentPos);
     //deal damage? apply effects?
 }
-void Pig_1::handle_collision([[maybe_unused]] const Projectile_Type1 &other,
+void Pig_1::handle_collision([[maybe_unused]] Projectile_Type1 *other,
                              [[maybe_unused]] const HandleCollisionArgs &args)
 {
     //deal damage? apply effects?

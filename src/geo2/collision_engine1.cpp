@@ -252,14 +252,9 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
     std::vector<std::function<void()>> tasks(num_threads);
     std::vector<std::future<void>> is_done(num_threads);
 
-    //note that processing an object has a complexity roughly linearly proportional
-    //to its index because (a, b) is checked for overlap only if a.idx < b.idx, so
-    //later objects require more work to check. Therefore, not every task should
-    //consist of the same number of objects. Empirically, using a power of ~0.75
-    //results in the best runtime.
     for(size_t i=0; i<num_threads; i++) {
-        size_t idx1 = active_objs.size() * std::pow(i / (double)num_threads, 0.75);
-        size_t idx2 = active_objs.size() * std::pow((i+1) / (double)num_threads, 0.75);
+        size_t idx1 = active_objs.size() * i / (double)num_threads;
+        size_t idx2 = active_objs.size() * (i+1) / (double)num_threads;
         tasks[i] = [num_threads, i, idx1, idx2, this, &collisions]
                     {
                         for(size_t j=idx1; j<idx2; j++)
@@ -311,7 +306,7 @@ void CollisionEngine1::update_intent(int idx, MoveIntent prev_intent, std::vecto
         else
             k_assert(false);
 
-    } else //this shouldn't happen
+    } else //we received a bogus move intent
         k_assert(false);
 
     (*ceng_data)[idx].set_move_intent(new_intent);

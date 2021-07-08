@@ -19,21 +19,21 @@ void Wall_Type1::run1_mt(const MapObjRun1Args &args)
 {
     args.set_move_intent(MoveIntent::StayAtCurrentPos);
 }
-void Wall_Type1::handle_collision(MapObject *other, const HandleCollisionArgs &args) const
+void Wall_Type1::handle_collision(MapObject *other, const HandleCollisionArgs &args)
 {
-    other->handle_collision(*this, args);
+    other->handle_collision(this, args);
 }
-void Wall_Type1::handle_collision([[maybe_unused]] const Wall_Type1 &other,
+void Wall_Type1::handle_collision([[maybe_unused]] Wall_Type1 *other,
                                         [[maybe_unused]] const HandleCollisionArgs &args)
 {
     args.set_move_intent(MoveIntent::StayAtCurrentPos);
 }
-void Wall_Type1::handle_collision([[maybe_unused]] const Unit_Type1 &other,
+void Wall_Type1::handle_collision([[maybe_unused]] Unit_Type1 *other,
                                         [[maybe_unused]] const HandleCollisionArgs &args)
 {
     args.set_move_intent(MoveIntent::StayAtCurrentPos);
 }
-void Wall_Type1::handle_collision([[maybe_unused]] const Projectile_Type1 &other,
+void Wall_Type1::handle_collision([[maybe_unused]] Projectile_Type1 *other,
                                         [[maybe_unused]] const HandleCollisionArgs &args)
 {
     args.set_move_intent(MoveIntent::StayAtCurrentPos);

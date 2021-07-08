@@ -64,6 +64,7 @@ protected:
         //tried to avoid them because they're messy
         k_expects(idx_to_delete->empty() || idx_to_delete->back()!=idx);
         idx_to_delete->push_back(idx);
+        (*ceng_data)[idx].set_move_intent(MoveIntent::RemoveShapes);
     }
 public:
     CEng1DataReaderAttorney() = default;
@@ -139,6 +140,12 @@ public:
     }
     inline void set_move_intent(MoveIntent new_intent) const
     {
+        //delete_me() already sets MoveIntent to RemoveShapes, so as of now
+        //there's no reason to set both RemoveShapes and call delete_me();
+        //in the future, if there is, we should be able to remove this statement
+        //without issues
+        k_expects(new_intent != MoveIntent::RemoveShapes);
+
         (*ceng_data)[idx].set_move_intent(new_intent);
     }
 };

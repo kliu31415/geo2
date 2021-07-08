@@ -8,22 +8,22 @@ Unit_Type1::Unit_Type1(Team team_, MapCoord position_, double collision_damage_)
     collision_damage(collision_damage_),
     team(team_)
 {}
-void Unit_Type1::handle_collision(MapObject *other, const HandleCollisionArgs &args) const
+void Unit_Type1::handle_collision(MapObject *other, const HandleCollisionArgs &args)
 {
-    other->handle_collision(*this, args);
+    other->handle_collision(this, args);
 }
-void Unit_Type1::handle_collision([[maybe_unused]] const Wall_Type1 &other,
+void Unit_Type1::handle_collision([[maybe_unused]] Wall_Type1 *other,
                                   [[maybe_unused]] const HandleCollisionArgs &args)
 {
     args.set_move_intent(MoveIntent::StayAtCurrentPos);
 }
-void Unit_Type1::handle_collision([[maybe_unused]] const Unit_Type1 &other,
+void Unit_Type1::handle_collision([[maybe_unused]] Unit_Type1 *other,
                                   [[maybe_unused]] const HandleCollisionArgs &args)
 {
     args.set_move_intent(MoveIntent::StayAtCurrentPos);
     //deal damage? apply effects?
 }
-void Unit_Type1::handle_collision([[maybe_unused]] const Projectile_Type1 &other,
+void Unit_Type1::handle_collision([[maybe_unused]] Projectile_Type1 *other,
                                   [[maybe_unused]] const HandleCollisionArgs &args)
 {
     //deal damage? apply effects?

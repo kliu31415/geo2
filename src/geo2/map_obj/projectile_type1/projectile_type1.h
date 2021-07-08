@@ -14,7 +14,7 @@ protected:
 public:
     virtual ~Projectile_Type1() = default;
 
-    void handle_collision(MapObject *other, const HandleCollisionArgs &args) const override;
+    void handle_collision(MapObject *other, const HandleCollisionArgs &args) override;
     HANDLE_COLLISION_FUNC_DECLARATION(Wall_Type1) override;
     HANDLE_COLLISION_FUNC_DECLARATION(Unit_Type1) override;
     HANDLE_COLLISION_FUNC_DECLARATION(Projectile_Type1) override;

@@ -100,14 +100,12 @@ void IShader::render(UBO_Allocator *ubo_allocator,
         ubo->invalidate();
 
         kx::FixedSizeArray<uint8_t> data(usize*num_instances);
-        size_t idx = 0;
-        for(const auto &single_iu_data: instance_uniform_data) {
-            k_expects((*single_iu_data)[i].size() == (size_t)usize);
-            std::copy_n((*single_iu_data)[i].begin(), usize, data.begin() + idx*usize);
-            idx++;
+        for(size_t j=0; j<instance_uniform_data.size(); j++) {
+            k_expects((*instance_uniform_data[j])[i].size() == (size_t)usize);
+            std::copy_n((*instance_uniform_data[j])[i].begin(), usize, data.begin() + j*usize);
         }
-        ubo->buffer_sub_data(UBs[i].global_data_size, data.begin(), usize*num_instances);
 
+        ubo->buffer_sub_data(UBs[i].global_data_size, data.begin(), usize*num_instances);
         rdr->bind_UB_base(i, *ubo);
         program->bind_UB(UBs[i].index, i);
     }
@@ -203,7 +201,6 @@ void RenderOpList::render_internal(kx::gfx::KWindowRunning *kwin_r,
     const IShader *cur_shader = nullptr;
     size_t prev_pos = 0;
 
-    int elapsed_us = 0;
     for(size_t i=1; i<=op_groups.size(); i++) {
         if(i==op_groups.size() || op_groups[i]->priority != op_groups[i-1]->priority) {
             //within a priority level, sort by op to take advantage of batching

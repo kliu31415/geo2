@@ -610,7 +610,7 @@ Game::Game():
     rngs(thread_pool->size() + 1),
     collision_engine(std::make_unique<CollisionEngine1>(thread_pool))
 {
-    generate_and_start_level(Level::Name::Test1);
+    generate_and_start_level(Level::Name::Test2);
 }
 Game::~Game()
 {}

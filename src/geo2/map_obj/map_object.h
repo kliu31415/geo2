@@ -20,7 +20,7 @@ class MapObjRenderArgs;
 class HandleCollisionArgs;
 
 #define HANDLE_COLLISION_FUNC_DECLARATION(T) \
-    void handle_collision(const class T &other, const HandleCollisionArgs &args)
+    void handle_collision(class T *other, const HandleCollisionArgs &args)
 
 class MapObject: public std::enable_shared_from_this<MapObject>
 {
@@ -40,7 +40,7 @@ public:
      *  const. Note that this function exists solely to perform the first level of
      *  double dispatch.
      */
-    virtual void handle_collision(MapObject *other, const HandleCollisionArgs &args) const = 0;
+    virtual void handle_collision(MapObject *other, const HandleCollisionArgs &args) = 0;
     ///for the below functions, "this" handles the collision and reports its intent
     virtual HANDLE_COLLISION_FUNC_DECLARATION(CosmeticMapObj);
     virtual HANDLE_COLLISION_FUNC_DECLARATION(Wall_Type1) = 0;
@@ -56,7 +56,7 @@ public:
  */
 class CosmeticMapObj: public MapObject
 {
-    void handle_collision(MapObject *other, const HandleCollisionArgs &args) const override;
+    void handle_collision(MapObject *other, const HandleCollisionArgs &args) override;
     HANDLE_COLLISION_FUNC_DECLARATION(Wall_Type1) override;
     HANDLE_COLLISION_FUNC_DECLARATION(Unit_Type1) override;
     HANDLE_COLLISION_FUNC_DECLARATION(Projectile_Type1) override;
