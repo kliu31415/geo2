@@ -21,10 +21,14 @@
  *  is turned off. Instead, do {int num_erased = my_set.erase(5); k_assert(num_erased == 1);}.
  */
 
-#define _k_check_nomsg(name, a) (a? void(0): kx::log_error(kx::to_str(name) + " failed: \"" + \
+#define _k_check_nomsg(name, a) (__builtin_expect(a, 0)? \
+                                 void(0): \
+                                 kx::log_error(kx::to_str(name) + " failed: \"" + \
                                  kx::to_str(#a) + "\"," + _K_LOC_INFO))
 
-#define _k_check_wmsg(name, a, msg) (a? void(0): kx::log_error(kx::to_str(name) + " failed: \"" + \
+#define _k_check_wmsg(name, a, msg) (__builtin_expect(a, 0) ? \
+                                     void(0): \
+                                     kx::log_error(kx::to_str(name) + " failed: \"" + \
                                      kx::to_str(#a) + "\"," + _K_LOC_INFO + ", msg \"" + \
                                      kx::to_str(msg) + "\""))
 
