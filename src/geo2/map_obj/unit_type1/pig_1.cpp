@@ -6,12 +6,12 @@
 namespace geo2 { namespace map_obj {
 
 Pig_1::Pig_1(MapCoord position_):
-    Unit_Type1(Team::Enemy, position_, 2.0),
+    Unit_Type1(Team::Enemy, position_, 6.0),
     current_angle(0)
 {}
 
-const kx::gfx::LinearColor INNER_COLOR(1.0f, 0.3f, 0.3f, 1.0f);
-const kx::gfx::LinearColor BORDER_COLOR(0.0f, 0.0f, 0.0f, 1.0f);
+const kx::gfx::LinearColor DEFAULT_INNER_COLOR(1.0f, 0.3f, 0.3f, 1.0f);
+const kx::gfx::LinearColor DEFAULT_BORDER_COLOR(0.0f, 0.0f, 0.0f, 1.0f);
 constexpr float BORDER_THICKNESS = 0.1f;
 
 constexpr float PART_W[]{2.625f, 1.125f, 0.375f};
@@ -79,17 +79,12 @@ void Pig_1::handle_collision([[maybe_unused]] Wall_Type1 *other,
 {
     args.set_move_intent(MoveIntent::StayAtCurrentPos);
 }
-void Pig_1::handle_collision([[maybe_unused]] Unit_Type1 *other,
-                             [[maybe_unused]] const HandleCollisionArgs &args)
+void Pig_1::handle_collision(Unit_Type1 *other,
+                             const HandleCollisionArgs &args)
 {
+    Unit_Type1::handle_collision(other, args);
     args.set_move_intent(MoveIntent::StayAtCurrentPos);
     //deal damage? apply effects?
-}
-void Pig_1::handle_collision([[maybe_unused]] Projectile_Type1 *other,
-                             [[maybe_unused]] const HandleCollisionArgs &args)
-{
-    //deal damage? apply effects?
-    //move_intent remains unchanged
 }
 
 void Pig_1::add_render_objs(const MapObjRenderArgs &args)
@@ -101,9 +96,6 @@ void Pig_1::add_render_objs(const MapObjRenderArgs &args)
             op_group->add_op(ops[i]);
             auto iu_map = ops[i]->map_instance_uniform(0);
             op_ius[i] = {(float*)iu_map.begin(), (float*)iu_map.end()};
-
-            *reinterpret_cast<kx::gfx::LinearColor*>(&op_ius[i][12]) = INNER_COLOR;
-            *reinterpret_cast<kx::gfx::LinearColor*>(&op_ius[i][16]) = BORDER_COLOR;
         }
 
         auto adjusted_border_thickness = args.to_whole_pixels(BORDER_THICKNESS);
@@ -185,7 +177,18 @@ void Pig_1::add_render_objs(const MapObjRenderArgs &args)
         op_ius[4][5] = args.y_to_ndc(v2_rot.y);
     }
 
+    auto inner_color = apply_color_mod(DEFAULT_INNER_COLOR, args.get_cur_level_time());
+    auto border_color = apply_color_mod(DEFAULT_BORDER_COLOR, args.get_cur_level_time());
+    for(int i=0; i<5; i++) {
+        *reinterpret_cast<kx::gfx::LinearColor*>(&op_ius[i][12]) = inner_color;
+        *reinterpret_cast<kx::gfx::LinearColor*>(&op_ius[i][16]) = border_color;
+    }
+
     args.add_op_group(op_group);
+}
+double Pig_1::get_collision_damage() const
+{
+    return 3.0;
 }
 
 }}

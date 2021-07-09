@@ -37,4 +37,6 @@ public:
     }
 };
 
+using StandardRNG = Xorshift64RNG;
+
 }

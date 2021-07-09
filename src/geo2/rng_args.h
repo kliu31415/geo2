@@ -6,13 +6,13 @@ namespace geo2 {
 
 class RNG_Args
 {
-    Xorshift64RNG *rng;
+    StandardRNG *rng;
 public:
-    Xorshift64RNG *get_rng() const
+    StandardRNG *get_rng() const
     {
         return rng;
     }
-    void set_rng(Xorshift64RNG *rng_)
+    void set_rng(StandardRNG *rng_)
     {
         rng = rng_;
     }

@@ -18,6 +18,7 @@ class MapObjRun1Args;
 class MapObjRun2Args;
 class MapObjRenderArgs;
 class HandleCollisionArgs;
+class EndHandleCollisionBlockArgs;
 
 #define HANDLE_COLLISION_FUNC_DECLARATION(T) \
     void handle_collision(class T *other, const HandleCollisionArgs &args)
@@ -25,6 +26,16 @@ class HandleCollisionArgs;
 class MapObject: public std::enable_shared_from_this<MapObject>
 {
 public:
+    MapObject() = default;
+
+    ///delete copy because it usually doesn't make sense
+    MapObject(const MapObject&) = delete;
+    MapObject& operator = (const MapObject&) = delete;
+
+    ///delete move for safety (we might keep pointers to things)
+    MapObject(MapObject&&) = delete;
+    MapObject& operator = (MapObject&&) = delete;
+
     virtual ~MapObject() = default;
 
     ///default behavior for these functions = do nothing
@@ -46,6 +57,8 @@ public:
     virtual HANDLE_COLLISION_FUNC_DECLARATION(Wall_Type1) = 0;
     virtual HANDLE_COLLISION_FUNC_DECLARATION(Unit_Type1) = 0;
     virtual HANDLE_COLLISION_FUNC_DECLARATION(Projectile_Type1) = 0;
+
+    virtual void end_handle_collision_block(const EndHandleCollisionBlockArgs &args);
 
     virtual Team get_team() const;
 };

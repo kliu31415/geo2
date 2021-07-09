@@ -15,12 +15,36 @@ BasicProj_1::BasicProj_1(const std::shared_ptr<MapObject> &owner_,
     current_position(pos_),
     velocity(velocity_)
 {}
+void BasicProj_1::run1_mt(const MapObjRun1Args &args)
+{
+    life_left -= args.get_tick_len();
 
+    if(life_left < 0) {
+        alive_status.set_status_to_dead();
+        args.delete_me();
+        return;
+    }
+
+    desired_position = current_position + velocity*args.get_tick_len();
+
+    auto cur = args.get_sole_current_pos();
+    copy_base_shape_into(cur);
+    cur->translate(current_position.x, current_position.y);
+    auto des = args.get_sole_desired_pos();
+    copy_base_shape_into(des);
+    des->translate(desired_position.x, desired_position.y);
+
+    args.set_move_intent(MoveIntent::GoToDesiredPos);
+}
 void BasicProj_1::run2_st([[maybe_unused]] const MapObjRun2Args &args)
 {
     if(args.get_move_intent() == MoveIntent::GoToDesiredPos) {
         current_position = desired_position;
     }
+}
+double BasicProj_1::get_damage() const
+{
+    return damage;
 }
 
 }}

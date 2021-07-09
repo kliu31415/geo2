@@ -7,7 +7,7 @@
 namespace geo2 { namespace map_obj {
 
 Player_Type1::Player_Type1():
-    Unit_Type1(Team::Ally, {}),
+    Unit_Type1(Team::Ally, {}, 20.0),
     velocity(MapVec(0, 0)),
     left_pressed_tick_count(0),
     right_pressed_tick_count(0),
@@ -204,6 +204,9 @@ void Player_Type1::run2_st([[maybe_unused]] const MapObjRun2Args &args)
         current_position = desired_position;
     }
 }
+using kx::gfx::LinearColor;
+const LinearColor DEFAULT_INSIDE_COLOR(0.2f, 0.3f, 0.6f, 0.9f);
+const LinearColor DEFAULT_OUTSIDE_COLOR(0.05f, 0.05f, 0.05f, 0.9f);
 void Player_Type1::add_render_objs(const MapObjRenderArgs &args)
 {
     if(op1 == nullptr) {
@@ -221,30 +224,17 @@ void Player_Type1::add_render_objs(const MapObjRenderArgs &args)
         op_iu1[9] = -1.0f;
         op_iu1[10] = BORDER_SIZE;
 
-        op_iu1[12] = 0.2f;
-        op_iu1[13] = 0.3f;
-        op_iu1[14] = 0.6f;
-        op_iu1[15] = 0.9f;
-
-        op_iu1[16] = 0.05f;
-        op_iu1[17] = 0.05f;
-        op_iu1[18] = 0.05f;
-        op_iu1[19] = 0.9f;
-
         op_iu2[8] = BORDER_SIZE;
         op_iu2[9] = -1.0f;
         op_iu2[10] = BORDER_SIZE;
-
-        op_iu2[12] = 0.2f;
-        op_iu2[13] = 0.3f;
-        op_iu2[14] = 0.6f;
-        op_iu2[15] = 0.9f;
-
-        op_iu2[16] = 0.05f;
-        op_iu2[17] = 0.05f;
-        op_iu2[18] = 0.05f;
-        op_iu2[19] = 0.9f;
     }
+
+    auto inside_color = apply_color_mod(DEFAULT_INSIDE_COLOR, args.get_cur_level_time());
+    auto outside_color = apply_color_mod(DEFAULT_OUTSIDE_COLOR, args.get_cur_level_time());
+    *reinterpret_cast<LinearColor*>(&op_iu1[12]) = inside_color;
+    *reinterpret_cast<LinearColor*>(&op_iu1[16]) = outside_color;
+    *reinterpret_cast<LinearColor*>(&op_iu2[12]) = inside_color;
+    *reinterpret_cast<LinearColor*>(&op_iu2[16]) = outside_color;
 
     op_iu1[0] = args.x_to_ndc(current_position.x - 0.5*PLAYER_SIDE_LEN);
     op_iu1[1] = args.y_to_ndc(current_position.y + 0.5*PLAYER_SIDE_LEN);
@@ -277,6 +267,10 @@ void Player_Type1::add_render_objs(const MapObjRenderArgs &args)
 void Player_Type1::set_position(MapCoord pos, kx::Passkey<Game>)
 {
     current_position = pos;
+}
+double Player_Type1::get_collision_damage() const
+{
+    return 2.0;
 }
 
 }}

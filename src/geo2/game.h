@@ -46,7 +46,7 @@ class Game final
 
     std::shared_ptr<class ThreadPool> thread_pool;
 
-    std::vector<Xorshift64RNG> rngs;
+    std::vector<StandardRNG> rngs;
 
     //these persistent across run() calls to save memory allocations
     std::vector<std::shared_ptr<map_obj::MapObject>> map_objs_to_add;

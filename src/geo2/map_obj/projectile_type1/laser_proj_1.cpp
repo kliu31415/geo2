@@ -9,7 +9,7 @@ namespace geo2 { namespace map_obj {
 
 constexpr auto SIDE_LEN = 0.3;
 
-const std::unique_ptr<Polygon> BASE_SHAPE = Polygon::make(
+const std::unique_ptr<const Polygon> BASE_SHAPE = Polygon::make(
     std::vector<float>{-0.5 * SIDE_LEN  , SIDE_LEN * 1.0 / 3.0 * std::sqrt(3.0) / 2.0,
                        0.5 * SIDE_LEN   , SIDE_LEN * 1.0 / 3.0 * std::sqrt(3.0) / 2.0,
                        0.0              , -SIDE_LEN * 2.0 / 3.0 * std::sqrt(3.0) / 2.0});
@@ -32,26 +32,6 @@ void LaserProj_1::init(const MapObjInitArgs &args)
 {
      args.add_current_pos(Polygon::make_with_num_sides(3));
      args.add_desired_pos(Polygon::make_with_num_sides(3));
-}
-void LaserProj_1::run1_mt(const MapObjRun1Args &args)
-{
-    life_left -= args.get_tick_len();
-
-    if(life_left < 0) {
-        args.delete_me();
-        return;
-    }
-
-    desired_position = current_position + velocity*args.get_tick_len();
-
-    auto cur = args.get_sole_current_pos();
-    cur->copy_from(base_shape.get());
-    cur->translate(current_position.x, current_position.y);
-    auto des = args.get_sole_desired_pos();
-    des->copy_from(base_shape.get());
-    des->translate(desired_position.x, desired_position.y);
-
-    args.set_move_intent(MoveIntent::GoToDesiredPos);
 }
 void LaserProj_1::add_render_objs(const MapObjRenderArgs &args)
 {
@@ -87,6 +67,10 @@ void LaserProj_1::add_render_objs(const MapObjRenderArgs &args)
         }
         args.add_op_group(op_group);
     }
+}
+void LaserProj_1::copy_base_shape_into(Polygon *p) const
+{
+    p->copy_from(base_shape.get());
 }
 
 }}

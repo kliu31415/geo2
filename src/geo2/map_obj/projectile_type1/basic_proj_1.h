@@ -21,7 +21,12 @@ protected:
 public:
     virtual ~BasicProj_1() = default;
 
+    void run1_mt(const MapObjRun1Args &args) override;
     void run2_st(const MapObjRun2Args &args) override;
+
+    double get_damage() const override;
+
+    virtual void copy_base_shape_into(Polygon *p) const = 0;
 };
 
 }}

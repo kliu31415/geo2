@@ -16,8 +16,6 @@ constexpr double DAMAGE = 0.1;
 constexpr double LIFESPAN = 0.5;
 constexpr double PROJ_SPEED = 100;
 
-constexpr double PI = 3.1415926535897932;
-
 void TestLaser1::run(const WeaponRunArgs &args)
 {
     if(reload_counter > 0)
@@ -38,7 +36,7 @@ void TestLaser1::run(const WeaponRunArgs &args)
                              LIFESPAN,
                              owner_info.pos + MapVec(dx, dy) * (owner_info.offset + 0.35),
                              MapVec(dx, dy) * PROJ_SPEED,
-                             std::uniform_real_distribution<double>(0, 2*PI)(*args.get_rng()));
+                             std::uniform_real_distribution<double>(0, 2*M_PI)(*args.get_rng()));
 
             args.add_map_obj(std::move(proj));
             reload_counter += FIRE_INTERVAL;

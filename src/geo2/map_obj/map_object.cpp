@@ -8,10 +8,16 @@
 namespace geo2 { namespace map_obj {
 
 //MapObject
-void MapObject::init([[maybe_unused]] const MapObjInitArgs &args) {}
-void MapObject::run1_mt([[maybe_unused]] const MapObjRun1Args &args) {}
-void MapObject::run2_st([[maybe_unused]] const MapObjRun2Args &args) {}
-void MapObject::add_render_objs([[maybe_unused]] const MapObjRenderArgs &args) {}
+void MapObject::init([[maybe_unused]] const MapObjInitArgs &args)
+{}
+void MapObject::run1_mt([[maybe_unused]] const MapObjRun1Args &args)
+{}
+void MapObject::run2_st([[maybe_unused]] const MapObjRun2Args &args)
+{}
+void MapObject::add_render_objs([[maybe_unused]] const MapObjRenderArgs &args)
+{}
+void MapObject::end_handle_collision_block([[maybe_unused]] const EndHandleCollisionBlockArgs &args)
+{}
 
 bool MapObject::collision_could_matter([[maybe_unused]] const MapObject &other) const
 {

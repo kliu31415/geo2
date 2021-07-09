@@ -21,8 +21,9 @@ public:
                 double rot);
 
     void init(const MapObjInitArgs &args) override;
-    void run1_mt(const MapObjRun1Args &args) override;
     void add_render_objs(const MapObjRenderArgs &args) override;
+
+    void copy_base_shape_into(Polygon *p) const override;
 };
 
 }}

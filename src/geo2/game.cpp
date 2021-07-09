@@ -351,6 +351,7 @@ void Game::run1(double tick_len)
             run1_args.set_map_objs_to_add(&map_objs_to_add_lt[t]);
             run1_args.set_rng(&rngs[t]);
             run1_args.set_idx_to_delete(&idx_to_delete_lt[t]);
+            run1_args.set_cur_level_time(cur_level_time);
 
             for(int i=idx1; i<idx2; i++) {
                 run1_args.set_index(i);
@@ -404,18 +405,24 @@ void Game::run_collision_engine()
         map_obj::HandleCollisionArgs args;
         args.set_idx_to_delete(&idx_to_delete);
         args.set_ceng_data(&ceng_data);
-        args.collision_info = collisions[i];
-        args.other = map_objs[idx1].get();
-        //the order has to be SWAPPED; A->handle_collision(B) results in
+        args.set_collision_info(collisions[i]);
+        args.set_this(map_objs[idx2].get());
+        args.set_other(map_objs[idx1].get());
+        args.set_cur_level_time(cur_level_time);
+        args.set_index(idx2);
+        args.set_other_idx(idx1);
+        //the order is SWAPPED; A->handle_collision(B) results in
         //B processing the collision and reporting its new intent
         auto prev_intent1 = ceng_data[idx1].get_move_intent();
         auto prev_intent2 = ceng_data[idx2].get_move_intent();
-        args.set_index(idx2);
+
         map_objs[idx1]->handle_collision(map_objs[idx2].get(), args);
         args.swap();
-        args.other = map_objs[idx2].get();
-        args.set_index(idx1);
         map_objs[idx2]->handle_collision(map_objs[idx1].get(), args);
+
+        map_objs[idx1]->end_handle_collision_block({});
+        map_objs[idx2]->end_handle_collision_block({});
+
         collision_engine->update_intent(idx1, prev_intent1, &collisions);
         collision_engine->update_intent(idx2, prev_intent2, &collisions);
     }
@@ -482,6 +489,7 @@ void Game::advance_one_tick(double tick_len, int render_w, int render_h)
     run2_args.set_ceng_data(&ceng_data);
     run2_args.set_map_objs_to_add(&map_objs_to_add);
     run2_args.set_idx_to_delete(&idx_to_delete);
+    run2_args.set_cur_level_time(cur_level_time);
     //~150us on Test2(40, 40)
     for(size_t i=0; i<map_objs.size(); i++) {
         run2_args.set_index(i);
@@ -564,6 +572,7 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
     camera.y = player_pos.y - 0.5f * camera.h;
     render_args.set_camera(camera);
     render_args.set_pixels_per_tile_len(tile_len);
+    render_args.set_cur_level_time(cur_level_time);
 
     render_args.set_op_groups_vec(&gfx->op_groups);
 
