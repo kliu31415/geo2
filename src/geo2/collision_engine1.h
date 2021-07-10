@@ -119,6 +119,7 @@ class CollisionEngine1
                                      const CEng1Obj &ceng_obj) const;
     void find_and_add_collisions_gt(std::vector<CEng1Collision> *add_to,
                                     const CEng1Obj &ceng_obj) const;
+    bool des_cur_has_collision(int idx1, int idx2) const;
 public:
     CollisionEngine1(std::shared_ptr<ThreadPool> thread_pool_);
 
@@ -129,6 +130,8 @@ public:
               std::function<bool(const map_obj::MapObject&,
                                const map_obj::MapObject&)> collision_could_matter_);
     std::vector<CEng1Collision> find_collisions();
-    void update_intent(int idx, MoveIntent intent, std::vector<CEng1Collision> *add_to);
+    void update_intent(int idx, MoveIntent prev_intent,
+                       int other_idx, MoveIntent other_prev_intent,
+                       std::vector<CEng1Collision> *add_to);
 };
 }

@@ -11,10 +11,10 @@ TestLaser1::TestLaser1(const std::shared_ptr<map_obj::MapObject> &owner_):
 
 }
 
-constexpr double FIRE_INTERVAL = 0.0015;
+constexpr double FIRE_INTERVAL = 0.0008;
 constexpr double DAMAGE = 0.1;
 constexpr double LIFESPAN = 0.5;
-constexpr double PROJ_SPEED = 100;
+constexpr double PROJ_SPEED = 150;
 
 void TestLaser1::run(const WeaponRunArgs &args)
 {

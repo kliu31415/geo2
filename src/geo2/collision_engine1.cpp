@@ -91,7 +91,6 @@ void CollisionEngine1::find_and_add_collisions_neq(std::vector<CEng1Collision> *
                 //-the AABBs don't overlap
                 //-the collision wouldn't matter anyway
                 if(ceng_obj.idx != other.idx &&
-                   aabb.overlaps(other.polygon->get_AABB()) &&
                    collision_could_matter(*(*map_objs)[ceng_obj.idx], *(*map_objs)[other.idx]))
                 {
                     if(ceng_obj.polygon->has_collision(*other.polygon)) {
@@ -128,7 +127,6 @@ void CollisionEngine1::find_and_add_collisions_gt(std::vector<CEng1Collision> *a
                 continue;
 
             if(ceng_obj.idx != other.idx &&
-               aabb.overlaps(other_AABB) &&
                collision_could_matter(*(*map_objs)[ceng_obj.idx], *(*map_objs)[other.idx]))
             {
                 if(ceng_obj.polygon->has_collision(*other.polygon)) {
@@ -153,7 +151,6 @@ void CollisionEngine1::find_and_add_collisions_gt(std::vector<CEng1Collision> *a
                 //note that we assume the grid cells are ordered, so we can break
                 //and move on to the next cell if our idx isn't greater than the other's idx
                 if(ceng_obj.idx != other.idx &&
-                   aabb.overlaps(other.polygon->get_AABB()) &&
                    collision_could_matter(*(*map_objs)[ceng_obj.idx], *(*map_objs)[other.idx]))
                 {
                     if(ceng_obj.polygon->has_collision(*other.polygon)) {
@@ -166,6 +163,23 @@ void CollisionEngine1::find_and_add_collisions_gt(std::vector<CEng1Collision> *a
             }
         }
     }
+}
+bool CollisionEngine1::des_cur_has_collision(int idx1, int idx2) const
+{
+    bool collision = false;
+
+    auto f1 = [this, &collision, idx2](const Polygon *polygon, int) -> void
+        {
+            auto f2 = [this, polygon, &collision](const Polygon *polygon2, int) -> void
+                {
+                    collision |= polygon->has_collision(*polygon2);
+                };
+            (*ceng_data)[idx2].for_each_cur(f2);
+        };
+
+    (*ceng_data)[idx1].for_each_des(f1);
+
+    return collision;
 }
 CollisionEngine1::CollisionEngine1(std::shared_ptr<ThreadPool> thread_pool_):
     thread_pool(std::move(thread_pool_))
@@ -244,6 +258,12 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
             (*ceng_data)[i].for_each_cur(add_active_obj);
         else if(move_intent == MoveIntent::GoToDesiredPos)
             (*ceng_data)[i].for_each_des(add_active_obj);
+        else {
+            //-NotSet is the correct move intent if we don't want to add any shapes
+            //-RemoveShapes would also work, as it also results in no shapes being
+            // added, but we prefer NotSet for cleanliness
+            k_expects(move_intent == MoveIntent::NotSet);
+        }
     }
 
     size_t num_threads = 1 + thread_pool->size();
@@ -283,7 +303,11 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
     return collisions;
     */
 }
-void CollisionEngine1::update_intent(int idx, MoveIntent prev_intent, std::vector<CEng1Collision> *add_to)
+void CollisionEngine1::update_intent(int idx,
+                                     MoveIntent prev_intent,
+                                     int other_idx,
+                                     MoveIntent other_prev_intent,
+                                     std::vector<CEng1Collision> *add_to)
 {
     //if the intent didn't change, do nothing
     auto new_intent = (*ceng_data)[idx].get_move_intent();
@@ -306,10 +330,31 @@ void CollisionEngine1::update_intent(int idx, MoveIntent prev_intent, std::vecto
         else
             k_assert(false);
 
-    } else //we received a bogus move intent
-        k_assert(false);
+    } else if(new_intent == MoveIntent::GoToDesiredPosIfOtherDoesntCollide) {
+        k_expects(prev_intent == MoveIntent::GoToDesiredPos);
+        if(other_prev_intent == MoveIntent::StayAtCurrentPos) {
+            //the other shape hasn't moved, so we have to move back
+            (*ceng_data)[idx].set_move_intent(MoveIntent::StayAtCurrentPos);
+        } else if(other_prev_intent == MoveIntent::GoToDesiredPos) {
+            auto other_new_intent = (*ceng_data)[other_idx].get_move_intent();
 
-    (*ceng_data)[idx].set_move_intent(new_intent);
+            if(other_new_intent == MoveIntent::StayAtCurrentPos ||
+               other_new_intent == MoveIntent::GoToDesiredPosIfOtherDoesntCollide)
+            {
+                if(!des_cur_has_collision(idx, other_idx))
+                    (*ceng_data)[idx].set_move_intent(MoveIntent::GoToDesiredPos);
+                else
+                    (*ceng_data)[idx].set_move_intent(MoveIntent::StayAtCurrentPos);
+            } else if(other_new_intent == MoveIntent::GoToDesiredPos) {
+                (*ceng_data)[idx].set_move_intent(MoveIntent::StayAtCurrentPos);
+            } else if(other_new_intent == MoveIntent::RemoveShapes) {
+                (*ceng_data)[idx].set_move_intent(MoveIntent::GoToDesiredPos);
+            } else
+                k_assert(false);
+        } else //shouldn't be able to happen
+            k_assert(false);
+    } else //we received a bogus move intent or an illegal change (e.g. prev intent=cur, new intent=des)
+        k_assert(false);
 }
 
 }

@@ -55,21 +55,13 @@ protected:
     std::vector<CEng1Data> *ceng_data;
     std::vector<std::shared_ptr<MapObject>> *map_objs_to_add;
     std::vector<int> *idx_to_delete;
-    double cur_level_time;
     int idx;
 
-    //it's a bit messy to put this here, but this is the quickest fix
-    inline void delete_me() const
-    {
-        //duplicates won't cause errors (yet, at least), but we really should
-        //tried to avoid them because they're messy
-        k_expects(idx_to_delete->empty() || idx_to_delete->back()!=idx);
-        idx_to_delete->push_back(idx);
-        (*ceng_data)[idx].set_move_intent(MoveIntent::RemoveShapes);
-    }
     CEng1DataReaderAttorney() = default;
+    CEng1DataReaderAttorney(const CEng1DataReaderAttorney&) = default;
 public:
-    CEng1DataReaderAttorney(const CEng1DataReaderAttorney&) = delete;
+    double cur_level_time;
+
     CEng1DataReaderAttorney & operator = (const CEng1DataReaderAttorney&) = delete;
     CEng1DataReaderAttorney(CEng1DataReaderAttorney&&) = delete;
     CEng1DataReaderAttorney & operator = (CEng1DataReaderAttorney&&) = delete;
@@ -110,22 +102,14 @@ public:
     {
         idx_to_delete = idx_to_delete_;
     }
-    inline void set_cur_level_time(double t)
-    {
-        cur_level_time = t;
-    }
-    inline double get_cur_level_time() const
-    {
-        return cur_level_time;
-    }
 };
 
 class CEng1DataMutatorAttorney: public CEng1DataReaderAttorney
 {
 protected:
     CEng1DataMutatorAttorney() = default;
+    CEng1DataMutatorAttorney(const CEng1DataMutatorAttorney&) = default;
 public:
-    CEng1DataMutatorAttorney(const CEng1DataMutatorAttorney&) = delete;
     CEng1DataMutatorAttorney & operator = (const CEng1DataMutatorAttorney&) = delete;
     CEng1DataMutatorAttorney(CEng1DataMutatorAttorney&&) = delete;
     CEng1DataMutatorAttorney & operator = (CEng1DataMutatorAttorney&&) = delete;
@@ -160,18 +144,9 @@ public:
 
 class MapObjRunArgs
 {
-    double tick_len;
 public:
+    double tick_len;
     MapObjRunArgs() = default;
-
-    inline void set_tick_len(double tick_len_)
-    {
-        tick_len = tick_len_;
-    }
-    inline double get_tick_len() const
-    {
-        return tick_len;
-    }
 };
 
 /** Note that only MapObjRun1Args inherits CEngMutatorAttorney; you generally
@@ -196,15 +171,25 @@ public:
     MapObjRun1Args(MapObjRun1Args&&) = delete;
     MapObjRun1Args & operator = (MapObjRun1Args&&) = delete;
 
-    using CEng1DataReaderAttorney::delete_me;
+    inline void delete_me() const
+    {
+        //duplicates won't cause errors (yet, at least), but we really should
+        //tried to avoid them because they're messy
+        k_expects(idx_to_delete->empty() || idx_to_delete->back()!=idx);
+        idx_to_delete->push_back(idx);
+        (*ceng_data)[idx].set_move_intent(MoveIntent::NotSet);
+    }
 };
 
-class HandleCollisionArgs final: public CEng1DataReaderAttorney
+class HandleCollisionArgs: public CEng1DataReaderAttorney
 {
     class MapObject *this_;
     class MapObject *other;
     CEng1Collision collision_info;
     int other_idx;
+
+protected:
+    HandleCollisionArgs(const HandleCollisionArgs &other) = default;
 public:
     HandleCollisionArgs() = default;
 
@@ -228,7 +213,15 @@ public:
     {
         (*ceng_data)[idx].set_move_intent(new_intent);
     }
-    using CEng1DataReaderAttorney::delete_me;
+    inline void delete_me() const
+    {
+        //duplicates won't cause errors (yet, at least), but we really should
+        //tried to avoid them because they're messy
+        k_expects(idx_to_delete->empty() || idx_to_delete->back()!=idx);
+        idx_to_delete->push_back(idx);
+        (*ceng_data)[idx].set_move_intent(MoveIntent::RemoveShapes);
+    }
+
     void swap()
     {
         std::swap(this_, other);
@@ -237,7 +230,7 @@ public:
     }
 };
 
-class MapObjRun2Args final: public CEng1DataReaderAttorney, public MapObjRunArgs
+class MapObjRun2Args final: public CEng1DataReaderAttorney, public MapObjRunArgs, public RNG_Args
 {
 public:
     MapObjRun2Args() = default;
@@ -247,7 +240,14 @@ public:
     MapObjRun2Args(MapObjRun2Args&&) = delete;
     MapObjRun2Args & operator = (MapObjRun2Args&&) = delete;
 
-    using CEng1DataReaderAttorney::delete_me;
+    inline void delete_me() const
+    {
+        //duplicates won't cause errors (yet, at least), but we really should
+        //tried to avoid them because they're messy
+        k_expects(idx_to_delete->empty() || idx_to_delete->back()!=idx);
+        idx_to_delete->push_back(idx);
+        (*ceng_data)[idx].set_move_intent(MoveIntent::RemoveShapes);
+    }
 };
 
 class EndHandleCollisionBlockArgs final

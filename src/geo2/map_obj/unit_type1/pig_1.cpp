@@ -6,9 +6,10 @@
 namespace geo2 { namespace map_obj {
 
 Pig_1::Pig_1(MapCoord position_):
-    Unit_Type1(Team::Enemy, position_, 6.0),
-    current_angle(0)
-{}
+    Unit_Type1(Team::Enemy, position_, 6.0)
+{
+    current_angle = 0;
+}
 
 const kx::gfx::LinearColor DEFAULT_INNER_COLOR(1.0f, 0.3f, 0.3f, 1.0f);
 const kx::gfx::LinearColor DEFAULT_BORDER_COLOR(0.0f, 0.0f, 0.0f, 1.0f);
@@ -36,23 +37,29 @@ const std::unique_ptr<Polygon> BASE_SHAPE = Polygon::make(
                        v0[1].x, v0[0].y,
                        v0[0].x, v0[0].y});
 
-void Pig_1::recalc_movement()
-{
-
-}
 void Pig_1::init(const MapObjInitArgs &args)
 {
     args.add_current_pos(Polygon::make_with_num_sides(12));
     args.add_desired_pos(Polygon::make_with_num_sides(12));
-
-    recalc_movement();
 }
 void Pig_1::run1_mt([[maybe_unused]] const MapObjRun1Args &args)
 {
-    desired_position = current_position;
-    double max_dtheta = std::sqrt(args.get_tick_len());
-    double dtheta = std::uniform_real_distribution<double>(-max_dtheta, max_dtheta)(*args.get_rng());
-    desired_angle = current_angle + dtheta;
+    if(alive_status.is_dead()) {
+        if(is_completely_faded_out(args.cur_level_time))
+            args.delete_me();
+        return;
+    }
+
+    unit_movement::Algo1RunArgs algo_args;
+    algo_args.rng = args.get_rng();
+    algo_args.current_position = &current_position;
+    algo_args.max_speed = 20.0;
+    algo_args.max_angular_speed = 4.0;
+    algo_args.max_accel = 40.0;
+    algo_args.max_angular_accel = 10.0;
+    algo_args.tick_len = args.tick_len;
+    algo_args.cur_level_time = args.cur_level_time;
+    movement_algo_run(algo_args);
 
     auto cur = args.get_sole_current_pos();
     cur->copy_from(BASE_SHAPE.get());
@@ -68,23 +75,21 @@ void Pig_1::run1_mt([[maybe_unused]] const MapObjRun1Args &args)
 }
 void Pig_1::run2_st([[maybe_unused]] const MapObjRun2Args &args)
 {
-    if(args.get_move_intent() == MoveIntent::GoToDesiredPos) {
-        current_position = desired_position;
-        current_angle = desired_angle;
-    }
-}
+    unit_movement::Algo1HandleMovementArgs algo_args;
+    algo_args.rng = args.get_rng();
+    algo_args.current_position = &current_position;
+    algo_args.max_speed = 20.0;
+    algo_args.max_angular_speed = 4.0;
+    algo_args.max_accel = 40.0;
+    algo_args.max_angular_accel = 10.0;
+    algo_args.tick_len = args.tick_len;
+    algo_args.cur_level_time = args.cur_level_time;
 
-void Pig_1::handle_collision([[maybe_unused]] Wall_Type1 *other,
-                             [[maybe_unused]] const HandleCollisionArgs &args)
-{
-    args.set_move_intent(MoveIntent::StayAtCurrentPos);
-}
-void Pig_1::handle_collision(Unit_Type1 *other,
-                             const HandleCollisionArgs &args)
-{
-    Unit_Type1::handle_collision(other, args);
-    args.set_move_intent(MoveIntent::StayAtCurrentPos);
-    //deal damage? apply effects?
+    if(args.get_move_intent() == MoveIntent::GoToDesiredPos) {
+        movement_algo_handle_successful_movement(algo_args);
+    } else {
+        movement_algo_handle_unsuccessful_movement(algo_args);
+    }
 }
 
 void Pig_1::add_render_objs(const MapObjRenderArgs &args)
@@ -177,8 +182,8 @@ void Pig_1::add_render_objs(const MapObjRenderArgs &args)
         op_ius[4][5] = args.y_to_ndc(v2_rot.y);
     }
 
-    auto inner_color = apply_color_mod(DEFAULT_INNER_COLOR, args.get_cur_level_time());
-    auto border_color = apply_color_mod(DEFAULT_BORDER_COLOR, args.get_cur_level_time());
+    auto inner_color = apply_color_mod(DEFAULT_INNER_COLOR, args.cur_level_time);
+    auto border_color = apply_color_mod(DEFAULT_BORDER_COLOR, args.cur_level_time);
     for(int i=0; i<5; i++) {
         *reinterpret_cast<kx::gfx::LinearColor*>(&op_ius[i][12]) = inner_color;
         *reinterpret_cast<kx::gfx::LinearColor*>(&op_ius[i][16]) = border_color;

@@ -17,7 +17,7 @@ BasicProj_1::BasicProj_1(const std::shared_ptr<MapObject> &owner_,
 {}
 void BasicProj_1::run1_mt(const MapObjRun1Args &args)
 {
-    life_left -= args.get_tick_len();
+    life_left -= args.tick_len;
 
     if(life_left < 0) {
         alive_status.set_status_to_dead();
@@ -25,7 +25,7 @@ void BasicProj_1::run1_mt(const MapObjRun1Args &args)
         return;
     }
 
-    desired_position = current_position + velocity*args.get_tick_len();
+    desired_position = current_position + velocity*args.tick_len;
 
     auto cur = args.get_sole_current_pos();
     copy_base_shape_into(cur);

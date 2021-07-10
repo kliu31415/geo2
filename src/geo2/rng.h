@@ -10,6 +10,8 @@ class Xorshift64RNG final
 {
     uint64_t x;
 public:
+    using result_type = uint64_t;
+
     static constexpr uint64_t min()
     {
         return 1;

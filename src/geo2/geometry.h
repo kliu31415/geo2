@@ -41,6 +41,10 @@ template<class T> struct _MapVec
     {
         return std::hypot(x, y);
     }
+    _MapVec operator - () const
+    {
+        return _MapVec(-x, -y);
+    }
     _MapVec operator + (const _MapVec& other) const
     {
         return _MapVec(x + other.x, y + other.y);
@@ -49,12 +53,24 @@ template<class T> struct _MapVec
     {
         return _MapVec(x * val, y * val);
     }
+    template<class U> _MapVec & operator *= (U val)
+    {
+        x *= val;
+        y *= val;
+        return *this;
+    }
     template<class U> _MapVec operator / (U val) const
     {
         return _MapVec(x / val, y / val);
     }
 };
 using MapVec = _MapVec<double>;
+
+template<class T, class U, std::enable_if_t<std::is_fundamental_v<U>, int> = 0>
+_MapVec<T> operator * (U c, _MapVec<T> vec)
+{
+    return _MapVec<T>(c*vec.x, c*vec.y);
+}
 
 template<class T> struct _MapCoord
 {
@@ -193,7 +209,11 @@ template<class T> struct _AABB
 using AABB = _AABB<float>;
 
 enum class MoveIntent: uint8_t {
-    NotSet, RemoveShapes, StayAtCurrentPos, GoToDesiredPos,
+    NotSet,
+    RemoveShapes,
+    StayAtCurrentPos,
+    GoToDesiredPos,
+    GoToDesiredPosIfOtherDoesntCollide
 };
 
 /*
@@ -415,6 +435,9 @@ public:
         if(this_n * other_d_len > other_n * this_d_len)
             return other.has_collision(*this);
 
+        if(!get_AABB().overlaps(other.get_AABB()))
+            return false;
+
         const __m256 mm0 = _mm256_set1_ps(0);
         const __m256 mm1 = _mm256_set1_ps(1);
 
@@ -457,7 +480,7 @@ public:
 
                 //use GE and LE to avoid having weird cases like when you're
                 //walking along a wall in one direction, but suddenly stop
-                //being able to
+                //being able to due to a collision between the ends of lines
                 __m256 t_ge_0 = _mm256_cmp_ps(t, mm0, _CMP_GT_OQ);
                 __m256 t_le_1 = _mm256_cmp_ps(t, mm1, _CMP_LT_OQ);
                 __m256 u_ge_0 = _mm256_cmp_ps(u, mm0, _CMP_GT_OQ);

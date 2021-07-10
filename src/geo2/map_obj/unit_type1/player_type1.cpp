@@ -184,8 +184,8 @@ void Player_Type1::run1_mt(const MapObjRun1Args &args)
 
     if(velocity.x!=0 || velocity.y!=0) {
         args.set_move_intent(MoveIntent::GoToDesiredPos);
-        desired_position.x = current_position.x + velocity.x * args.get_tick_len();
-        desired_position.y = current_position.y + velocity.y * args.get_tick_len();
+        desired_position.x = current_position.x + velocity.x * args.tick_len;
+        desired_position.y = current_position.y + velocity.y * args.tick_len;
 
         MapCoord des_v[]{{desired_position.x - 0.5*PSL, desired_position.y - 0.5*PSL},
                          {desired_position.x + 0.5*PSL, desired_position.y - 0.5*PSL},
@@ -229,8 +229,8 @@ void Player_Type1::add_render_objs(const MapObjRenderArgs &args)
         op_iu2[10] = BORDER_SIZE;
     }
 
-    auto inside_color = apply_color_mod(DEFAULT_INSIDE_COLOR, args.get_cur_level_time());
-    auto outside_color = apply_color_mod(DEFAULT_OUTSIDE_COLOR, args.get_cur_level_time());
+    auto inside_color = apply_color_mod(DEFAULT_INSIDE_COLOR, args.cur_level_time);
+    auto outside_color = apply_color_mod(DEFAULT_OUTSIDE_COLOR, args.cur_level_time);
     *reinterpret_cast<LinearColor*>(&op_iu1[12]) = inside_color;
     *reinterpret_cast<LinearColor*>(&op_iu1[16]) = outside_color;
     *reinterpret_cast<LinearColor*>(&op_iu2[12]) = inside_color;

@@ -255,6 +255,7 @@ struct _gfx
 //minimize artifacting around the edges
 constexpr float TILES_PER_SCREEN = 3060;
 constexpr double MENU_OFFSET = 0.85;
+constexpr int PREV_MOUSE_X_NOT_SET = -123456;
 
 void Game::generate_and_start_level(Level::Name level_name)
 {
@@ -287,6 +288,8 @@ void Game::generate_and_start_level(Level::Name level_name)
     default:
         log_error("Game attempted to generate unknown level");
     }
+
+    prev_mouse_x = PREV_MOUSE_X_NOT_SET;
 
     map_objs.clear();
     map_objs_to_add = std::move(level.map_objs);
@@ -346,12 +349,12 @@ void Game::run1(double tick_len)
         auto task = [this, t, tick_len, idx1, idx2]
         {
             map_obj::MapObjRun1Args run1_args;
-            run1_args.set_tick_len(tick_len);
+            run1_args.tick_len = tick_len;
             run1_args.set_ceng_data(&ceng_data);
             run1_args.set_map_objs_to_add(&map_objs_to_add_lt[t]);
             run1_args.set_rng(&rngs[t]);
             run1_args.set_idx_to_delete(&idx_to_delete_lt[t]);
-            run1_args.set_cur_level_time(cur_level_time);
+            run1_args.cur_level_time = cur_level_time;
 
             for(int i=idx1; i<idx2; i++) {
                 run1_args.set_index(i);
@@ -408,7 +411,7 @@ void Game::run_collision_engine()
         args.set_collision_info(collisions[i]);
         args.set_this(map_objs[idx2].get());
         args.set_other(map_objs[idx1].get());
-        args.set_cur_level_time(cur_level_time);
+        args.cur_level_time = cur_level_time;
         args.set_index(idx2);
         args.set_other_idx(idx1);
         //the order is SWAPPED; A->handle_collision(B) results in
@@ -420,15 +423,24 @@ void Game::run_collision_engine()
         args.swap();
         map_objs[idx2]->handle_collision(map_objs[idx1].get(), args);
 
+        collision_engine->update_intent(idx1, prev_intent1, idx2, prev_intent2, &collisions);
+        collision_engine->update_intent(idx2, prev_intent2, idx1, prev_intent1, &collisions);
+
         map_objs[idx1]->end_handle_collision_block({});
         map_objs[idx2]->end_handle_collision_block({});
-
-        collision_engine->update_intent(idx1, prev_intent1, &collisions);
-        collision_engine->update_intent(idx2, prev_intent2, &collisions);
     }
 }
-void Game::advance_one_tick(double tick_len, int render_w, int render_h)
+
+void Game::advance_one_tick(double tick_len,
+                            int render_w, int render_h,
+                            float mouse_x, float mouse_y,
+                            const uint8_t *keyboard_state)
 {
+    //move forward a tick
+    cur_level_time += tick_len;
+    cur_level_time_left -= tick_len;
+    cur_level_tick++;
+
     /** Standard sequence:
      *  -Call run1_mt() on everything in parallel. All objects insert shapes representing
      *   their desired positions. These shapes will be fed into the collision engine. Not all
@@ -447,12 +459,11 @@ void Game::advance_one_tick(double tick_len, int render_w, int render_h)
     //process input
     map_obj::PlayerRunSpecialArgs player_args;
     player_args.tick_len = tick_len;
-    auto mouse_x = kx::gfx::get_mouse_x();
-    auto mouse_y = kx::gfx::get_mouse_y();
+
     player_args.mouse_x = mouse_x;
     player_args.mouse_y = mouse_y;
 
-    auto keystate = kx::gfx::get_keyboard_state();
+    auto keystate = keyboard_state;
     player_args.left_pressed = keystate[SDL_SCANCODE_A];
     player_args.right_pressed = keystate[SDL_SCANCODE_D];
     player_args.up_pressed = keystate[SDL_SCANCODE_W];
@@ -468,8 +479,8 @@ void Game::advance_one_tick(double tick_len, int render_w, int render_h)
     weapon_args.set_owner_info(weapon::WeaponOwnerInfo(player_pos, map_obj::Player_Type1::WEAPON_OFFSET));
     auto cursor_pos = player_pos + offset;
     weapon_args.set_cursor_pos(cursor_pos);
-    weapon_args.set_tick_len(tick_len);
-    weapon_args.set_cur_level_time(cur_level_time);
+    weapon_args.tick_len = tick_len;
+    weapon_args.cur_level_time = cur_level_time;
     weapon_args.set_mouse_state(kx::gfx::get_mouse_state());
     weapon_args.set_angle(std::atan2(cursor_pos.y - player_pos.y, cursor_pos.x - player_pos.x));
     weapon_args.set_rng(&rngs[0]);
@@ -485,11 +496,12 @@ void Game::advance_one_tick(double tick_len, int render_w, int render_h)
 
     //second run
     map_obj::MapObjRun2Args run2_args;
-    run2_args.set_tick_len(tick_len);
+    run2_args.tick_len = tick_len;
     run2_args.set_ceng_data(&ceng_data);
     run2_args.set_map_objs_to_add(&map_objs_to_add);
     run2_args.set_idx_to_delete(&idx_to_delete);
-    run2_args.set_cur_level_time(cur_level_time);
+    run2_args.cur_level_time = cur_level_time;
+    run2_args.set_rng(&rngs[0]);
     //~150us on Test2(40, 40)
     for(size_t i=0; i<map_objs.size(); i++) {
         run2_args.set_index(i);
@@ -524,11 +536,6 @@ void Game::advance_one_tick(double tick_len, int render_w, int render_h)
 
     //everything in map_objs_to_add is moved to map_objs
     process_added_map_objs();
-
-    //move forward a tick
-    cur_level_time += tick_len;
-    cur_level_time_left -= tick_len;
-    cur_level_tick++;
 }
 std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
                                                int render_w, int render_h)
@@ -572,7 +579,7 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
     camera.y = player_pos.y - 0.5f * camera.h;
     render_args.set_camera(camera);
     render_args.set_pixels_per_tile_len(tile_len);
-    render_args.set_cur_level_time(cur_level_time);
+    render_args.cur_level_time = cur_level_time;
 
     render_args.set_op_groups_vec(&gfx->op_groups);
 
@@ -619,19 +626,40 @@ Game::Game():
     rngs(thread_pool->size() + 1),
     collision_engine(std::make_unique<CollisionEngine1>(thread_pool))
 {
-    generate_and_start_level(Level::Name::Test2);
+    generate_and_start_level(Level::Name::Test3);
 }
 Game::~Game()
 {}
+
+inline float lerp(double a, double b, double t)
+{
+    return a*(1-t) + b*t;
+}
 std::shared_ptr<kx::gfx::Texture> Game::run(kx::gfx::KWindowRunning *kwin_r,
                                             int render_w, int render_h)
 {
     constexpr int TICKS_PER_FRAME = 10;
 
+    //using lerped mouse positions allows for smoother laser beams when rapidly moving the mouse
+    int mouse_x = kx::gfx::get_mouse_x();
+    int mouse_y = kx::gfx::get_mouse_y();
+    if(prev_mouse_x == PREV_MOUSE_X_NOT_SET) {
+        prev_mouse_x = mouse_x;
+        prev_mouse_y = mouse_y;
+    }
+
     for(int i=0; i<TICKS_PER_FRAME; i++) {
         //~1300us on Test2(40, 40)
-        advance_one_tick(1.0 / 1440.0, render_w, render_h);
+        float simulated_mouse_x = lerp(prev_mouse_x, mouse_x, (i+1)/((double)TICKS_PER_FRAME));
+        float simulated_mouse_y = lerp(prev_mouse_y, mouse_y, (i+1)/((double)TICKS_PER_FRAME));
+        advance_one_tick(1.0 / 1440.0,
+                         render_w, render_h,
+                         simulated_mouse_x, simulated_mouse_y,
+                         kx::gfx::get_keyboard_state());
     }
+
+    prev_mouse_x = mouse_x;
+    prev_mouse_y = mouse_y;
 
     //a few hundred ms (integrated GPU, 1920x1080, Test3)
     auto ret = render(kwin_r, render_w, render_h);

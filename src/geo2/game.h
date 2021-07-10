@@ -44,6 +44,9 @@ class Game final
     double cur_level_time;
     double cur_level_time_left;
 
+    int prev_mouse_x;
+    int prev_mouse_y;
+
     std::shared_ptr<class ThreadPool> thread_pool;
 
     std::vector<StandardRNG> rngs;
@@ -61,7 +64,10 @@ class Game final
     void process_added_map_objs();
     void run1(double tick_len);
     void run_collision_engine();
-    void advance_one_tick(double tick_len, int render_w, int render_h);
+    void advance_one_tick(double tick_len,
+                          int render_w, int render_h,
+                          float mouse_x, float mouse_y,
+                          const uint8_t *keyboard_state);
 
     std::shared_ptr<kx::gfx::Texture> render(kx::gfx::KWindowRunning *kwin_r,
                                              int render_w, int render_h);
