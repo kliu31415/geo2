@@ -20,7 +20,10 @@ LinearColor Unit_Type1::apply_color_mod(const LinearColor &color, double cur_lev
                            color.a);
 
     if(alive_status.is_dead()) {
-        //it'd be weird for a fully faded object to not be deleted
+        //it'd be weird for a fully faded object to not be deleted;
+        //the only case in which this fails is if "this" is the player,
+        //because the player isn't deleted when the player dies, at least
+        //as of now
         k_expects(cur_level_time - death_time <= DEATH_TIME_FADE_LEN);
         ret.a *= 1 - (cur_level_time - death_time) / DEATH_TIME_FADE_LEN;
     }

@@ -134,7 +134,7 @@ public:
 
             desired_angle = current_angle + args.tick_len * current_d_angle;
             if(current_d_angle > 0)
-                current_d_angle = std::max(current_d_angle - args.tick_len * args.max_angular_accwel, 0.0);
+                current_d_angle = std::max(current_d_angle - args.tick_len * args.max_angular_accel, 0.0);
             else
                 current_d_angle = std::min(current_d_angle + args.tick_len * args.max_angular_accel, 0.0);
             break;

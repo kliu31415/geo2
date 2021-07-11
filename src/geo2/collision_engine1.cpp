@@ -320,7 +320,6 @@ void CollisionEngine1::update_intent_after_collision(int idx,
             remove_des_from_grid(idx);
         else
             k_assert(false);
-
         add_cur_to_grid(idx, add_to);
     } else if(new_intent == MoveIntent::RemoveShapes) {
         if(prev_intent == MoveIntent::GoToDesiredPos)
@@ -329,12 +328,23 @@ void CollisionEngine1::update_intent_after_collision(int idx,
             remove_cur_from_grid(idx);
         else
             k_assert(false);
-
     } else if(new_intent == MoveIntent::GoToDesiredPosIfOtherDoesntCollide) {
+        //Note that GoToDesiredPosIfOtherDoesntCollide is a transient state that is
+        //immediately resolved after it is declared, i.e. the only place where this state
+        //can legally be set is in handle_collision, and it is converted to either
+        //GoToDesiredPos or StayAtCurrentPos by the block below in this function, and
+        //this function is called right after handle_collision. This means that you can
+        //almost never observe a unit's move intent being GoToDesiredPosIfOtherDoesntCollide,
+        //and in particular, it's impossible for prev_intent to be it.
+        //Also note that the only previous legal state is GoToDesiredPos (it doesn't make
+        //sense to have any other previous state, and it could cause bugs unless the block
+        //below is changed to support it).
         k_expects(prev_intent == MoveIntent::GoToDesiredPos);
         if(other_prev_intent == MoveIntent::StayAtCurrentPos) {
             //the other shape hasn't moved, so we have to move back
             (*ceng_data)[idx].set_move_intent(MoveIntent::StayAtCurrentPos);
+            remove_des_from_grid(idx);
+            add_cur_to_grid(idx, add_to);
         } else if(other_prev_intent == MoveIntent::GoToDesiredPos) {
             auto other_new_intent = (*ceng_data)[other_idx].get_move_intent();
 
@@ -343,10 +353,15 @@ void CollisionEngine1::update_intent_after_collision(int idx,
             {
                 if(!des_cur_has_collision(idx, other_idx))
                     (*ceng_data)[idx].set_move_intent(MoveIntent::GoToDesiredPos);
-                else
+                else {
                     (*ceng_data)[idx].set_move_intent(MoveIntent::StayAtCurrentPos);
+                    remove_des_from_grid(idx);
+                    add_cur_to_grid(idx, add_to);
+                }
             } else if(other_new_intent == MoveIntent::GoToDesiredPos) {
                 (*ceng_data)[idx].set_move_intent(MoveIntent::StayAtCurrentPos);
+                remove_des_from_grid(idx);
+                add_cur_to_grid(idx, add_to);
             } else if(other_new_intent == MoveIntent::RemoveShapes) {
                 (*ceng_data)[idx].set_move_intent(MoveIntent::GoToDesiredPos);
             } else

@@ -126,6 +126,10 @@ template<class T> struct _MapCoord
     {
         return _MapCoord(x + other.x, y + other.y);
     }
+    bool operator == (const _MapCoord &other) const
+    {
+        return x==other.x && y==other.y;
+    }
     template<class U> T dot_prod(U v1, U v2) const
     {
         return x*v1 + y*v2;
@@ -447,7 +451,17 @@ public:
     }
     bool has_collision(const Polygon &other) const
     {
+        //TODO: ensure reflexivity, e.g. ensure a.has_collision(b) == b.has_collision(a).
+        //Perhaps this might not always hold due to floating point inaccuracies; the
+        //algorithm should be analyzed in more detail to make sure.
+        //Reflexivity is important because the collision engine could bug if it doesn't hold,
+        //i.e. two units move and the collision engine doesn't think they overlap, but then
+        //the order in has_collision changes and the collision engine now thinks they do, so
+        //the units are overlapping, which is an illegal state.
+
         //This only checks for edge intersections; it doesn't check if one is inside the other.
+
+        //this probably bugs for parallel objects moving into each other
 
         //https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
         //Note that this DOESN'T handle parallel lines properly, but that's usually OK.

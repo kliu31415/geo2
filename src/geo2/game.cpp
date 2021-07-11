@@ -423,6 +423,8 @@ void Game::run_collision_engine()
         args.swap();
         map_objs[idx2]->handle_collision(map_objs[idx1].get(), args);
 
+        //these can't be run in parallel because they might depend on each other,
+        //in particular, if MoveIntent::GoToDesiredPosIfOtherDoesntCollide is used.
         collision_engine->update_intent_after_collision(idx1, prev_intent1,
                                                         idx2, prev_intent2,
                                                         &collisions);

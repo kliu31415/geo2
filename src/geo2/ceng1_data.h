@@ -80,7 +80,7 @@ class CEng1Data final
 
     MoveIntent move_intent;
 
-    template<class Func> inline static void for_each(const PolygonData &data, Func func)
+    template<class Func> inline static void for_each(const PolygonData &data, Func &&func)
     {
         if(data.num_polygons == 1) {
             func(data.ptr.get(), 0);
@@ -129,18 +129,18 @@ public:
     {
         move_intent = new_intent;
     }
-    template<class Func> inline void for_each_cur(Func func)
+    template<class Func> inline void for_each_cur(Func &&func)
     {
-        for_each(cur, func);
+        for_each(cur, std::forward<Func>(func));
     }
-    template<class Func> inline void for_each_des(Func func)
+    template<class Func> inline void for_each_des(Func &&func)
     {
-        for_each(des, func);
+        for_each(des, std::forward<Func>(func));
     }
-    template<class Func> inline void for_each(Func func)
+    template<class Func> inline void for_each(Func &&func)
     {
-        for_each(cur, func);
-        for_each(des, func);
+        for_each(cur, std::forward<Func>(func));
+        for_each(des, std::forward<Func>(func));
     }
 
     ///TODO: add support for multiple shapes and deleting

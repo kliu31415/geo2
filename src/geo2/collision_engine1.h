@@ -93,9 +93,8 @@ class CollisionEngine1
 
     const std::vector<std::shared_ptr<map_obj::MapObject>> *map_objs;
     std::function<bool(const map_obj::MapObject&, const map_obj::MapObject&)> collision_could_matter;
-    //ceng_data is const, but due to lambda weirdness, I have to spend extra runtime
-    //if I declare it const because I can't pass a capturing lambda, so I decided to
-    //not declare it const and just make a note here that it is effectively const.
+
+    //afaik, the only way we modify ceng_data is calling set_move_intent in update_intent_after_collision
     std::vector<CEng1Data> *ceng_data;
     std::vector<CEng1Obj> active_objs;
     Grid<CEng1Obj> grid;
