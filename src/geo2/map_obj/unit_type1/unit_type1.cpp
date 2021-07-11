@@ -50,6 +50,9 @@ void Unit_Type1::handle_unit_collision(Unit_Type1 *other, const HandleUnitCollis
 
     args.set_move_intent(args.move_intent_upon_collision);
 
+    if(!are_enemies(team, other->get_team()))
+        return;
+
     auto other_in_map = last_collision_damage_time.find(other);
     if(other_in_map == last_collision_damage_time.end()) {
         last_collision_damage_time.emplace(other, args.cur_level_time);

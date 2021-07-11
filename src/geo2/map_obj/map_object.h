@@ -15,7 +15,7 @@ static inline bool are_enemies(Team t1, Team t2)
 
 class MapObjInitArgs;
 class MapObjRun1Args;
-class MapObjRun2Args;
+class MapObjRun3Args;
 class MapObjRenderArgs;
 class HandleCollisionArgs;
 class EndHandleCollisionBlockArgs;
@@ -41,7 +41,7 @@ public:
     ///default behavior for these functions = do nothing
     virtual void init(const MapObjInitArgs &args);
     virtual void run1_mt(const MapObjRun1Args &args);
-    virtual void run2_st(const MapObjRun2Args &args);
+    virtual void run3_mt(const MapObjRun3Args &args);
     virtual void add_render_objs(const MapObjRenderArgs &args);
 
     ///default return value = true

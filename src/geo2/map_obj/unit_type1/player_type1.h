@@ -47,7 +47,7 @@ public:
     void run_special(const PlayerRunSpecialArgs &args, kx::Passkey<Game>);
     void init(const MapObjInitArgs &args) override;
     void run1_mt(const MapObjRun1Args &args) override;
-    void run2_st(const MapObjRun2Args &args) override;
+    void run3_mt(const MapObjRun3Args &args) override;
     void add_render_objs(const MapObjRenderArgs &args) override;
     void set_position(MapCoord pos, kx::Passkey<Game>); ///called at level start
     double get_collision_damage() const override;

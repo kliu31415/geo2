@@ -15,7 +15,7 @@ const kx::gfx::LinearColor DEFAULT_INNER_COLOR(1.0f, 0.3f, 0.3f, 1.0f);
 const kx::gfx::LinearColor DEFAULT_BORDER_COLOR(0.0f, 0.0f, 0.0f, 1.0f);
 constexpr float BORDER_THICKNESS = 0.1f;
 
-constexpr float PART_W[]{2.625f, 1.125f, 0.375f};
+constexpr float PART_W[]{2.5f, 1.0f, 0.375f};
 constexpr float PART_H[]{2.0f, 1.5f, 0.5f};
 constexpr float X_BEGIN = -2.0f;
 constexpr MapVec v0[]{{X_BEGIN, -0.5f*PART_H[0]},
@@ -54,9 +54,9 @@ void Pig_1::run1_mt([[maybe_unused]] const MapObjRun1Args &args)
     algo_args.rng = args.get_rng();
     algo_args.current_position = &current_position;
     algo_args.max_speed = 20.0;
-    algo_args.max_angular_speed = 4.0;
-    algo_args.max_accel = 40.0;
-    algo_args.max_angular_accel = 10.0;
+    algo_args.max_angular_speed = 8.0;
+    algo_args.max_accel = 70.0;
+    algo_args.max_angular_accel = 40.0;
     algo_args.tick_len = args.tick_len;
     algo_args.cur_level_time = args.cur_level_time;
     movement_algo_run(algo_args);
@@ -73,15 +73,15 @@ void Pig_1::run1_mt([[maybe_unused]] const MapObjRun1Args &args)
 
     args.set_move_intent(MoveIntent::GoToDesiredPos);
 }
-void Pig_1::run2_st([[maybe_unused]] const MapObjRun2Args &args)
+void Pig_1::run3_mt([[maybe_unused]] const MapObjRun3Args &args)
 {
     unit_movement::Algo1HandleMovementArgs algo_args;
     algo_args.rng = args.get_rng();
     algo_args.current_position = &current_position;
     algo_args.max_speed = 20.0;
-    algo_args.max_angular_speed = 4.0;
-    algo_args.max_accel = 40.0;
-    algo_args.max_angular_accel = 10.0;
+    algo_args.max_angular_speed = 8.0;
+    algo_args.max_accel = 70.0;
+    algo_args.max_angular_accel = 40.0;
     algo_args.tick_len = args.tick_len;
     algo_args.cur_level_time = args.cur_level_time;
 
@@ -124,8 +124,8 @@ void Pig_1::add_render_objs(const MapObjRenderArgs &args)
         //eyes
         eye_w = args.to_whole_pixels(0.21f);
         eye_h = args.to_whole_pixels(0.21f);
-        eye_x_offset = args.to_whole_pixels(0.7f);
-        eye_y_offset = args.to_whole_pixels(0.25f);
+        eye_x_offset = args.to_whole_pixels(0.6f);
+        eye_y_offset = args.to_whole_pixels(0.23f);
         for(int i=3; i<=4; i++) {
             op_ius[i][8] = -0.5f * eye_w;
             op_ius[i][9] = -0.5f * eye_h;

@@ -230,15 +230,15 @@ public:
     }
 };
 
-class MapObjRun2Args final: public CEng1DataReaderAttorney, public MapObjRunArgs, public RNG_Args
+class MapObjRun3Args final: public CEng1DataReaderAttorney, public MapObjRunArgs, public RNG_Args
 {
 public:
-    MapObjRun2Args() = default;
+    MapObjRun3Args() = default;
 
-    MapObjRun2Args(const MapObjRun2Args&) = delete;
-    MapObjRun2Args & operator = (const MapObjRun2Args&) = delete;
-    MapObjRun2Args(MapObjRun2Args&&) = delete;
-    MapObjRun2Args & operator = (MapObjRun2Args&&) = delete;
+    MapObjRun3Args(const MapObjRun3Args&) = delete;
+    MapObjRun3Args & operator = (const MapObjRun3Args&) = delete;
+    MapObjRun3Args(MapObjRun3Args&&) = delete;
+    MapObjRun3Args & operator = (MapObjRun3Args&&) = delete;
 
     inline void delete_me() const
     {

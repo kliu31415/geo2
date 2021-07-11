@@ -303,11 +303,11 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
     return collisions;
     */
 }
-void CollisionEngine1::update_intent(int idx,
-                                     MoveIntent prev_intent,
-                                     int other_idx,
-                                     MoveIntent other_prev_intent,
-                                     std::vector<CEng1Collision> *add_to)
+void CollisionEngine1::update_intent_after_collision(int idx,
+                                                     MoveIntent prev_intent,
+                                                     int other_idx,
+                                                     MoveIntent other_prev_intent,
+                                                     std::vector<CEng1Collision> *add_to)
 {
     //if the intent didn't change, do nothing
     auto new_intent = (*ceng_data)[idx].get_move_intent();

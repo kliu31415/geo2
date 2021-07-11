@@ -36,7 +36,7 @@ void BasicProj_1::run1_mt(const MapObjRun1Args &args)
 
     args.set_move_intent(MoveIntent::GoToDesiredPos);
 }
-void BasicProj_1::run2_st([[maybe_unused]] const MapObjRun2Args &args)
+void BasicProj_1::run3_mt([[maybe_unused]] const MapObjRun3Args &args)
 {
     if(args.get_move_intent() == MoveIntent::GoToDesiredPos) {
         current_position = desired_position;

@@ -130,8 +130,9 @@ public:
               std::function<bool(const map_obj::MapObject&,
                                const map_obj::MapObject&)> collision_could_matter_);
     std::vector<CEng1Collision> find_collisions();
-    void update_intent(int idx, MoveIntent prev_intent,
-                       int other_idx, MoveIntent other_prev_intent,
-                       std::vector<CEng1Collision> *add_to);
+    ///called only after a collision happens
+    void update_intent_after_collision(int idx, MoveIntent prev_intent,
+                                       int other_idx, MoveIntent other_prev_intent,
+                                       std::vector<CEng1Collision> *add_to);
 };
 }

@@ -42,7 +42,6 @@ class Algo1
     };
 
     MapVec current_velocity;
-    MapVec desired_velocity;
     MapVec translation_accel;
 
     double accel;
@@ -60,9 +59,12 @@ class Algo1
 
     void calc_translating_movement(StandardRNG *rng, double max_accel, double max_speed_)
     {
-        current_state = State::Translating;
+        k_expects(current_speed == 0);
+        k_expects(current_velocity == MapVec(0, 0));
 
+        current_state = State::Translating;
         accel = max_accel;
+
         if(std::uniform_int_distribution<int>(0, 2)(*rng) == 0) {
             translation_accel = accel * MapVec(std::cos(current_angle), std::sin(current_angle));
             max_speed = max_speed_;
@@ -71,10 +73,13 @@ class Algo1
             translation_accel = -MOVE_BACK_PENALTY*accel * MapVec(std::cos(current_angle), std::sin(current_angle));
             max_speed = MOVE_BACK_PENALTY*max_speed_;
         }
+
         max_speed *= std::uniform_real_distribution<double>(0.7, 1)(*rng);
     }
     void calc_rotating_movement(StandardRNG *rng, [[maybe_unused]] double max_angular_accel)
     {
+        k_expects(current_d_angle == 0);
+
         current_state = State::Rotating;
 
         do angular_accel = std::uniform_real_distribution<double>(-1, 1)(*rng);
@@ -93,6 +98,9 @@ public:
     double desired_angle;
 
     Algo1():
+        current_velocity(0, 0),
+        current_speed(0),
+        current_d_angle(0),
         current_state(State::NotSet)
     {}
     virtual ~Algo1() = default;
@@ -107,7 +115,6 @@ public:
         case State::Translating:
             desired_position = *args.current_position + args.tick_len * current_velocity;
             desired_speed = std::min(current_speed + args.tick_len * accel, max_speed);
-            desired_velocity = current_velocity + args.tick_len * translation_accel;
             desired_angle = current_angle;
             break;
         case State::Rotating:
@@ -120,7 +127,6 @@ public:
         case State::Resting:
             desired_position = *args.current_position + args.tick_len * current_velocity;
             current_speed = std::max(current_speed - args.tick_len * args.max_accel, 0.0);
-
             if(current_speed > 1e-9)
                 current_velocity = current_velocity / current_velocity.norm() * current_speed;
             else
@@ -128,7 +134,7 @@ public:
 
             desired_angle = current_angle + args.tick_len * current_d_angle;
             if(current_d_angle > 0)
-                current_d_angle = std::max(current_d_angle - args.tick_len * args.max_angular_accel, 0.0);
+                current_d_angle = std::max(current_d_angle - args.tick_len * args.max_angular_accwel, 0.0);
             else
                 current_d_angle = std::min(current_d_angle + args.tick_len * args.max_angular_accel, 0.0);
             break;
@@ -142,22 +148,21 @@ public:
             break;
         case State::Translating:
             current_speed = desired_speed;
-            current_velocity = desired_velocity;
+            current_velocity += args.tick_len * translation_accel;
             *args.current_position = desired_position;
-            if(std::uniform_real_distribution<double>(0, 2)(*args.rng) < args.tick_len)
+            if(std::uniform_real_distribution<double>(0, 0.25)(*args.rng) < args.tick_len)
                 calc_resting_movement(args.rng, args.cur_level_time);
             break;
         case State::Rotating:
             current_d_angle = desired_d_angle;
             current_angle = desired_angle;
             *args.current_position = desired_position;
-            if(std::uniform_real_distribution<double>(0, 1)(*args.rng) < args.tick_len)
+            if(std::uniform_real_distribution<double>(0, 0.15)(*args.rng) < args.tick_len)
                 calc_resting_movement(args.rng, args.cur_level_time);
             break;
         case State::Resting:
             *args.current_position = desired_position;
             current_angle = desired_angle;
-
             if(args.cur_level_time >= resting_until && current_speed==0 && current_d_angle==0) {
                 if(std::uniform_int_distribution<int>(0, 2)(*args.rng) == 0)
                     calc_translating_movement(args.rng, args.max_accel, args.max_speed);

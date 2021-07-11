@@ -63,6 +63,7 @@ class Game final
 
     void process_added_map_objs();
     void run1(double tick_len);
+    void run3(double tick_len);
     void run_collision_engine();
     void advance_one_tick(double tick_len,
                           int render_w, int render_h,

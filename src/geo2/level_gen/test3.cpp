@@ -33,8 +33,9 @@ Level LevelGenerator<Level::Name::Test3>::generate([[maybe_unused]] Game *game)
             level.map_objs.push_back(std::make_shared<MonochromaticFloor_1>(pos, color));
         }
     }
-
-    level.map_objs.push_back(std::make_shared<Pig_1>(MapCoord(8.0f, 8.0f)));
+    for(int i=0; i<2; i++)
+        for(int j=0; j<2; j++)
+            level.map_objs.push_back(std::make_shared<Pig_1>(MapCoord(6 + 5*i, 6 + 5*j)));
 
     level.time_to_complete = 120;
     level.player_start_x = 4;

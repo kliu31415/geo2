@@ -423,14 +423,78 @@ void Game::run_collision_engine()
         args.swap();
         map_objs[idx2]->handle_collision(map_objs[idx1].get(), args);
 
-        collision_engine->update_intent(idx1, prev_intent1, idx2, prev_intent2, &collisions);
-        collision_engine->update_intent(idx2, prev_intent2, idx1, prev_intent1, &collisions);
+        collision_engine->update_intent_after_collision(idx1, prev_intent1,
+                                                        idx2, prev_intent2,
+                                                        &collisions);
+        collision_engine->update_intent_after_collision(idx2, prev_intent2,
+                                                        idx1, prev_intent1,
+                                                        &collisions);
 
         map_objs[idx1]->end_handle_collision_block({});
         map_objs[idx2]->end_handle_collision_block({});
     }
 }
+void Game::run3(double tick_len)
+{
+    /*
+    map_obj::MapObjRun3Args run3_args;
+    run3_args.tick_len = tick_len;
+    run3_args.set_ceng_data(&ceng_data);
+    run3_args.set_map_objs_to_add(&map_objs_to_add);
+    run3_args.set_idx_to_delete(&idx_to_delete);
+    run3_args.cur_level_time = cur_level_time;
+    run3_args.set_rng(&rngs[0]);
 
+    for(size_t i=0; i<map_objs.size(); i++) {
+        run3_args.set_index(i);
+        map_objs[i]->run3_mt(run3_args);
+    }
+    */
+    int num_threads = thread_pool->size() + 1;
+    std::vector<std::future<void>> is_done_futures(num_threads);
+
+    int num_map_objs = map_objs.size();
+
+    map_objs_to_add_lt.resize(num_threads);
+    idx_to_delete_lt.resize(num_threads);
+
+    for(int t=num_threads-1; t>=0; t--) {
+        int idx1 = (num_map_objs * (uint64_t)t) / num_threads;
+        int idx2 = (num_map_objs * (uint64_t)(t+1)) / num_threads;
+        auto task = [this, t, tick_len, idx1, idx2]
+        {
+            map_obj::MapObjRun3Args run3_args;
+            run3_args.tick_len = tick_len;
+            run3_args.set_ceng_data(&ceng_data);
+            run3_args.set_map_objs_to_add(&map_objs_to_add_lt[t]);
+            run3_args.set_idx_to_delete(&idx_to_delete_lt[t]);
+            run3_args.cur_level_time = cur_level_time;
+            run3_args.set_rng(&rngs[t]);
+
+            for(int i=idx1; i<idx2; i++) {
+                run3_args.set_index(i);
+                map_objs[i]->run3_mt(run3_args);
+            }
+        };
+
+        if(t == 0)
+            task();
+        else
+            is_done_futures[t] = thread_pool->add_task(task);
+    }
+
+    for(int t=1; t<num_threads; t++)
+        is_done_futures[t].get();
+
+    for(auto &i: map_objs_to_add_lt) {
+        map_objs_to_add.insert(map_objs_to_add.end(), i.begin(), i.end());
+        i.clear();
+    }
+    for(auto &i: idx_to_delete_lt) {
+        idx_to_delete.insert(idx_to_delete.end(), i.begin(), i.end());
+        i.clear();
+    }
+}
 void Game::advance_one_tick(double tick_len,
                             int render_w, int render_h,
                             float mouse_x, float mouse_y,
@@ -450,7 +514,8 @@ void Game::advance_one_tick(double tick_len,
      *   they don't interact with the collision engine.
      *  -Run the collision engine and find all collisions. Objects process all collisions,
      *   possibly moving back to their original place.
-     *  -Call run2_st() on everything. Objects will update their internal positions here.
+     *  -run2_st(); plan to add in the future
+     *  -Call run3_mt() on everything. Objects will update their internal positions here.
      *   Objects that tried to move in run1_mt() will likely perform a simple update of
      *   their position. Objects that require sole access to data to update will likely
      *   perform a more complicated operation.
@@ -494,19 +559,8 @@ void Game::advance_one_tick(double tick_len,
     //~400us on Test2(40, 40)
     run_collision_engine();
 
-    //second run
-    map_obj::MapObjRun2Args run2_args;
-    run2_args.tick_len = tick_len;
-    run2_args.set_ceng_data(&ceng_data);
-    run2_args.set_map_objs_to_add(&map_objs_to_add);
-    run2_args.set_idx_to_delete(&idx_to_delete);
-    run2_args.cur_level_time = cur_level_time;
-    run2_args.set_rng(&rngs[0]);
-    //~150us on Test2(40, 40)
-    for(size_t i=0; i<map_objs.size(); i++) {
-        run2_args.set_index(i);
-        map_objs[i]->run2_st(run2_args);
-    }
+    //run3
+    run3(tick_len);
 
     //-remove all map objects that want to be removed
     //-note that we should preserve the order to prevent rendering glitches
@@ -626,6 +680,17 @@ Game::Game():
     rngs(thread_pool->size() + 1),
     collision_engine(std::make_unique<CollisionEngine1>(thread_pool))
 {
+    /** Note:
+     *  In order to make the program deterministic even if it multi-threaded, we have
+     *  to ensure that no matter what thread in a thread pool executes a function,
+     *  the result will appear the same; we might naively assume that if a thread pool
+     *  has X threads and we give the pool X tasks in order, then thread i will execute
+     *  task i, but this isn't true; perhaps a thread that is fast to wake up executes
+     *  more than 1 task, and a slow thread to wake up executes none, as the task queue
+     *  is empty by the time it wakes up.
+     */
+
+
     generate_and_start_level(Level::Name::Test3);
 }
 Game::~Game()

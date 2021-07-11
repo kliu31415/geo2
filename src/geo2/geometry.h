@@ -49,19 +49,45 @@ template<class T> struct _MapVec
     {
         return _MapVec(x + other.x, y + other.y);
     }
+    _MapVec operator - (const _MapVec& other) const
+    {
+        return _MapVec(x - other.x, y - other.y);
+    }
     template<class U> _MapVec operator * (U val) const
     {
         return _MapVec(x * val, y * val);
     }
-    template<class U> _MapVec & operator *= (U val)
+    template<class U> _MapVec& operator *= (U val)
     {
         x *= val;
         y *= val;
         return *this;
     }
+    template<class U> _MapVec& operator /= (U val)
+    {
+        x /= val;
+        y /= val;
+        return *this;
+    }
+    template<class U> _MapVec& operator += (const _MapVec<U> &other)
+    {
+        x += other.x;
+        y += other.y;
+        return *this;
+    }
+    template<class U> _MapVec& operator -= (const _MapVec<U> &other)
+    {
+        x -= other.x;
+        y -= other.y;
+        return *this;
+    }
     template<class U> _MapVec operator / (U val) const
     {
         return _MapVec(x / val, y / val);
+    }
+    bool operator == (const _MapVec &other) const
+    {
+        return x==other.x && y==other.y;
     }
 };
 using MapVec = _MapVec<double>;
