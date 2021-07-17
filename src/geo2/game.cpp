@@ -4,6 +4,7 @@
 #include "geo2/map_obj/map_object.h"
 #include "geo2/map_obj/map_obj_args.h"
 #include "geo2/collision_engine1.h"
+#include "geo2/texture_utils.h"
 
 #include "geo2/level_gen/test2.h"
 #include "geo2/level_gen/test3.h"
@@ -20,37 +21,6 @@
 #include <cmath>
 
 namespace geo2 {
-
-class PersistentTextureTarget
-{
-    std::shared_ptr<kx::gfx::Texture> texture;
-    kx::gfx::Renderer *owner;
-public:
-    std::shared_ptr<kx::gfx::Texture> get(kx::gfx::Renderer *rdr,
-                                          int w,
-                                          int h,
-                                          kx::gfx::Texture::Format format,
-                                          bool is_srgb,
-                                          int num_samples = 1)
-    {
-        if(texture == nullptr ||
-           rdr != owner ||
-           texture->get_w()!=w ||
-           texture->get_h()!=h ||
-           texture->get_format()!=format ||
-           texture->is_srgb() != is_srgb ||
-           texture->get_num_samples() != num_samples)
-        {
-            owner = rdr;
-            texture = rdr->make_texture_target(w,
-                                               h,
-                                               format,
-                                               is_srgb,
-                                               num_samples);
-        }
-        return texture;
-    }
-};
 
 struct _gfx
 {
@@ -72,19 +42,13 @@ struct _gfx
     std::unique_ptr<kx::gfx::ShaderProgram> bloom2;
     std::unique_ptr<kx::gfx::VAO> bloom2_vao;
 
-    std::unique_ptr<kx::gfx::ShaderProgram> hdr;
-    std::unique_ptr<kx::gfx::VAO> hdr_vao;
-
     std::shared_ptr<kx::gfx::VBO> full_target_vbo;
-    kx::FixedSizeArray<float> full_target;
+    std::array<float, 16> full_target;
 
-    void init(kx::gfx::Renderer *rdr)
+    _gfx(kx::gfx::Renderer *rdr):
+        cur_renderer(rdr)
     {
-        cur_renderer = rdr;
-
         render_op_list = std::make_unique<GameRenderOpList>(rdr);
-
-        full_target = kx::FixedSizeArray<float>(16);
 
         auto bloom1_vert = rdr->make_vert_shader("geo2_data/shaders/bloom1_1.vert");
         auto bloom1_frag = rdr->make_frag_shader("geo2_data/shaders/bloom1_1.frag");
@@ -111,18 +75,6 @@ struct _gfx
         bloom2_vao->vertex_attrib_pointer_f(1, 2, 4*sizeof(float), 2*sizeof(float)); //src loc
         bloom2_vao->enable_vertex_attrib_array(0);
         bloom2_vao->enable_vertex_attrib_array(1);
-
-        auto hdr_vert = rdr->make_vert_shader("geo2_data/shaders/hdr1.vert");
-        auto hdr_frag = rdr->make_frag_shader("geo2_data/shaders/hdr1.frag");
-        hdr = rdr->make_shader_program(*hdr_vert, *hdr_frag);
-        hdr_vao = rdr->make_VAO();
-        rdr->bind_VAO(*hdr_vao);
-        rdr->bind_VBO(*full_target_vbo);
-        hdr_vao->add_VBO(full_target_vbo);
-        hdr_vao->vertex_attrib_pointer_f(0, 2, 4*sizeof(float), 0*sizeof(float)); //dst loc
-        hdr_vao->vertex_attrib_pointer_f(1, 2, 4*sizeof(float), 2*sizeof(float)); //src loc
-        hdr_vao->enable_vertex_attrib_array(0);
-        hdr_vao->enable_vertex_attrib_array(1);
     }
     std::shared_ptr<kx::gfx::Texture> resolve_multisamples(kx::gfx::Texture *tex)
     {
@@ -136,41 +88,27 @@ struct _gfx
         cur_renderer->draw_texture_ms(*tex, kx::gfx::Rect(0, 0, tex->get_w(), tex->get_h()), {});
         return no_ms_tex;
     }
-    void apply_bloom_and_hdr(kx::gfx::Texture *texture, double bloom_radius_sd)
+    void apply_bloom(kx::gfx::Texture *texture, double bloom_radius_sd)
     {
         using namespace kx::gfx;
 
         auto rdr = cur_renderer;
         k_expects(!texture->is_srgb());
-        auto cur_target = rdr->get_target();
-        kx::ScopeGuard sg([=]() -> void {rdr->set_target(cur_target);});
+
+        auto original_target = rdr->get_target();
+        auto original_blend_factors = rdr->get_blend_factors();
+        kx::ScopeGuard sg([=]() -> void {
+                                            rdr->set_target(original_target);
+                                            rdr->set_blend_factors(original_blend_factors);
+                                        });
 
         int w = texture->get_w();
         int h = texture->get_h();
 
-        full_target[0] = rdr->x_nc_to_ndc(0.0);
-        full_target[1] = rdr->y_nc_to_ndc(0.0);
-        full_target[2] = rdr->x_nc_to_tex_coord(0.0, w);
-        full_target[3] = rdr->y_nc_to_tex_coord(0.0, h);
-
-        full_target[4] = rdr->x_nc_to_ndc(1.0);
-        full_target[5] = rdr->y_nc_to_ndc(0.0);
-        full_target[6] = rdr->x_nc_to_tex_coord(1.0, w);
-        full_target[7] = rdr->y_nc_to_tex_coord(0.0, h);
-
-        full_target[8] = rdr->x_nc_to_ndc(0.0);
-        full_target[9] = rdr->y_nc_to_ndc(1.0);
-        full_target[10] = rdr->x_nc_to_tex_coord(0.0, w);
-        full_target[11] = rdr->y_nc_to_tex_coord(1.0, h);
-
-        full_target[12] = rdr->x_nc_to_ndc(1.0);
-        full_target[13] = rdr->y_nc_to_ndc(1.0);
-        full_target[14] = rdr->x_nc_to_tex_coord(1.0, w);
-        full_target[15] = rdr->y_nc_to_tex_coord(1.0, h);
+        set_to_full_target(&full_target, rdr, w, h);
 
         rdr->bind_VBO(*full_target_vbo);
-        full_target_vbo->buffer_data(&full_target[0],
-                                     full_target.size() * sizeof(full_target[0]));
+        full_target_vbo->buffer_data(&full_target[0], full_target.size() * sizeof(full_target[0]));
 
         //the bloom shaders assume linear interpolation to speed things up,
         //so make sure linear interpolation is set. If it's not set, it'll be buggy.
@@ -184,7 +122,7 @@ struct _gfx
         rdr->prepare_for_custom_shader();
         rdr->set_active_texture(0);
 
-        //extract bright colors
+        //STEP 1: extract bright colors
         rdr->use_shader_program(*bloom1);
         bloom1->set_uniform1i(bloom1->get_uniform_loc("texture_in"), 0);
         rdr->bind_VAO(*bloom1_vao);
@@ -194,7 +132,7 @@ struct _gfx
         rdr->clear();
         rdr->draw_arrays(DrawMode::TriangleStrip, 0, 4);
 
-        //blur (horizontal, then vertical)
+        //STEP 2: blur (horizontal, then vertical)
         rdr->use_shader_program(*bloom2);
         constexpr int MAX_ITER = 49; //IMPORTANT: must be half - 1 of sw's size in the frag shader
         constexpr double RADIUS_SDs = 3.5;
@@ -230,23 +168,18 @@ struct _gfx
         bloom2->set_uniform1i(bloom2->get_uniform_loc("is_horizontal"), false);
         rdr->draw_arrays(DrawMode::TriangleStrip, 0, 4);
 
-        //sum the textures
+        //STEP 3: sum the textures
         rdr->set_target(tex2.get());
         rdr->set_color(SRGB_Color(0.0, 0.0, 0.0, 0.0));
         rdr->clear();
         rdr->set_blend_factors(BlendFactor::SrcAlpha, BlendFactor::One);
-        rdr->draw_texture_nc(*texture, Rect(0.0, 0.0, 1.0, 1.0));
-        rdr->draw_texture_nc(*tex1, Rect(0.0, 0.0, 1.0, 1.0));
-        rdr->set_blend_factors(BlendFactor::SrcAlpha, BlendFactor::OneMinusSrcAlpha);
+        rdr->draw_texture_nc(*texture, Rect(0, 0, 1, 1));
+        rdr->draw_texture_nc(*tex1, Rect(0, 0, 1, 1));
 
-        //apply HDR
-        rdr->prepare_for_custom_shader();
+        //STEP 4: copy it back to the original texture
+        rdr->set_blend_factors(BlendFactor::One, BlendFactor::Zero);
         rdr->set_target(texture);
-        rdr->bind_texture(*tex2);
-        rdr->use_shader_program(*hdr);
-        hdr->set_uniform1i(hdr->get_uniform_loc("texture_in"), 0);
-        rdr->bind_VAO(*hdr_vao);
-        rdr->draw_arrays(DrawMode::TriangleStrip, 0, 4);
+        rdr->draw_texture_nc(*tex2, Rect(0, 0, 1, 1));
     }
 };
 
@@ -601,8 +534,8 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
 
     //create the texture where the map will be rendered; note that this isn't the whole screen.
     auto rdr = kwin_r->rdr();
-    if(rdr != gfx->cur_renderer) {
-        gfx->init(rdr);
+    if(gfx==nullptr || rdr!=gfx->cur_renderer) {
+        gfx = std::make_unique<_gfx>(rdr);
     }
     float w = render_w;
     float h = render_h;
@@ -655,7 +588,7 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
         map_texture = gfx->resolve_multisamples(map_texture.get());
     }
 
-    gfx->apply_bloom_and_hdr(map_texture.get(), 0.1*tile_len);
+    gfx->apply_bloom(map_texture.get(), 0.1*tile_len);
 
     //add the menu bar and other stuff here
     //(code goes here)
@@ -678,7 +611,6 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
 //the thread pool size is the number of threads we have - 1 because we should
 //make use of the current thread too to reduce overhead
 Game::Game():
-    gfx(std::make_unique<_gfx>()),
     player(std::make_unique<map_obj::Player_Type1>()),
     thread_pool(std::make_shared<ThreadPool>(std::thread::hardware_concurrency() - 1)),
     rngs(thread_pool->size() + 1),

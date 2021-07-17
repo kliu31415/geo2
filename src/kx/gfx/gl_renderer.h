@@ -286,6 +286,8 @@ class Renderer final
                                         */
     Texture *render_target;
 
+    std::pair<BlendFactor, BlendFactor> blend_factors;
+
     SRGB_Color draw_color;
 
     struct _Shaders
@@ -477,6 +479,8 @@ public:
     void draw_texture_ms(const Texture &texture, const Rect &dst, const std::optional<Rect> &src_);
 
     void set_blend_factors(BlendFactor src, BlendFactor dst);
+    void set_blend_factors(const std::pair<BlendFactor, BlendFactor> &factors);
+    const std::pair<BlendFactor, BlendFactor>& get_blend_factors() const;
 
     /** These can be called without any preparation */
     template<class ...Args> std::unique_ptr<VAO> make_VAO(Args &&...args)

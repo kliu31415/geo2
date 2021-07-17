@@ -758,9 +758,10 @@ Renderer::Renderer(SDL_Window *window_, [[maybe_unused]] Uint32 flags):
     render_target(nullptr),
     Shaders()
 {
+
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    set_blend_factors(BlendFactor::SrcAlpha, BlendFactor::OneMinusSrcAlpha);
     SDL_GL_SetSwapInterval(1);
 
     int w;
@@ -1188,7 +1189,17 @@ void Renderer::draw_texture_ms(const Texture &texture, const Rect &dst, const st
 }
 void Renderer::set_blend_factors(BlendFactor src, BlendFactor dst)
 {
+    blend_factors = std::make_pair(src, dst);
     glBlendFunc((GLenum)src, (GLenum)dst);
+}
+void Renderer::set_blend_factors(const std::pair<BlendFactor, BlendFactor> &factors)
+{
+    blend_factors = factors;
+    glBlendFunc((GLenum)factors.first, (GLenum)factors.second);
+}
+const std::pair<BlendFactor, BlendFactor>& Renderer::get_blend_factors() const
+{
+    return blend_factors;
 }
 void Renderer::prepare_for_custom_shader()
 {

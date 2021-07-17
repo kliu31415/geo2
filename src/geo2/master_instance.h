@@ -15,10 +15,8 @@ class MasterInstance final: public kx::gfx::KItem
     enum class State {MainMenu, InGame};
     State state;
 
-    int render_w;
-    int render_h;
-
     std::unique_ptr<Game> game;
+    std::unique_ptr<class gfx_impl> gfx;
 public:
     MasterInstance(const kx::gfx::Rect &render_rect_);
 

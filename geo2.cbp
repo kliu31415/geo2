@@ -129,6 +129,9 @@
 		</Unit>
 		<Unit filename="src/geo2/test.cpp" />
 		<Unit filename="src/geo2/test.h" />
+		<Unit filename="src/geo2/texture_utils.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="src/geo2/timer.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>

@@ -323,7 +323,7 @@
 	"kx/gfx/gl_renderer.h"
 	"kx/gfx/vk_renderer.h"
 
-1625522782 source:d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.cpp
+1626508704 source:d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.cpp
 	"kx/gfx/renderer.h"
 	"kx/gfx/renderer.h"
 	"kx/io.h"
@@ -406,7 +406,7 @@
 	"glad/glad.h"
 	<SDL2/SDL_pixels.h>
 
-1625522773 d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.h
+1626508645 d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.h
 	"kx/gfx/font.h"
 	"kx/gfx/renderer_types.h"
 	"kx/sdl_deleter.h"
@@ -529,13 +529,14 @@
 	<vector>
 	<cstdint>
 
-1626489397 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
+1626508399 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
 	"geo2/map_obj/floor_type1/test_terrain1.h"
 	"geo2/game_render_op_list.h"
 	"geo2/game.h"
 	"geo2/map_obj/map_object.h"
 	"geo2/map_obj/map_obj_args.h"
 	"geo2/collision_engine1.h"
+	"geo2/texture_utils.h"
 	"geo2/level_gen/test2.h"
 	"geo2/level_gen/test3.h"
 	"geo2/multithread/thread_pool.h"
@@ -547,12 +548,13 @@
 	<thread>
 	<cmath>
 
-1622742577 d:\code\cbprojects\geo2\src\geo2\master_instance.h
+1626507153 d:\code\cbprojects\geo2\src\geo2\master_instance.h
 	"geo2/game.h"
 	"kx/gfx/kwindow.h"
 
-1625518619 source:d:\code\cbprojects\geo2\src\geo2\master_instance.cpp
+1626508256 source:d:\code\cbprojects\geo2\src\geo2\master_instance.cpp
 	"geo2/master_instance.h"
+	"geo2/texture_utils.h"
 	"kx/gfx/renderer.h"
 
 1623384772 d:\code\cbprojects\geo2\src\geo2\map_object.h
@@ -999,15 +1001,19 @@
 	"geo2/geometry.h"
 	<random>
 
-1626492288 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\hexfly_1.h
+1626499550 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\hexfly_1.h
 	"geo2/map_obj/unit_type1/unit_type1.h"
 	"geo2/map_obj/unit_type1/movement/algo1.h"
 	"geo2/game_render_op_list.h"
 	<array>
 	<functional>
 
-1626492232 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\hexfly_1.cpp
+1626492319 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\hexfly_1.cpp
 	"geo2/map_obj/unit_type1/hexfly_1.h"
 	"geo2/map_obj/map_obj_args.h"
 	<random>
+
+1626506772 d:\code\cbprojects\geo2\src\geo2\texture_utils.h
+	"kx/gfx/renderer.h"
+	<memory>
 
