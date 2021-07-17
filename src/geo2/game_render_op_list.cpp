@@ -60,6 +60,14 @@ void GameRenderOpList::Shaders::init(kx::gfx::Renderer *rdr, kx::Passkey<GameRen
     make_shader_vf_1ub(&laser_1, rdr, "weapons/laser_1",
                        256, DM::TriangleStrip, 4,
                        "block1", 0, 4*4*sizeof(float));
+
+    make_shader_vf_1ub(&cow_1, rdr, "map_objs/unit_type1/cow_1",
+                       128, DM::TriangleStrip, 4,
+                       "block1", 0, 8*4*sizeof(float));
+
+    make_shader_vf_1ub(&hexfly_1, rdr, "map_objs/unit_type1/hexfly_1",
+                       170, DM::Triangles, 3,
+                       "block1", 0, 6*4*sizeof(float));
 }
 
 GameRenderOpList::GameRenderOpList(kx::gfx::Renderer *renderer):

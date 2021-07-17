@@ -12,7 +12,7 @@ namespace geo2 {class Game;}
 
 namespace geo2 { namespace map_obj {
 
-class MapObjInitArgs final
+class MapObjInitArgs final: public RNG_Args
 {
     CEng1Data *data;
 public:
@@ -260,7 +260,7 @@ class EndHandleCollisionBlockArgs final
     EndHandleCollisionBlockArgs & operator = (EndHandleCollisionBlockArgs&&) = delete;
 };
 
-class MapObjRenderArgs final: public CEng1DataMutatorAttorney, public RenderArgs
+class MapObjRenderArgs final: public CEng1DataMutatorAttorney, public RenderArgs, public RNG_Args
 {
     std::vector<std::shared_ptr<RenderOpGroup>> *op_groups;
 

@@ -21,7 +21,7 @@ void TestLaser1::run(const WeaponRunArgs &args)
     if(reload_counter > 0)
         reload_counter -= args.get_tick_len();
 
-    if(args.is_lmb_down()) {
+    if(args.primary_attack()) {
         while(reload_counter <= 0) {
             auto mobj = owner.lock();
             k_expects(mobj != nullptr);

@@ -35,7 +35,7 @@ public:
     double cur_level_time;
     double tick_len;
 
-    inline bool is_lmb_down() const
+    inline bool primary_attack() const
     {
         return mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT);
     }

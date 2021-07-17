@@ -83,10 +83,10 @@ class CEng1Data final
     template<class Func> inline static void for_each(const PolygonData &data, Func &&func)
     {
         if(data.num_polygons == 1) {
-            func(data.ptr.get(), 0);
+            std::forward<Func>(func)(data.ptr.get(), 0);
         } else if(data.num_polygons > 1) {
             for(size_t i=0; i<data.vec->size(); i++) {
-                func((*data.vec)[i].get(), i);
+                std::forward<Func>(func)((*data.vec)[i].get(), i);
             }
         }
     }

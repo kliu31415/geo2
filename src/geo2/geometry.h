@@ -23,7 +23,7 @@ template<class T> struct _MapVec
     T x;
     T y;
 
-    _MapVec() {}
+    constexpr _MapVec() {}
     constexpr _MapVec(T x_, T y_):
         x(x_),
         y(y_)
@@ -103,11 +103,13 @@ template<class T> struct _MapCoord
     ///T should not be integral. It could be fixed, but fixeds don't really exist.
     static_assert(std::is_floating_point<T>::value);
 
+    static constexpr _MapCoord ORIGIN = _MapCoord(0, 0);
+
     T x;
     T y;
 
-    _MapCoord() {}
-    _MapCoord(T x_, T y_):
+    constexpr _MapCoord() {}
+    constexpr _MapCoord(T x_, T y_):
         x(x_),
         y(y_)
     {}
@@ -134,10 +136,6 @@ template<class T> struct _MapCoord
     {
         return x*v1 + y*v2;
     }
-    inline static MapVec ORIGIN()
-    {
-        return MapVec(0, 0);
-    }
 };
 using MapCoord = _MapCoord<double>;
 
@@ -145,25 +143,28 @@ template<class T> struct _Matrix2
 {
     static_assert(std::is_floating_point<T>::value);
 
-    std::array<std::array<T, 2>, 2> vals;
+    T a00;
+    T a01;
+    T a10;
+    T a11;
 
     template<class U> _MapVec<U> operator * (const _MapVec<U> &vec) const
     {
-        U x = vals[0][0]*vec.x + vals[0][1]*vec.y;
-        U y = vals[1][0]*vec.x + vals[1][1]*vec.y;
+        U x = a00*vec.x + a01*vec.y;
+        U y = a10*vec.x + a11*vec.y;
         return _MapVec<U>(x, y);
     }
     inline static _Matrix2 make_rotation_matrix(T theta)
     {
         _Matrix2 ret;
-        ret.vals[0][0] = std::cos(theta);
-        ret.vals[1][0] = std::sin(theta);
-        ret.vals[0][1] = -ret.vals[1][0];
-        ret.vals[1][1] = ret.vals[0][0];
+        ret.a00 = std::cos(theta);
+        ret.a10 = std::sin(theta);
+        ret.a01 = -ret.a10;
+        ret.a11 = ret.a00;
         return ret;
     }
 };
-using Matrix2 = _Matrix2<double>;
+using Matrix2 = _Matrix2<float>;
 
 template<class T> struct _MapRect
 {
@@ -326,7 +327,12 @@ public:
 };
 */
 
-//This is a polygon class that uses AVX2
+/** This is a polygon class that uses AVX2
+ *  The first coordinate will be repeated (this saves a mod instruction
+ *  when looping over all edges). It's possible, but not guaranteed,
+ *  that other coordinates will too. This means that, in a polygon P with
+ *  n vertices, P[i] is valid for 0 <= i <= n (note that <= n instead of < n).
+ */
 class Polygon final
 {
     AABB aabb;
@@ -384,6 +390,56 @@ class Polygon final
             aabb.combine(c);
         }
     }
+    void translate_internal(float dx, float dy)
+    {
+        //use d_len, not n, as we have to move duplicated vertices too
+        auto d_len = get_d_len(n);
+        k_expects(d_len % 8 == 1);
+
+        vals[0] += dx;
+        vals[d_len] += dy;
+
+        auto mm_dx = _mm256_set1_ps(dx);
+        auto mm_dy = _mm256_set1_ps(dy);
+
+        for(int i=1; i<d_len; i+=8) {
+            auto mm_x = _mm256_loadu_ps(vals + i);
+            auto mm_y = _mm256_loadu_ps(vals + d_len + i);
+
+            mm_x += mm_dx;
+            mm_y += mm_dy;
+
+            _mm256_storeu_ps(vals + i, mm_x);
+            _mm256_storeu_ps(vals + d_len + i, mm_y);
+        }
+    }
+    void rotate_about_origin_internal(float theta)
+    {
+        auto d_len = get_d_len(n);
+        k_expects(d_len % 8 == 1);
+
+        //use d_len, not n, as we have to move duplicated vertices too
+        float cos_theta = std::cos(theta);
+        float sin_theta = std::sin(theta);
+
+        {
+            auto cur_x = vals[0];
+            auto cur_y = vals[d_len];
+            vals[0] = cur_x * cos_theta - cur_y * sin_theta;
+            vals[d_len] = cur_x * sin_theta + cur_y * cos_theta;
+        }
+
+        auto mm_cos_theta = _mm256_set1_ps(cos_theta);
+        auto mm_sin_theta = _mm256_set1_ps(sin_theta);
+
+        for(int i=1; i<d_len; i+=8) {
+            auto mm_x = _mm256_loadu_ps(vals + i);
+            auto mm_y = _mm256_loadu_ps(vals + d_len + i);
+
+            _mm256_storeu_ps(vals + i, mm_x * mm_cos_theta - mm_y * mm_sin_theta);
+            _mm256_storeu_ps(vals + d_len + i, mm_x * mm_sin_theta + mm_y * mm_cos_theta);
+        }
+    }
 public:
 
     std::unique_ptr<Polygon> copy() const
@@ -419,30 +475,27 @@ public:
 
     void translate(float dx, float dy)
     {
-        //use d_len, not n, as we have to move duplicated vertices too
-        auto d_len = get_d_len(n);
-        for(int i=0; i<d_len; i++) {
-            vals[i] += dx;
-            vals[d_len + i] += dy;
-        }
+        translate_internal(dx, dy);
 
-        calc_aabb();
+        //this shouldn't lead to precision issues even if done many times
+        aabb.x1 += dx;
+        aabb.y1 += dy;
+        aabb.x2 += dx;
+        aabb.y2 += dy;
+    }
+    template<class T> void translate(const _MapVec<T> &v)
+    {
+        translate(v.x, v.y);
     }
     void rotate_about_origin(float theta)
     {
-        //use d_len, not n, as we have to move duplicated vertices too
-        auto v0 = std::cos(theta);
-        auto v1 = std::sin(theta);
-
-        auto d_len = get_d_len(n);
-
-        for(int i=0; i<d_len; i++) {
-            auto cur_x = vals[i];
-            auto cur_y = vals[d_len + i];
-            vals[i] = cur_x * v0 - cur_y * v1;
-            vals[d_len + i] = cur_x * v1 + cur_y * v0;
-        }
-
+        rotate_about_origin_internal(theta);
+        calc_aabb();
+    }
+    template<class T> void rotate_about_origin_and_translate(float theta, const _MapVec<T> &v)
+    {
+        rotate_about_origin_internal(theta);
+        translate_internal(v.x, v.y);
         calc_aabb();
     }
     inline const AABB &get_AABB() const
@@ -493,37 +546,34 @@ public:
                 __m256 Qx = _mm256_loadu_ps(other.vals + j-1);
                 __m256 Qy = _mm256_loadu_ps(other.vals + other_d_len + j-1);
 
-                __m256 p1_Sx = _mm256_loadu_ps(other.vals + j);
-                __m256 p2_Sx = _mm256_loadu_ps(other.vals + j-1);
-                __m256 Sx = p1_Sx - p2_Sx;
+                __m256 Sx = _mm256_loadu_ps(other.vals + j) - Qx;
+                __m256 Sy = _mm256_loadu_ps(other.vals + other_d_len + j) - Qy;
 
                 __m256 Ry_times_Sx = Ry * Sx;
-
-                __m256 p1_Sy = _mm256_loadu_ps(other.vals + other_d_len + j);
-                __m256 p2_Sy = _mm256_loadu_ps(other.vals + other_d_len + j-1);
-                __m256 Sy = p1_Sy - p2_Sy;
-
-                __m256 part3 = _mm256_fmsub_ps(Rx, Sy, Ry_times_Sx);
 
                 __m256 part1y = Qy - Py;
                 __m256 part1x = Qx - Px;
 
                 //multiplying by the reciprocal causes some edge cases to misbehave,
-                //so we have to use division (which is slow)
+                //because the reciprocal function has precision issues,
+                //so we have to use division (which is slower)
+                __m256 part3 = _mm256_fmsub_ps(Rx, Sy, Ry_times_Sx);
+                __m256 part3_inv = mm1 / part3;
+
                 __m256 part1y_times_Sx = part1y * Sx;
                 __m256 t_part1 = _mm256_fmsub_ps(part1x, Sy, part1y_times_Sx);
-                __m256 t = t_part1 / part3;
+                __m256 t = t_part1 * part3_inv;
 
                 __m256 part1y_times_Rx = part1y * Rx;
                 __m256 u_part1 = _mm256_fmsub_ps(part1x, Ry, part1y_times_Rx);
-                __m256 u = u_part1 / part3;
+                __m256 u = u_part1 * part3_inv;
 
                 //use GE and LE to avoid having weird cases like when you're
                 //walking along a wall in one direction, but suddenly stop
                 //being able to due to a collision between the ends of lines
                 __m256 t_ge_0 = _mm256_cmp_ps(t, mm0, _CMP_GT_OQ);
-                __m256 t_le_1 = _mm256_cmp_ps(t, mm1, _CMP_LT_OQ);
                 __m256 u_ge_0 = _mm256_cmp_ps(u, mm0, _CMP_GT_OQ);
+                __m256 t_le_1 = _mm256_cmp_ps(t, mm1, _CMP_LT_OQ);
                 __m256 u_le_1 = _mm256_cmp_ps(u, mm1, _CMP_LT_OQ);
 
                 __m256 t_good = _mm256_and_ps(t_ge_0, t_le_1);
@@ -561,6 +611,7 @@ public:
 
         calc_aabb();
     }
+    ///0 <= idx <= n (note the <= n instead of < n)
     inline _MapCoord<float> get_vertex(size_t idx) const
     {
         auto d_len = get_d_len(n);
@@ -571,7 +622,7 @@ public:
         std::unique_ptr<Polygon> ret(new Polygon(vertices));
         return ret;
     }
-    template<class T> static std::unique_ptr<Polygon> make(std::vector<T> coords)
+    template<class T> static std::unique_ptr<Polygon> make(const std::vector<T> &coords)
     {
         k_expects(coords.size() % 2 == 0);
         std::vector<_MapCoord<T>> mc;

@@ -19,6 +19,8 @@ public:
         std::unique_ptr<IShader> pig_1;
         std::unique_ptr<IShader> laser_proj_1;
         std::unique_ptr<IShader> laser_1;
+        std::unique_ptr<IShader> cow_1;
+        std::unique_ptr<IShader> hexfly_1;
 
         void init(kx::gfx::Renderer *rdr, kx::Passkey<GameRenderOpList>);
     };

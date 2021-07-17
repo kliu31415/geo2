@@ -23,7 +23,7 @@ class EndHandleCollisionBlockArgs;
 #define HANDLE_COLLISION_FUNC_DECLARATION(T) \
     void handle_collision(class T *other, const HandleCollisionArgs &args)
 
-class MapObject: public std::enable_shared_from_this<MapObject>
+class MapObject
 {
 public:
     MapObject() = default;

@@ -305,6 +305,7 @@ void Game::process_added_map_objs()
 {
     ceng_data.resize(map_objs.size() + map_objs_to_add.size());
     map_obj::MapObjInitArgs args;
+    args.set_rng(&rngs[0]);
     size_t ceng_data_idx = map_objs.size();
     for(auto &mobj: map_objs_to_add) {
         args.set_ceng_data(&ceng_data[ceng_data_idx]);
@@ -636,6 +637,7 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
     render_args.set_camera(camera);
     render_args.set_pixels_per_tile_len(tile_len);
     render_args.cur_level_time = cur_level_time;
+    render_args.set_rng(&rngs[0]);
 
     render_args.set_op_groups_vec(&gfx->op_groups);
 

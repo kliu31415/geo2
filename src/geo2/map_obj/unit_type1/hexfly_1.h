@@ -9,12 +9,15 @@
 
 namespace geo2 { namespace map_obj {
 
-class Pig_1 final: public Unit_Type1
+class Hexfly_1 final: public Unit_Type1
 {
     unit_movement::Algo1 movement_algo;
+    std::unique_ptr<Polygon> base_shape;
+    float side_len;
+    double wing_freq;
 
-    std::array<std::shared_ptr<RenderOpShader>, 5> ops;
-    std::array<nonstd::span<float>, 5> op_ius;
+    std::array<std::shared_ptr<RenderOpShader>, 8> ops;
+    std::array<nonstd::span<float>, 8> op_ius;
     std::shared_ptr<RenderOpGroup> op_group;
 
     float eye_w;
@@ -22,13 +25,13 @@ class Pig_1 final: public Unit_Type1
     float eye_x_offset;
     float eye_y_offset;
 
-    Pig_1(MapCoord position_);
+    Hexfly_1(MapCoord position_, float side_len_);
 public:
     template<class... Args>
     static void make_standard(const std::function<void(std::shared_ptr<MapObject>&&)> &add_func,
                               Args &&...args)
     {
-        add_func(std::shared_ptr<Pig_1>(new Pig_1(std::forward<Args>(args)...)));
+        add_func(std::shared_ptr<Hexfly_1>(new Hexfly_1(std::forward<Args>(args)..., 0.8)));
     }
 
     void init(const MapObjInitArgs &args) override;

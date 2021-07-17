@@ -164,7 +164,11 @@ void Player_Type1::init([[maybe_unused]] const MapObjInitArgs &args)
     args.add_current_pos(Polygon::make_with_num_sides(4));
     args.add_desired_pos(Polygon::make_with_num_sides(4));
 
-    weapons.push_back(std::make_shared<weapon::TestLaser1>(shared_from_this()));
+    try {
+        weapons.push_back(std::make_shared<weapon::TestLaser1>(shared_from_this()));
+    } catch(std::bad_weak_ptr &e) {
+        k_assert(false);
+    }
     weapon::WeaponSwapInArgs swap_in_args;
     weapons.back()->swap_in(swap_in_args);
     cur_weapon_idx = 0;

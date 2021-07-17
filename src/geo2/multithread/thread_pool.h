@@ -46,10 +46,9 @@ public:
     {
         if(n < 1) {
 
-            kx::log_warning("ThreadPool with <1 thread constructed. Upping thread count to 1."
+            kx::log_warning("ThreadPool with <1 thread constructed. ThreadPool will have 0 threads. "
                             "Note: This machine has " +
                             kx::to_str(std::thread::hardware_concurrency()) + " threads");
-            n = 1;
         }
         threads.resize(n);
         for(int i=0; i<n; i++)

@@ -8,6 +8,8 @@
 #undef main
 #endif
 
+static_assert(sizeof(int) == 4);
+
 int main()
 {
     using namespace kx;

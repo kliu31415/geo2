@@ -20,7 +20,7 @@ struct PlayerRunSpecialArgs final
     weapon::WeaponRunArgs weapon_run_args;
 };
 
-class Player_Type1 final: public Unit_Type1
+class Player_Type1 final: public Unit_Type1, public std::enable_shared_from_this<Player_Type1>
 {
     MapCoord desired_position;
     MapVec velocity;

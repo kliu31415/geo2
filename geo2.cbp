@@ -85,6 +85,11 @@
 		<Unit filename="src/geo2/map_obj/projectile_type1/laser_proj_1.h" />
 		<Unit filename="src/geo2/map_obj/projectile_type1/projectile_type1.cpp" />
 		<Unit filename="src/geo2/map_obj/projectile_type1/projectile_type1.h" />
+		<Unit filename="src/geo2/map_obj/unit_type1/hexfly_1.cpp" />
+		<Unit filename="src/geo2/map_obj/unit_type1/hexfly_1.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="src/geo2/map_obj/unit_type1/movement/algo1.cpp" />
 		<Unit filename="src/geo2/map_obj/unit_type1/movement/algo1.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
@@ -92,6 +97,10 @@
 		<Unit filename="src/geo2/map_obj/unit_type1/pig_1.h" />
 		<Unit filename="src/geo2/map_obj/unit_type1/player_type1.cpp" />
 		<Unit filename="src/geo2/map_obj/unit_type1/player_type1.h" />
+		<Unit filename="src/geo2/map_obj/unit_type1/spotted_pig_1.cpp" />
+		<Unit filename="src/geo2/map_obj/unit_type1/spotted_pig_1.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="src/geo2/map_obj/unit_type1/unit_type1.cpp" />
 		<Unit filename="src/geo2/map_obj/unit_type1/unit_type1.h" />
 		<Unit filename="src/geo2/map_obj/wall_type1/monochromatic_wall_1.cpp" />
