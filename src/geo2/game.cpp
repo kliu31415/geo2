@@ -432,8 +432,8 @@ void Game::run3(double tick_len)
     }
 }
 void Game::advance_one_tick(double tick_len,
-                            int render_w, int render_h,
-                            float mouse_x, float mouse_y,
+                            MapCoord cursor_pos,
+                            decltype(kx::gfx::get_mouse_state()) mouse_state,
                             const uint8_t *keyboard_state)
 {
     //move forward a tick
@@ -461,9 +461,6 @@ void Game::advance_one_tick(double tick_len,
     map_obj::PlayerRunSpecialArgs player_args;
     player_args.tick_len = tick_len;
 
-    player_args.mouse_x = mouse_x;
-    player_args.mouse_y = mouse_y;
-
     auto keystate = keyboard_state;
     player_args.left_pressed = keystate[SDL_SCANCODE_A];
     player_args.right_pressed = keystate[SDL_SCANCODE_D];
@@ -472,17 +469,12 @@ void Game::advance_one_tick(double tick_len,
 
     weapon::WeaponRunArgs weapon_args;
     weapon_args.set_map_objs_to_add(&map_objs_to_add);
-    float tile_len = std::sqrt(render_w * MENU_OFFSET * render_h / TILES_PER_SCREEN);
-    auto offset = MapVec(mouse_x - 0.5f*MENU_OFFSET*render_w,
-                         mouse_y - 0.5f*render_h)
-                         / tile_len;
     auto player_pos = player->get_position();
     weapon_args.set_owner_info(weapon::WeaponOwnerInfo(player_pos, map_obj::Player_Type1::WEAPON_OFFSET));
-    auto cursor_pos = player_pos + offset;
     weapon_args.set_cursor_pos(cursor_pos);
     weapon_args.tick_len = tick_len;
     weapon_args.cur_level_time = cur_level_time;
-    weapon_args.set_mouse_state(kx::gfx::get_mouse_state());
+    weapon_args.set_mouse_state(mouse_state);
     weapon_args.set_angle(std::atan2(cursor_pos.y - player_pos.y, cursor_pos.x - player_pos.x));
     weapon_args.set_rng(&rngs[0]);
     player_args.weapon_run_args = weapon_args;
@@ -528,7 +520,9 @@ void Game::advance_one_tick(double tick_len,
     process_added_map_objs();
 }
 std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
-                                               int render_w, int render_h)
+                                               int render_w, int render_h,
+                                               int map_render_w,
+                                               float tile_len)
 {
     using namespace kx::gfx;
 
@@ -539,7 +533,6 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
     }
     float w = render_w;
     float h = render_h;
-    int map_render_w = w * MENU_OFFSET;
     int map_render_h = h;
 
     auto map_texture = gfx->render_func_map_texture.get(rdr,
@@ -558,8 +551,6 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
     map_obj::MapObjRenderArgs render_args;
     render_args.set_renderer(kwin_r->rdr());
     render_args.set_shaders(&gfx->render_op_list->shaders);
-
-    float tile_len = std::sqrt(map_render_w * map_render_h / TILES_PER_SCREEN);
 
     kx::gfx::Rect camera;
     camera.w = map_render_w / tile_len;
@@ -582,6 +573,8 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
     gfx->render_op_list->render(*this, kwin_r, map_render_w, map_render_h);
     gfx->render_op_list->steal_op_groups_into(&gfx->op_groups);
     gfx->op_groups.clear();
+
+
 
     //if we have a multisample texture, resolve it into a 1-sample texture
     if(map_texture->is_multisample()) {
@@ -649,13 +642,20 @@ std::shared_ptr<kx::gfx::Texture> Game::run(kx::gfx::KWindowRunning *kwin_r,
         prev_mouse_y = mouse_y;
     }
 
+    float tile_len = std::sqrt(render_w * MENU_OFFSET * render_h / TILES_PER_SCREEN);
+
     for(int i=0; i<TICKS_PER_FRAME; i++) {
         //~1300us on Test2(40, 40)
         float simulated_mouse_x = lerp(prev_mouse_x, mouse_x, (i+1)/((double)TICKS_PER_FRAME));
         float simulated_mouse_y = lerp(prev_mouse_y, mouse_y, (i+1)/((double)TICKS_PER_FRAME));
+
+        auto offset = MapVec(simulated_mouse_x - 0.5f*MENU_OFFSET*render_w,
+                             simulated_mouse_y - 0.5f*render_h)
+                             / tile_len;
+
         advance_one_tick(1.0 / 1440.0,
-                         render_w, render_h,
-                         simulated_mouse_x, simulated_mouse_y,
+                         player->get_position() + offset,
+                         kx::gfx::get_mouse_state(),
                          kx::gfx::get_keyboard_state());
     }
 
@@ -663,7 +663,7 @@ std::shared_ptr<kx::gfx::Texture> Game::run(kx::gfx::KWindowRunning *kwin_r,
     prev_mouse_y = mouse_y;
 
     //a few hundred ms (integrated GPU, 1920x1080, Test3)
-    auto ret = render(kwin_r, render_w, render_h);
+    auto ret = render(kwin_r, render_w, render_h, render_w*MENU_OFFSET, tile_len);
     return ret;
 }
 }

@@ -66,12 +66,14 @@ class Game final
     void run3(double tick_len);
     void run_collision_engine();
     void advance_one_tick(double tick_len,
-                          int render_w, int render_h,
-                          float mouse_x, float mouse_y,
+                          MapCoord cursor_pos,
+                          decltype(kx::gfx::get_mouse_state()) mouse_state,
                           const uint8_t *keyboard_state);
 
     std::shared_ptr<kx::gfx::Texture> render(kx::gfx::KWindowRunning *kwin_r,
-                                             int render_w, int render_h);
+                                             int render_w, int render_h,
+                                             int map_render_w,
+                                             float tile_len);
 public:
     Game();
     ~Game();

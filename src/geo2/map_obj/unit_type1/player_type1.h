@@ -9,9 +9,6 @@ struct PlayerRunSpecialArgs final
 {
     double tick_len;
 
-    float mouse_x;
-    float mouse_y;
-
     bool left_pressed;
     bool right_pressed;
     bool up_pressed;
