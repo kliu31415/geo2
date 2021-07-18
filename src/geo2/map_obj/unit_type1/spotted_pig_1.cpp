@@ -100,7 +100,7 @@ void Spotted_Pig_1::run3_mt([[maybe_unused]] const MapObjRun3Args &args)
     }
 }
 
-void Spotted_Pig_1::add_render_objs(const MapObjRenderArgs &args)
+void Spotted_Pig_1::add_render_ops(const MapObjRenderArgs &args)
 {
     if(op_group == nullptr) {
         op_group = std::make_shared<RenderOpGroup>(args.get_NPC_render_priority());

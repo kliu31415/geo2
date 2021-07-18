@@ -211,7 +211,7 @@ void Player_Type1::run3_mt([[maybe_unused]] const MapObjRun3Args &args)
 using kx::gfx::LinearColor;
 const LinearColor DEFAULT_INSIDE_COLOR(0.2f, 0.3f, 0.6f, 0.9f);
 const LinearColor DEFAULT_OUTSIDE_COLOR(0.05f, 0.05f, 0.05f, 0.9f);
-void Player_Type1::add_render_objs(const MapObjRenderArgs &args)
+void Player_Type1::add_render_ops(const MapObjRenderArgs &args)
 {
     if(op1 == nullptr) {
         op_group = std::make_shared<RenderOpGroup>(args.get_player_render_priority());

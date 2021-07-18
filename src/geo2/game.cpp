@@ -572,7 +572,7 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
     render_args.set_op_groups_vec(&gfx->op_groups);
 
     for(size_t i=0; i<map_objs.size(); i++) {
-        map_objs[i]->add_render_objs(render_args);
+        map_objs[i]->add_render_ops(render_args);
     }
 
     gfx->render_op_list->set_op_groups(std::move(gfx->op_groups));

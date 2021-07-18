@@ -35,7 +35,7 @@ public:
     void run1_mt(const MapObjRun1Args &args) override;
     void run3_mt(const MapObjRun3Args &args) override;
 
-    void add_render_objs(const MapObjRenderArgs &args) override;
+    void add_render_ops(const MapObjRenderArgs &args) override;
 
     double get_collision_damage() const override;
 };

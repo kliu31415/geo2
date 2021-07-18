@@ -193,19 +193,21 @@ void RenderOpText::add_iu_data(std::vector<float> *iu_data,
     k_expects(vertical_align == VerticalAlign::Top);
 
     double cur_x = x;
-    double cur_y = y + font_size * font->atlas->max_ascent_per_size;
+    double cur_y = y;
     double cur_w = 0;
+
+    float char_w = font->atlas->w_per_size;
+    float char_h = font->atlas->h_per_size;
+
     for(const auto &c: text) {
-        k_assert(c != '\0');
-        const auto &metrics_per_size = font->atlas->glyph_metrics_per_size[c];
-        std::remove_const_t<std::remove_reference_t<decltype(metrics_per_size)>> metrics;
-        metrics.w = font_size * metrics_per_size.w;
-        metrics.h = font_size * metrics_per_size.h;
-        metrics.min_x = font_size * metrics_per_size.min_x;
-        metrics.max_x = font_size * metrics_per_size.max_x;
-        metrics.min_y = font_size * metrics_per_size.min_y;
-        metrics.max_y = font_size * metrics_per_size.max_y;
-        metrics.advance = font_size * metrics_per_size.advance;
+        k_assert(c>=1 && c<=kx::gfx::ASCII_Atlas::MAX_ASCII_CHAR);
+        const auto &normalized_metrics = font->atlas->glyph_metrics[c];
+        std::remove_const_t<std::remove_reference_t<decltype(normalized_metrics)>> metrics;
+        metrics.min_x = font_size * char_w * normalized_metrics.min_x;
+        metrics.max_x = font_size * char_w * normalized_metrics.max_x;
+        metrics.min_y = font_size * char_h * normalized_metrics.min_y;
+        metrics.max_y = font_size * char_h * normalized_metrics.max_y;
+        metrics.advance = font_size * char_w * normalized_metrics.advance;
 
         //if the assert fails, then our width is too small for the font size;
         //we can't even fit one character in the alloted width!
@@ -215,23 +217,33 @@ void RenderOpText::add_iu_data(std::vector<float> *iu_data,
         if(next_w > w) {
             cur_w = 0;
             cur_x = x;
-            cur_y += font->atlas->font->get_recommended_line_skip(font->atlas->font_size);
+            cur_y += font->atlas->font->get_recommended_line_skip(font_size);
         }
 
+        //[x1, y1] is the bottom left
         auto x1 = rdr->x_to_ndc(cur_x + metrics.min_x);
         auto x2 = rdr->x_to_ndc(cur_x + metrics.max_x);
-        auto y1 = rdr->y_to_ndc(cur_y + metrics.min_y);
-        auto y2 = rdr->y_to_ndc(cur_y + metrics.max_y);
+        auto y1 = rdr->y_to_ndc(cur_y + metrics.max_y);
+        auto y2 = rdr->y_to_ndc(cur_y + metrics.min_y);
 
         iu_data->push_back(x1);
-        iu_data->push_back(y2);
+        iu_data->push_back(y1);
         iu_data->push_back(x2 - x1);
-        iu_data->push_back(y1 - y2);
+        iu_data->push_back(y2 - y1);
 
         iu_data->push_back(font_size);
         iu_data->push_back(int_bits_to_float(c));
-        iu_data->push_back(metrics.w / (double)font->atlas->max_w);
-        iu_data->push_back(metrics.h / (double)font->atlas->max_h);
+
+        std::array<uint32_t, 4> data;
+        constexpr double SCALE = 65535;
+        data[0] = SCALE * normalized_metrics.min_x;
+        data[1] = SCALE * (1 - normalized_metrics.max_y);
+        data[2] = SCALE * normalized_metrics.max_x;
+        data[3] = SCALE * (1 - normalized_metrics.min_y);
+        data[2] -= data[0];
+        data[3] -= data[1];
+        iu_data->push_back(uint_bits_to_float((data[1]<<16) | data[0]));
+        iu_data->push_back(uint_bits_to_float((data[3]<<16) | data[2]));
 
         iu_data->push_back(color.r);
         iu_data->push_back(color.g);

@@ -15,7 +15,7 @@ class TestTerrain1 final: public Floor_Type1
     nonstd::span<float> op_iu;
 public:
     TestTerrain1(MapCoord pos_);
-    void add_render_objs(const MapObjRenderArgs &info) override;
+    void add_render_ops(const MapObjRenderArgs &info) override;
 };
 
 }}

@@ -8,7 +8,7 @@ MonochromaticWall_1::MonochromaticWall_1(const MapRect &position_,
     Wall_Type1(position_),
     color(color_)
 {}
-void MonochromaticWall_1::add_render_objs(const MapObjRenderArgs &args)
+void MonochromaticWall_1::add_render_ops(const MapObjRenderArgs &args)
 {
     if(op == nullptr) {
         op = std::make_shared<RenderOpShader>(*args.shaders->monoc_wall_1);

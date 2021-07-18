@@ -16,7 +16,7 @@ class MonochromaticWall_1 final: public Wall_Type1
     nonstd::span<float> op_iu;
 public:
     MonochromaticWall_1(const MapRect &position_, kx::gfx::LinearColor color_);
-    void add_render_objs(const MapObjRenderArgs &args) override;
+    void add_render_ops(const MapObjRenderArgs &args) override;
 };
 
 }}

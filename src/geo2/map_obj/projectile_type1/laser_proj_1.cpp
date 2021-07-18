@@ -33,7 +33,7 @@ void LaserProj_1::init(const MapObjInitArgs &args)
      args.add_current_pos(Polygon::make_with_num_sides(3));
      args.add_desired_pos(Polygon::make_with_num_sides(3));
 }
-void LaserProj_1::add_render_objs(const MapObjRenderArgs &args)
+void LaserProj_1::add_render_ops(const MapObjRenderArgs &args)
 {
     if(op == nullptr) {
         op_group = std::make_shared<RenderOpGroup>(args.get_proj_render_priority());

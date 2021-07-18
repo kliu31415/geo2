@@ -42,7 +42,7 @@ public:
     virtual void init(const MapObjInitArgs &args);
     virtual void run1_mt(const MapObjRun1Args &args);
     virtual void run3_mt(const MapObjRun3Args &args);
-    virtual void add_render_objs(const MapObjRenderArgs &args);
+    virtual void add_render_ops(const MapObjRenderArgs &args);
 
     ///default return value = true
     virtual bool collision_could_matter(const MapObject &other) const;

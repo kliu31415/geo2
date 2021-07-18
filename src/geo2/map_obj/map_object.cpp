@@ -14,7 +14,7 @@ void MapObject::run1_mt([[maybe_unused]] const MapObjRun1Args &args)
 {}
 void MapObject::run3_mt([[maybe_unused]] const MapObjRun3Args &args)
 {}
-void MapObject::add_render_objs([[maybe_unused]] const MapObjRenderArgs &args)
+void MapObject::add_render_ops([[maybe_unused]] const MapObjRenderArgs &args)
 {}
 void MapObject::end_handle_collision_block([[maybe_unused]] const EndHandleCollisionBlockArgs &args)
 {}

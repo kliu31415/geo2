@@ -63,9 +63,16 @@ inline void set_to_full_target(std::array<float, 16> *full_target_, kx::gfx::Ren
     full_target[15] = rdr->y_nc_to_tex_coord(1.0, h);
 }
 
-inline float int_bits_to_float(int x)
+inline float int_bits_to_float(int32_t x)
 {
-    static_assert(sizeof(int) == sizeof(float));
+    static_assert(sizeof(int32_t) == sizeof(float));
+    float ret;
+    std::memcpy(&ret, &x, sizeof(ret));
+    return ret;
+}
+inline float uint_bits_to_float(uint32_t x)
+{
+    static_assert(sizeof(uint32_t) == sizeof(float));
     float ret;
     std::memcpy(&ret, &x, sizeof(ret));
     return ret;

@@ -14,7 +14,7 @@ TestTerrain1::TestTerrain1(MapCoord pos_):
 {
 
 }
-void TestTerrain1::add_render_objs(const MapObjRenderArgs &args)
+void TestTerrain1::add_render_ops(const MapObjRenderArgs &args)
 {
     using namespace kx::gfx;
 

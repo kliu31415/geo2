@@ -1141,58 +1141,49 @@ std::unique_ptr<ASCII_Atlas> Renderer::make_ascii_atlas(const Font *font, int fo
     auto atlas = std::make_unique<ASCII_Atlas>();
     atlas->font = font;
     atlas->font_size = font_size;
+
+    std::array<unique_ptr_sdl<SDL_Surface>, ASCII_Atlas::MAX_ASCII_CHAR+1> char_surfaces;
+
     int max_w = 0;
     int max_h = 0;
-    std::array<unique_ptr_sdl<SDL_Surface>, ASCII_Atlas::MAX_ASCII_CHAR+1> char_surfaces;
 
     //start at 1, not 0, because (char)0 is the string terminator, which causes TTF_RenderText
     //to complain about text of zero width
     for(int i=1; i<=ASCII_Atlas::MAX_ASCII_CHAR; i++) {
-        std::string s;
-        s += (char)i;
-
-        int w;
-        int h;
-        TTF_SizeText(font->font_of_size[font_size].get(), s.c_str(), &w, &h);
-        atlas->glyph_metrics[i].w = w;
-        atlas->glyph_metrics[i].h = h;
-        atlas->glyph_metrics_per_size[i].w = w / (double)font_size;
-        atlas->glyph_metrics_per_size[i].h = h / (double)font_size;
-
-        int min_x;
-        int max_x;
-        int min_y;
-        int max_y;
-        int advance;
-        TTF_GlyphMetrics(font->font_of_size[font_size].get(), i, &min_x, &max_x, &min_y, &max_y, &advance);
-        atlas->glyph_metrics[i].min_x = min_x;
-        atlas->glyph_metrics[i].max_x = max_x;
-        atlas->glyph_metrics[i].min_y = min_y;
-        atlas->glyph_metrics[i].max_y = max_y;
-        atlas->glyph_metrics[i].advance = advance;
-
-        atlas->glyph_metrics_per_size[i].min_x = min_x / (double)font_size;
-        atlas->glyph_metrics_per_size[i].max_x = max_x / (double)font_size;
-        atlas->glyph_metrics_per_size[i].min_y = min_y / (double)font_size;
-        atlas->glyph_metrics_per_size[i].max_y = max_y / (double)font_size;
-        atlas->glyph_metrics_per_size[i].advance = advance / (double)font_size;
-
-        atlas->max_ascent_per_size = TTF_FontAscent(font->font_of_size[font_size].get()) / (double)font_size;
-        atlas->max_descent_per_size = TTF_FontDescent(font->font_of_size[font_size].get()) / (double)font_size;
-
-        char_surfaces[i] = TTF_RenderText_Blended(font->font_of_size[font_size].get(),
-                                                  s.c_str(),
-                                                  SDL_Color{0, 0, 0, 255});
+        //-I assume TTF_RenderGlyph fills in the alpha bits of a surface with
+        //-nonzero alpha is where the glyph appears
+        char_surfaces[i] = TTF_RenderGlyph_Blended(font->font_of_size[font_size].get(),
+                                                   i,
+                                                   SDL_Color{0, 0, 0, 255});
         k_assert(char_surfaces[i] != nullptr);
+
         max_w = std::max(max_w, char_surfaces[i]->w);
         max_h = std::max(max_h, char_surfaces[i]->h);
     }
+    atlas->w_per_size = max_w / (double)font_size;
+    atlas->h_per_size = max_h / (double)font_size;
 
     auto bytes_per_slice = max_w * max_h;
     std::vector<uint8_t> pixels((ASCII_Atlas::MAX_ASCII_CHAR+1) * bytes_per_slice, 0);
 
+    //The x range is normalized to [0, max_x - min_x] and y is normalized to [0, max_y - min_y]
+    //GlyphMetrics has inaccurate values so I calculate them by scanning through the pixels myself.
+    //e.g. if the global min_x=-10 and global max_x = 20, then x=7 is normalized to 17/30.
+    //advance is normalized to max_w
     for(int i=1; i<=ASCII_Atlas::MAX_ASCII_CHAR; i++) {
         auto s = char_surfaces[i].get();
+
+        //all surfaces should be the same size (smaller glyphs will just take up less of their surface)
+        k_expects(s->w == max_w);
+        k_expects(s->h == max_h);
+
+        int advance;
+        TTF_GlyphMetrics(font->font_of_size[font_size].get(), i, nullptr, nullptr, nullptr, nullptr, &advance);
+
+        int min_x = std::numeric_limits<int>::max();
+        int max_x = 0;
+        int min_y = std::numeric_limits<int>::max();
+        int max_y = 0;
 
         auto bpp = s->format->BytesPerPixel;
         //we use uint32_t to access pixels so make sure they can fit in a uint32_t
@@ -1206,9 +1197,28 @@ std::unique_ptr<ASCII_Atlas> Renderer::make_ascii_atlas(const Font *font, int fo
         for(int r=0; r < s->h; r++) {
             for(int c=0; c < s->w; c++) {
                 auto pixel = *(uint32_t*)((uint8_t*)s->pixels + r * s->pitch + c * bpp + 4 - bpp);
-                pixels[i*bytes_per_slice + (max_h-r-1)*max_w + c] = (s->format->Amask & pixel) >> Ashift;
+                uint8_t alpha = (s->format->Amask & pixel) >> Ashift;
+                if(alpha != 0) {
+                    min_x = std::min(min_x, c);
+                    max_x = std::max(max_x, c);
+                    min_y = std::min(min_y, r);
+                    max_y = std::max(max_y, r);
+                }
+                pixels[i*bytes_per_slice + (max_h-r-1)*max_w + c] = alpha;
             }
         }
+
+        //empty glyph
+        if(min_x == std::numeric_limits<int>::max()) {
+            min_x = 0;
+            min_y = 0;
+        }
+
+        atlas->glyph_metrics[i].min_x = min_x / (double)max_w;
+        atlas->glyph_metrics[i].max_x = (max_x + 1) / (double)max_w;
+        atlas->glyph_metrics[i].min_y = min_y / (double)max_h;
+        atlas->glyph_metrics[i].max_y = (max_y + 1) / (double)max_h;
+        atlas->glyph_metrics[i].advance = advance / max_w;
 
         SDL_UnlockSurface(s);
     }
@@ -1222,8 +1232,6 @@ std::unique_ptr<ASCII_Atlas> Renderer::make_ascii_atlas(const Font *font, int fo
                                            pixels.data());
     atlas->texture->make_mipmaps();
     atlas->texture->set_min_filter(Texture::FilterAlgo::LinearMipmapLinear);
-    atlas->max_w = max_w;
-    atlas->max_h = max_h;
     return atlas;
 }
 std::unique_ptr<MonofontAtlas> Renderer::create_monofont_atlas([[maybe_unused]] const Font &font,

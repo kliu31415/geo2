@@ -7,7 +7,7 @@ layout(std140) uniform characters
     //requires 4 vertices in a triangle strip
     vec4 data[341*3];
     //[0] = (x, y, w, h)
-    //[1] = (font size, character (as int), character w %, character h %)
+    //[1] = (font size, character (as int), (x1%: u16, y1%: u16), (x2%: u16, y2%: u16))
     //[2] = color
 };
 in vec2 tex_coord;

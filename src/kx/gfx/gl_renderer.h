@@ -243,8 +243,6 @@ public:
 
 struct GlyphMetrics
 {
-    float w;
-    float h;
     float min_x;
     float max_x;
     float min_y;
@@ -258,13 +256,10 @@ struct ASCII_Atlas
 
     const Font *font;
     int font_size;
-    int max_w;
-    int max_h;
-    float max_ascent_per_size;
-    float max_descent_per_size;
+    float w_per_size;
+    float h_per_size;
     std::unique_ptr<Texture> texture;
     std::array<GlyphMetrics, MAX_ASCII_CHAR+1> glyph_metrics;
-    std::array<GlyphMetrics, MAX_ASCII_CHAR+1> glyph_metrics_per_size;
 };
 
 constexpr int NUM_SAMPLES_DEFAULT = 4;
