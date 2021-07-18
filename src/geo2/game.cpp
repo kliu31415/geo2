@@ -88,6 +88,22 @@ struct _gfx
         cur_renderer->draw_texture_ms(*tex, kx::gfx::Rect(0, 0, tex->get_w(), tex->get_h()), {});
         return no_ms_tex;
     }
+    kx::FixedSizeArray<float> get_normal_pdf_sw(size_t num_iter, double bloom_radius_sd)
+    {
+        kx::FixedSizeArray<float> sw(num_iter*2 + 2);
+        sw[0] = kx::stats::normal_cdf(0.5, 0.0, bloom_radius_sd) -
+                kx::stats::normal_cdf(-0.5, 0.0, bloom_radius_sd);
+        sw[1] = 0; //doesn't actually need to be set
+        for(size_t i=1; i<=num_iter; i++) {
+            float w1 = kx::stats::normal_cdf(i*2 - 0.5, 0.0, bloom_radius_sd) -
+                       kx::stats::normal_cdf(i*2 - 1.5, 0.0, bloom_radius_sd);
+            float w2 = kx::stats::normal_cdf(i*2 + 0.5, 0.0, bloom_radius_sd) -
+                       kx::stats::normal_cdf(i*2 - 0.5, 0.0, bloom_radius_sd);
+            sw[2*i] = w1 + w2;
+            sw[2*i + 1] = i*2 - w1 / (w1 + w2);
+        }
+        return sw;
+    }
     void apply_bloom(kx::gfx::Texture *texture, double bloom_radius_sd)
     {
         using namespace kx::gfx;
@@ -137,18 +153,7 @@ struct _gfx
         constexpr int MAX_ITER = 49; //IMPORTANT: must be half - 1 of sw's size in the frag shader
         constexpr double RADIUS_SDs = 3.5;
         int num_iter = std::min(MAX_ITER, (int)std::ceil(bloom_radius_sd * (RADIUS_SDs / 2.0)));
-        kx::FixedSizeArray<float> sw(num_iter*2 + 2);
-        sw[0] = kx::stats::normal_cdf(0.5, 0.0, bloom_radius_sd) -
-                kx::stats::normal_cdf(-0.5, 0.0, bloom_radius_sd);
-        sw[1] = 0; //doesn't actually need to be set
-        for(int i=1; i<=num_iter; i++) {
-            float w1 = kx::stats::normal_cdf(i*2 - 0.5, 0.0, bloom_radius_sd) -
-                       kx::stats::normal_cdf(i*2 - 1.5, 0.0, bloom_radius_sd);
-            float w2 = kx::stats::normal_cdf(i*2 + 0.5, 0.0, bloom_radius_sd) -
-                       kx::stats::normal_cdf(i*2 - 0.5, 0.0, bloom_radius_sd);
-            sw[2*i] = w1 + w2;
-            sw[2*i + 1] = i*2 - w1 / (w1 + w2);
-        }
+        auto sw = get_normal_pdf_sw(num_iter, bloom_radius_sd);
         bloom2->set_uniform1i(bloom2->get_uniform_loc("texture_in"), 0);
         bloom2->set_uniform1fv(bloom2->get_uniform_loc("sw"), {sw.begin(), sw.end()});
         bloom2->set_uniform1i(bloom2->get_uniform_loc("num_iter"), num_iter);
@@ -550,7 +555,8 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
     //render the map and things on it
     map_obj::MapObjRenderArgs render_args;
     render_args.set_renderer(kwin_r->rdr());
-    render_args.set_shaders(&gfx->render_op_list->shaders);
+    render_args.shaders = &gfx->render_op_list->shaders;
+    render_args.fonts = &gfx->render_op_list->fonts;
 
     kx::gfx::Rect camera;
     camera.w = map_render_w / tile_len;
@@ -559,7 +565,7 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
     camera.x = player_pos.x - 0.5f * camera.w;
     camera.y = player_pos.y - 0.5f * camera.h;
     render_args.set_camera(camera);
-    render_args.set_pixels_per_tile_len(tile_len);
+    render_args.pixels_per_tile_len = tile_len;
     render_args.cur_level_time = cur_level_time;
     render_args.set_rng(&rngs[0]);
 

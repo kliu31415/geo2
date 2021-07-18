@@ -88,7 +88,7 @@ struct ColorMod
 class Texture
 {
 public:
-    enum class Format {RGBA8888, RGB888, RGBA16F, RGB16F};
+    enum class Format {RGBA8888, RGB888, RGBA16F, RGB16F, R8};
 private:
     friend class Renderer;
 
@@ -103,10 +103,10 @@ private:
     Format format;
     ColorMod color_mod;
     float alpha_mod;
-    GLenum binding_point; ///GL_TEXTURE_2D or GL_TEXTURE_2D_MULTISAMPLE
+    GLenum binding_point; ///GL_TEXTURE_2D or GL_TEXTURE_2D_MULTISAMPLE (or the array equivalents)
     int samples;
 
-    Texture(int w_, int h_, Format format_, bool is_srgb__, int samples_);
+    Texture(int dim, int slices, int w_, int h_, Format format_, bool is_srgb__, int samples_, void *pixels);
     Texture(SDL_Surface *s, bool is_srgb__);
 public:
     Texture(const Texture&) = delete;
@@ -123,7 +123,16 @@ public:
 
     void make_targetable();
 
-    enum class FilterAlgo {Nearest = GL_NEAREST, Linear = GL_LINEAR};
+    void make_mipmaps();
+
+    enum class FilterAlgo {
+        Nearest = GL_NEAREST,
+        Linear = GL_LINEAR,
+        NearestMipmapNearest = GL_NEAREST_MIPMAP_NEAREST,
+        NearestMipmapLinear = GL_NEAREST_MIPMAP_LINEAR,
+        LinearMipmapNearest = GL_LINEAR_MIPMAP_NEAREST,
+        LinearMipmapLinear = GL_LINEAR_MIPMAP_LINEAR
+    };
 
     void set_min_filter(FilterAlgo algo);
     void set_mag_filter(FilterAlgo algo);
@@ -200,9 +209,9 @@ template<_BufferType T> class Buffer final
     Buffer(Renderer *owner_);
 public:
     void ensure_active();
-    void buffer_data(void *data, GLuint n);
-    void buffer_sub_data(GLintptr offset, void *data, GLuint n);
-    void *map_range(GLintptr offset, GLsizeiptr len, BufferRangeAccess access);
+    void buffer_data(const void *data, GLuint n);
+    void buffer_sub_data(GLintptr offset, const void *data, GLuint n);
+    [[nodiscard]] void *map_range(GLintptr offset, GLsizeiptr len, BufferRangeAccess access);
     void unmap();
     void invalidate();
 };
@@ -230,6 +239,32 @@ public:
     void add_EBO(std::shared_ptr<EBO> ebo);
     void vertex_attrib_pointer_f(GLuint pos, GLuint size, GLsizei stride, uintptr_t offset);
     void enable_vertex_attrib_array(GLuint pos);
+};
+
+struct GlyphMetrics
+{
+    float w;
+    float h;
+    float min_x;
+    float max_x;
+    float min_y;
+    float max_y;
+    float advance;
+};
+
+struct ASCII_Atlas
+{
+    static constexpr int MAX_ASCII_CHAR = 127;
+
+    const Font *font;
+    int font_size;
+    int max_w;
+    int max_h;
+    float max_ascent_per_size;
+    float max_descent_per_size;
+    std::unique_ptr<Texture> texture;
+    std::array<GlyphMetrics, MAX_ASCII_CHAR+1> glyph_metrics;
+    std::array<GlyphMetrics, MAX_ASCII_CHAR+1> glyph_metrics_per_size;
 };
 
 constexpr int NUM_SAMPLES_DEFAULT = 4;
@@ -275,6 +310,8 @@ class Renderer final
     std::shared_ptr<const Font> current_font;
 
     //actually ints, but float for speed
+    float renderer_w;
+    float renderer_h;
     float renderer_w_div2;
     float renderer_h_div2;
 
@@ -386,6 +423,14 @@ public:
     {
         return y_to_gl_coord<CoordSys::NC>(y);
     }
+    inline float x_nc_to_dc(float x) const
+    {
+        return x * renderer_w;
+    }
+    inline float y_nc_to_dc(float y) const
+    {
+        return y * renderer_h;
+    }
 
     inline float x_to_tex_coord(float x, [[maybe_unused]] int w) const
     {
@@ -440,34 +485,54 @@ public:
     void set_font(std::shared_ptr<const Font> font);
     const std::shared_ptr<const Font> &get_font() const;
 
-    std::shared_ptr<Texture> get_text_texture(const std::string &text, int sz, SRGB_Color c = Color::BLACK);
+    std::shared_ptr<Texture> get_text_texture(const std::string &text,
+                                              int sz,
+                                              SRGB_Color c = Color::BLACK);
     ///no const reference to the string because we mutate it
-    std::shared_ptr<Texture> get_text_texture_wrapped(std::string text, int sz, int wrap_length,
+    std::shared_ptr<Texture> get_text_texture_wrapped(std::string text,
+                                                      int sz,
+                                                      int wrap_length,
                                                       SRGB_Color c = Color::BLACK);
 
     void draw_text(std::string text, float x, float y, int sz, SRGB_Color c = Color::BLACK);
     void draw_text_wrapped(std::string text, float x, float y, int sz, int wrap_length,
                            SRGB_Color c = Color::BLACK);
 
-    std::unique_ptr<MonofontAtlas> create_monofont_atlas(const Font &font, int font_size, SRGB_Color color);
+    std::unique_ptr<ASCII_Atlas> make_ascii_atlas(const Font *font,
+                                                  int font_size);
+    std::unique_ptr<MonofontAtlas> create_monofont_atlas(const Font &font,
+                                                         int font_size,
+                                                         SRGB_Color color);
 
     void set_target(Texture *target);
     Texture *get_target() const;
     bool is_target_srgb() const;
 
     void set_viewport(const std::optional<IRect> &r);
+    int get_render_w() const;
+    int get_render_h() const;
+
+    std::unique_ptr<Texture> make_texture_2d_array(int w,
+                                                   int h,
+                                                   int slices,
+                                                   Texture::Format format = Texture::Format::RGBA8888,
+                                                   bool is_srgb = true,
+                                                   int samples = 1,
+                                                   void *pixels = nullptr) const;
 
     std::unique_ptr<Texture> make_texture_target(int w,
                                                  int h,
                                                  Texture::Format format = Texture::Format::RGBA8888,
                                                  bool is_srgb = true,
-                                                 int sample = 1) const;
+                                                 int samples = 1,
+                                                 void *pixels = nullptr) const;
     [[deprecated]]
     std::unique_ptr<Texture> create_texture_target(int w,
                                                    int h,
                                                    Texture::Format format = Texture::Format::RGBA8888,
                                                    bool is_srgb = true,
-                                                   int samples = 1) const;
+                                                   int samples = 1,
+                                                   void *pixels = nullptr) const;
 
     ///use these only for non-multisampled textures
     void draw_texture(const Texture &texture, const Rect &dst, const std::optional<Rect> &src_ = {});

@@ -26,6 +26,14 @@ public:
     };
     Shaders shaders;
 
+    struct Fonts
+    {
+        std::unique_ptr<Font> default_;
+
+        void init(kx::gfx::Renderer *rdr, kx::Passkey<GameRenderOpList>);
+    };
+    Fonts fonts;
+
     GameRenderOpList(kx::gfx::Renderer *renderer);
     void render(const Game &game, kx::gfx::KWindowRunning *kwin_r, int render_w, int render_h);
 };

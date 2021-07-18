@@ -37,7 +37,7 @@ void LaserProj_1::add_render_objs(const MapObjRenderArgs &args)
 {
     if(op == nullptr) {
         op_group = std::make_shared<RenderOpGroup>(args.get_proj_render_priority());
-        op = std::make_shared<RenderOpShader>(*args.get_shaders()->laser_proj_1);
+        op = std::make_shared<RenderOpShader>(*args.shaders->laser_proj_1);
         op_group->add_op(op);
 
         auto iu_map = op->map_instance_uniform(0);

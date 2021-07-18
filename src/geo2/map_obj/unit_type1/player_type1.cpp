@@ -215,8 +215,8 @@ void Player_Type1::add_render_objs(const MapObjRenderArgs &args)
 {
     if(op1 == nullptr) {
         op_group = std::make_shared<RenderOpGroup>(args.get_player_render_priority());
-        op1 = std::make_shared<RenderOpShader>(*args.get_shaders()->outlined_tri);
-        op2 = std::make_shared<RenderOpShader>(*args.get_shaders()->outlined_tri);
+        op1 = std::make_shared<RenderOpShader>(*args.shaders->outlined_tri);
+        op2 = std::make_shared<RenderOpShader>(*args.shaders->outlined_tri);
         auto iu_map = op1->map_instance_uniform(0);
         op_iu1 = {(float*)iu_map.begin(), (float*)iu_map.end()};
         iu_map = op2->map_instance_uniform(0);

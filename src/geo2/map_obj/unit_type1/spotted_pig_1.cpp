@@ -105,7 +105,7 @@ void Spotted_Pig_1::add_render_objs(const MapObjRenderArgs &args)
     if(op_group == nullptr) {
         op_group = std::make_shared<RenderOpGroup>(args.get_NPC_render_priority());
         for(int i=0; i<5; i++) {
-            ops[i] = std::make_shared<RenderOpShader>(*args.get_shaders()->cow_1);
+            ops[i] = std::make_shared<RenderOpShader>(*args.shaders->cow_1);
             op_group->add_op(ops[i]);
             auto iu_map = ops[i]->map_instance_uniform(0);
             op_ius[i] = {(float*)iu_map.begin(), (float*)iu_map.end()};

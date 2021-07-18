@@ -105,7 +105,7 @@ void Pig_1::add_render_objs(const MapObjRenderArgs &args)
     if(op_group == nullptr) {
         op_group = std::make_shared<RenderOpGroup>(args.get_NPC_render_priority());
         for(int i=0; i<5; i++) {
-            ops[i] = std::make_shared<RenderOpShader>(*args.get_shaders()->pig_1);
+            ops[i] = std::make_shared<RenderOpShader>(*args.shaders->pig_1);
             op_group->add_op(ops[i]);
             auto iu_map = ops[i]->map_instance_uniform(0);
             op_ius[i] = {(float*)iu_map.begin(), (float*)iu_map.end()};
@@ -144,6 +144,16 @@ void Pig_1::add_render_objs(const MapObjRenderArgs &args)
             op_ius[i][6] = -1.0f;
             op_ius[i][7] = -1.0f;
         }
+
+        auto text = std::make_shared<RenderOpText>();
+
+        text->set_text("The quick brown fox jumps over the lazy dog");
+        text->set_x(500);
+        text->set_y(500);
+        text->set_font_size(64);
+        text->set_font(args.fonts->default_.get());
+        text->set_color(kx::gfx::LinearColor(0, 0, 8, 1));
+        op_group->add_op(text);
     }
 
     auto rot_mat = Matrix2::make_rotation_matrix(movement_algo.get_current_angle());

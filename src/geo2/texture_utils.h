@@ -3,6 +3,7 @@
 #include "kx/gfx/renderer.h"
 
 #include <memory>
+#include <cstring>
 
 namespace geo2 {
 
@@ -60,6 +61,14 @@ inline void set_to_full_target(std::array<float, 16> *full_target_, kx::gfx::Ren
     full_target[13] = rdr->y_nc_to_ndc(1.0);
     full_target[14] = rdr->x_nc_to_tex_coord(1.0, w);
     full_target[15] = rdr->y_nc_to_tex_coord(1.0, h);
+}
+
+inline float int_bits_to_float(int x)
+{
+    static_assert(sizeof(int) == sizeof(float));
+    float ret;
+    std::memcpy(&ret, &x, sizeof(ret));
+    return ret;
 }
 
 }

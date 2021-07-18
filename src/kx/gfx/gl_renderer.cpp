@@ -134,7 +134,14 @@ ColorMod::ColorMod(float r_, float g_, float b_):
     b(b_)
 {}
 
-Texture::Texture(int w_, int h_, Texture::Format format_, bool is_srgb__, int samples_):
+Texture::Texture(int dim,
+                 int slices,
+                 int w_,
+                 int h_,
+                 Texture::Format format_,
+                 bool is_srgb__,
+                 int samples_,
+                 void *pixels):
     framebuffer(0),
     is_srgb_(is_srgb__),
     has_mipmaps(false),
@@ -145,44 +152,81 @@ Texture::Texture(int w_, int h_, Texture::Format format_, bool is_srgb__, int sa
     alpha_mod(1.0),
     samples(samples_)
 {
-    if(samples == 1)
-        binding_point = GL_TEXTURE_2D;
-    else
-        binding_point = GL_TEXTURE_2D_MULTISAMPLE;
+    k_expects(dim == 2); //only 2d textures are support right now
+
+    if(slices == 1) { //1 slice = standard non-array texture
+        if(samples == 1)
+            binding_point = GL_TEXTURE_2D;
+        else
+            binding_point = GL_TEXTURE_2D_MULTISAMPLE;
+    } else {
+        if(samples == 1)
+            binding_point = GL_TEXTURE_2D_ARRAY;
+        else {
+            binding_point = GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
+        }
+    }
 
     glGenTextures(1, &texture.id);
     glBindTexture(binding_point, texture.id);
 
-    if(binding_point == GL_TEXTURE_2D) {
+    //this doesn't apply to multisample textures
+    if(samples == 1) {
         glTexParameteri(binding_point, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(binding_point, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(binding_point, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
         glTexParameteri(binding_point, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     }
 
+    GLenum arg1;
+    GLenum arg2;
+    GLenum type;
+
     switch(format) {
+    case Texture::Format::R8:
+        arg1 = GL_R8;
+        arg2 = GL_RED;
+        type = GL_UNSIGNED_BYTE;
+        break;
     case Texture::Format::RGBA8888:
-        if(binding_point == GL_TEXTURE_2D)
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-        else
-            glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGBA, w, h, false);
+        arg1 = GL_RGBA8;
+        arg2 = GL_RGBA;
+        type = GL_UNSIGNED_BYTE;
+        break;
+    case Texture::Format::RGB888:
+        arg1 = GL_RGB8;
+        arg2 = GL_RGB;
+        type = GL_UNSIGNED_BYTE;
         break;
     case Texture::Format::RGBA16F:
-        if(binding_point == GL_TEXTURE_2D)
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, w, h, 0, GL_RGBA, GL_FLOAT, nullptr);
-        else
-            glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGBA16F, w, h, false);
+        arg1 = GL_RGBA16F;
+        arg2 = GL_RGBA;
+        type = GL_FLOAT;
         break;
     case Texture::Format::RGB16F:
-        if(binding_point == GL_TEXTURE_2D)
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, w, h, 0, GL_RGB, GL_FLOAT, nullptr);
-        else
-            glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGB16F, w, h, false);
+        arg1 = GL_RGB16F;
+        arg2 = GL_RGB;
+        type = GL_FLOAT;
         break;
     default:
-        log_error("bad texture format given to ctor");
+        arg1 = GL_RGBA8;
+        arg2 = GL_RGBA;
+        type = GL_UNSIGNED_BYTE;
+        log_error("bad texture format given to ctor: defaulting to RGBA8");
         break;
     }
+    if(binding_point == GL_TEXTURE_2D) {
+        glTexImage2D(GL_TEXTURE_2D, 0, arg1, w, h, 0, arg2, type, pixels);
+    } else if(binding_point == GL_TEXTURE_2D_MULTISAMPLE) {
+        k_expects(pixels == nullptr);
+        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, arg1, w, h, false);
+    } else if(binding_point == GL_TEXTURE_2D_ARRAY) {
+        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, arg1, w, h, slices, 0, arg2, type, pixels);
+    } else if(binding_point == GL_TEXTURE_2D_MULTISAMPLE_ARRAY) {
+        k_expects(pixels == nullptr);
+        glTexImage3DMultisample(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, samples, arg1, w, h, slices, false);
+    } else
+        k_assert(false);
 }
 Texture::Texture(SDL_Surface *s, bool is_srgb__):
     framebuffer(0),
@@ -235,10 +279,10 @@ Texture::Texture(SDL_Surface *s, bool is_srgb__):
     SDL_UnlockSurface(s);
 
     if(bpp == 4) {
-        glTexImage2D(binding_point, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+        glTexImage2D(binding_point, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
         format = Texture::Format::RGBA8888;
     } else {
-        glTexImage2D(binding_point, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
+        glTexImage2D(binding_point, 0, GL_RGB8, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
         format = Texture::Format::RGB888;
     }
 }
@@ -294,17 +338,19 @@ void Texture::make_targetable()
 
     glBindFramebuffer(GL_FRAMEBUFFER, fb);
 }
+void Texture::make_mipmaps()
+{
+    glGenerateTextureMipmap(texture.id);
+}
 void Texture::set_min_filter(Texture::FilterAlgo algo)
 {
     k_expects(!is_multisample());
-    glBindTexture(binding_point, texture.id);
-    glTexParameteri(binding_point, GL_TEXTURE_MIN_FILTER, (GLenum)algo);
+    glTextureParameteri(texture.id, GL_TEXTURE_MIN_FILTER, (GLenum)algo);
 }
 void Texture::set_mag_filter(Texture::FilterAlgo algo)
 {
     k_expects(!is_multisample());
-    glBindTexture(binding_point, texture.id);
-    glTexParameteri(binding_point, GL_TEXTURE_MAG_FILTER, (GLenum)algo);
+    glTextureParameteri(texture.id, GL_TEXTURE_MAG_FILTER, (GLenum)algo);
 }
 
 Shader::Shader():
@@ -438,29 +484,13 @@ template<_BufferType T> void Buffer<T>::ensure_active()
         k_assert(false, "bad _BufferType in ensure_active()");
     #endif
 }
-template<_BufferType T> void Buffer<T>::buffer_data(void *data, GLuint n)
+template<_BufferType T> void Buffer<T>::buffer_data(const void *data, GLuint n)
 {
-    ensure_active();
-    if constexpr(T == _BufferType::VBO)
-        glBufferData(GL_ARRAY_BUFFER, n, data, GL_DYNAMIC_DRAW);
-    else if constexpr(T == _BufferType::EBO)
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, n, data, GL_DYNAMIC_DRAW);
-    else if constexpr(T == _BufferType::UBO)
-        glBufferData(GL_UNIFORM_BUFFER, n, data, GL_DYNAMIC_DRAW);
-    else
-        k_assert(false);
+    glNamedBufferData(buffer.id, n, data, GL_DYNAMIC_DRAW);
 }
-template<_BufferType T> void Buffer<T>::buffer_sub_data(GLintptr offset, void *data, GLuint n)
+template<_BufferType T> void Buffer<T>::buffer_sub_data(GLintptr offset, const void *data, GLuint n)
 {
-    ensure_active();
-    if constexpr(T == _BufferType::VBO)
-        glBufferSubData(GL_ARRAY_BUFFER, offset, n, data);
-    else if constexpr(T == _BufferType::EBO)
-        glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, offset, n, data);
-    else if constexpr(T == _BufferType::UBO)
-        glBufferSubData(GL_UNIFORM_BUFFER, offset, n, data);
-    else
-        k_assert(false);
+    glNamedBufferSubData(buffer.id, offset, n, data);
 }
 template<_BufferType T> void *Buffer<T>::map_range(GLintptr offset,
                                                    GLsizeiptr len,
@@ -737,6 +767,73 @@ void Renderer::_draw_texture(const Texture &texture, const Rect &dst, const std:
     draw_arrays(DrawMode::TriangleStrip, 0, 4);
     Shaders.texture_vbo->invalidate();
 }
+
+std::map<GLenum, std::string> debug_callback_map_source;
+std::map<GLenum, std::string> debug_callback_map_type;
+std::map<GLenum, std::string> debug_callback_map_severity;
+std::once_flag gl_debug_once_flag;
+void init_debug_callback_maps()
+{
+    debug_callback_map_source[GL_DEBUG_SOURCE_API] = "GL_DEBUG_SOURCE_API";
+    debug_callback_map_source[GL_DEBUG_SOURCE_WINDOW_SYSTEM] = "GL_DEBUG_SOURCE_WINDOW_SYSTEM";
+    debug_callback_map_source[GL_DEBUG_SOURCE_SHADER_COMPILER] = "GL_DEBUG_SOURCE_SHADER_COMPILER";
+    debug_callback_map_source[GL_DEBUG_SOURCE_THIRD_PARTY] = "GL_DEBUG_SOURCE_THIRD_PARTY";
+    debug_callback_map_source[GL_DEBUG_SOURCE_APPLICATION] = "GL_DEBUG_SOURCE_APPLICATION";
+    debug_callback_map_source[GL_DEBUG_SOURCE_OTHER] = "GL_DEBUG_SOURCE_OTHER";
+
+    debug_callback_map_type[GL_DEBUG_TYPE_ERROR] = "GL_DEBUG_TYPE_ERROR";
+    debug_callback_map_type[GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR] = "GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR";
+    debug_callback_map_type[GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR] = "GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR";
+    debug_callback_map_type[GL_DEBUG_TYPE_PORTABILITY] = "GL_DEBUG_TYPE_PORTABILITY";
+    debug_callback_map_type[GL_DEBUG_TYPE_PERFORMANCE] = "GL_DEBUG_TYPE_PERFORMANCE";
+    debug_callback_map_type[GL_DEBUG_TYPE_MARKER] = "GL_DEBUG_TYPE_MARKER";
+    debug_callback_map_type[GL_DEBUG_TYPE_PUSH_GROUP] = "GL_DEBUG_TYPE_PUSH_GROUP";
+    debug_callback_map_type[GL_DEBUG_TYPE_POP_GROUP] = "GL_DEBUG_TYPE_POP_GROUP";
+    debug_callback_map_type[GL_DEBUG_TYPE_OTHER] = "GL_DEBUG_TYPE_OTHER";
+
+    debug_callback_map_severity[GL_DEBUG_SEVERITY_HIGH] = "GL_DEBUG_SEVERITY_HIGH";
+    debug_callback_map_severity[GL_DEBUG_SEVERITY_MEDIUM] = "GL_DEBUG_SEVERITY_MEDIUM";
+    debug_callback_map_severity[GL_DEBUG_SEVERITY_LOW] = "GL_DEBUG_SEVERITY_LOW";
+    debug_callback_map_severity[GL_DEBUG_SEVERITY_NOTIFICATION] = "GL_DEBUG_SEVERITY_NOTIFICATION";
+}
+void GLAPIENTRY debug_callback(GLenum source,
+                               GLenum type,
+                               [[maybe_unused]] GLuint id,
+                               GLenum severity,
+                               [[maybe_unused]] GLsizei length,
+                               const GLchar* message,
+                               [[maybe_unused]] const void* user_param)
+{
+    if(severity == GL_DEBUG_SEVERITY_NOTIFICATION)
+        return;
+    if(strstr(message, "ragment shader")!=nullptr && strstr(message, "recompiled")!=nullptr)
+        return;
+
+    std::call_once(gl_debug_once_flag, init_debug_callback_maps);
+
+    auto source_find = debug_callback_map_source.find(source);
+    auto type_find = debug_callback_map_type.find(type);
+    auto severity_find = debug_callback_map_severity.find(severity);
+
+    auto source_str = (source_find != debug_callback_map_source.end() ?
+                       source_find->second :
+                       to_str("int: ") + to_str((int)source));
+
+    auto type_str = (type_find != debug_callback_map_type.end() ?
+                     type_find->second :
+                     to_str("int: ") + to_str((int)type));
+
+    auto severity_str = (type_find != debug_callback_map_severity.end() ?
+                         severity_find->second :
+                         to_str("int: ") + to_str((int)severity));
+
+    log_error("OpenGL debug callback: \n"
+              "source = " + source_str + "\n"
+              "type = " + type_str + "\n"
+              "severity = " + severity_str + "\n"
+              "message = " + to_str(message));
+}
+
 Renderer::Renderer(SDL_Window *window_, [[maybe_unused]] Uint32 flags):
     window(window_),
     gl_context([=]() -> std::unique_ptr<void, GLDeleteContext>
@@ -758,18 +855,19 @@ Renderer::Renderer(SDL_Window *window_, [[maybe_unused]] Uint32 flags):
     render_target(nullptr),
     Shaders()
 {
+    glEnable(GL_DEBUG_OUTPUT);
+    glDebugMessageCallback(debug_callback, nullptr);
 
-    glEnable(GL_MULTISAMPLE);
     glEnable(GL_BLEND);
+
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+
     set_blend_factors(BlendFactor::SrcAlpha, BlendFactor::OneMinusSrcAlpha);
     SDL_GL_SetSwapInterval(1);
 
-    int w;
-    int h;
-    SDL_GetWindowSize(window_, &w, &h);
-    glViewport(0, 0, w, h);
-    renderer_w_div2 = w / 2.0;
-    renderer_h_div2 = h / 2.0;
+    set_viewport({});
 
     init_shaders();
 }
@@ -904,7 +1002,7 @@ std::shared_ptr<Texture> Renderer::get_text_texture(const std::string &text, int
 
     if(cached == text_cache.end()) { //the text texture doesn't exist in the cache, so create it
         if(text.size() > 0) { //passing in a string of length 0 returns an error
-            auto desired_font = current_font->font_size[std::clamp(sz, 0, Font::NUM_FONT_SIZES-1)].get();
+            auto desired_font = current_font->font_of_size[std::clamp(sz, 0, Font::MAX_FONT_SIZE)].get();
             unique_ptr_sdl<SDL_Surface> temp_surface = TTF_RenderText_Blended(desired_font, text.c_str(), c);
             if(temp_surface == nullptr)
                 log_error("TTF_RenderText_Blended returned nullptr: " + (std::string)SDL_GetError());
@@ -955,7 +1053,7 @@ std::shared_ptr<Texture> Renderer::get_text_texture_wrapped(std::string text, in
                     }
                     int w;
                     //TODO: how fast is TTF_SizeText? Could this be a bottleneck?
-                    auto desired_font = current_font->font_size[std::clamp(sz, 0, Font::NUM_FONT_SIZES-1)].get();
+                    auto desired_font = current_font->font_of_size[std::clamp(sz, 0, Font::MAX_FONT_SIZE)].get();
                     TTF_SizeText(desired_font, (this_line + text.back()).c_str(), &w, nullptr);
                     if(w > wrap_length) {
                         break;
@@ -969,7 +1067,7 @@ std::shared_ptr<Texture> Renderer::get_text_texture_wrapped(std::string text, in
                     this_line += text.back();
                     text.pop_back();
                 }
-                auto desired_font = current_font->font_size[std::clamp(sz, 0, Font::NUM_FONT_SIZES-1)].get();
+                auto desired_font = current_font->font_of_size[std::clamp(sz, 0, Font::MAX_FONT_SIZE)].get();
                 unique_ptr_sdl<SDL_Surface> temp_surface = TTF_RenderText_Blended(desired_font, this_line.c_str(), c);
                 if(temp_surface == nullptr)
                     log_error("TTF_RenderText_Blended_Wrapped returned nullptr: " + (std::string)SDL_GetError());
@@ -1036,6 +1134,98 @@ void Renderer::draw_text_wrapped(std::string text, float x, float y, int sz, int
     Rect dst{x, y, (float)w, (float)h};
     draw_texture(*text_texture, dst);
 }
+std::unique_ptr<ASCII_Atlas> Renderer::make_ascii_atlas(const Font *font, int font_size)
+{
+    k_expects(font_size>=1 && font_size<=Font::MAX_FONT_SIZE);
+
+    auto atlas = std::make_unique<ASCII_Atlas>();
+    atlas->font = font;
+    atlas->font_size = font_size;
+    int max_w = 0;
+    int max_h = 0;
+    std::array<unique_ptr_sdl<SDL_Surface>, ASCII_Atlas::MAX_ASCII_CHAR+1> char_surfaces;
+
+    //start at 1, not 0, because (char)0 is the string terminator, which causes TTF_RenderText
+    //to complain about text of zero width
+    for(int i=1; i<=ASCII_Atlas::MAX_ASCII_CHAR; i++) {
+        std::string s;
+        s += (char)i;
+
+        int w;
+        int h;
+        TTF_SizeText(font->font_of_size[font_size].get(), s.c_str(), &w, &h);
+        atlas->glyph_metrics[i].w = w;
+        atlas->glyph_metrics[i].h = h;
+        atlas->glyph_metrics_per_size[i].w = w / (double)font_size;
+        atlas->glyph_metrics_per_size[i].h = h / (double)font_size;
+
+        int min_x;
+        int max_x;
+        int min_y;
+        int max_y;
+        int advance;
+        TTF_GlyphMetrics(font->font_of_size[font_size].get(), i, &min_x, &max_x, &min_y, &max_y, &advance);
+        atlas->glyph_metrics[i].min_x = min_x;
+        atlas->glyph_metrics[i].max_x = max_x;
+        atlas->glyph_metrics[i].min_y = min_y;
+        atlas->glyph_metrics[i].max_y = max_y;
+        atlas->glyph_metrics[i].advance = advance;
+
+        atlas->glyph_metrics_per_size[i].min_x = min_x / (double)font_size;
+        atlas->glyph_metrics_per_size[i].max_x = max_x / (double)font_size;
+        atlas->glyph_metrics_per_size[i].min_y = min_y / (double)font_size;
+        atlas->glyph_metrics_per_size[i].max_y = max_y / (double)font_size;
+        atlas->glyph_metrics_per_size[i].advance = advance / (double)font_size;
+
+        atlas->max_ascent_per_size = TTF_FontAscent(font->font_of_size[font_size].get()) / (double)font_size;
+        atlas->max_descent_per_size = TTF_FontDescent(font->font_of_size[font_size].get()) / (double)font_size;
+
+        char_surfaces[i] = TTF_RenderText_Blended(font->font_of_size[font_size].get(),
+                                                  s.c_str(),
+                                                  SDL_Color{0, 0, 0, 255});
+        k_assert(char_surfaces[i] != nullptr);
+        max_w = std::max(max_w, char_surfaces[i]->w);
+        max_h = std::max(max_h, char_surfaces[i]->h);
+    }
+
+    auto bytes_per_slice = max_w * max_h;
+    std::vector<uint8_t> pixels((ASCII_Atlas::MAX_ASCII_CHAR+1) * bytes_per_slice, 0);
+
+    for(int i=1; i<=ASCII_Atlas::MAX_ASCII_CHAR; i++) {
+        auto s = char_surfaces[i].get();
+
+        auto bpp = s->format->BytesPerPixel;
+        //we use uint32_t to access pixels so make sure they can fit in a uint32_t
+        k_expects(bpp <= 4);
+        //ensure alpha has 8 consecutive bits
+        k_expects(s->format->Amask / (s->format->Amask & (-s->format->Amask)) == 0xff);
+
+        SDL_LockSurface(s);
+
+        int Ashift = std::log2(s->format->Amask / 0xff);
+        for(int r=0; r < s->h; r++) {
+            for(int c=0; c < s->w; c++) {
+                auto pixel = *(uint32_t*)((uint8_t*)s->pixels + r * s->pitch + c * bpp + 4 - bpp);
+                pixels[i*bytes_per_slice + (max_h-r-1)*max_w + c] = (s->format->Amask & pixel) >> Ashift;
+            }
+        }
+
+        SDL_UnlockSurface(s);
+    }
+
+    atlas->texture = make_texture_2d_array(max_w,
+                                           max_h,
+                                           ASCII_Atlas::MAX_ASCII_CHAR+1,
+                                           Texture::Format::R8,
+                                           false,
+                                           1,
+                                           pixels.data());
+    atlas->texture->make_mipmaps();
+    atlas->texture->set_min_filter(Texture::FilterAlgo::LinearMipmapLinear);
+    atlas->max_w = max_w;
+    atlas->max_h = max_h;
+    return atlas;
+}
 std::unique_ptr<MonofontAtlas> Renderer::create_monofont_atlas([[maybe_unused]] const Font &font,
                                                                [[maybe_unused]] int font_size,
                                                                [[maybe_unused]] SRGB_Color color)
@@ -1050,20 +1240,12 @@ void Renderer::set_target(Texture *target)
 
     if(target == nullptr) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        int w;
-        int h;
-        SDL_GetWindowSize(window, &w, &h);
-        glViewport(0, 0, w, h);
-        renderer_w_div2 = w / 2.0;
-        renderer_h_div2 = h / 2.0;
     } else {
         k_expects(target->framebuffer.id != 0);
         glBindFramebuffer(GL_FRAMEBUFFER, target->framebuffer.id);
-        glViewport(0, 0, target->get_w(), target->get_h());
-        renderer_w_div2 = target->get_w() / 2.0;
-        renderer_h_div2 = target->get_h() / 2.0;
     }
     render_target = target;
+    set_viewport({});
 }
 Texture *Renderer::get_target() const
 {
@@ -1080,24 +1262,53 @@ void Renderer::set_viewport(const std::optional<IRect> &r)
 {
     if(r.has_value()) {
         glViewport(r->x, r->y, r->w, r->h);
+        renderer_w = r->w;
+        renderer_h = r->h;
         renderer_w_div2 = r->w / 2.0;
         renderer_h_div2 = r->h / 2.0;
     } else {
         int w;
         int h;
-        SDL_GetWindowSize(window, &w, &h);
+        if(render_target == nullptr) {
+            SDL_GetWindowSize(window, &w, &h);
+        } else {
+            w = render_target->get_w();
+            h = render_target->get_h();
+        }
         glViewport(0, 0, w, h);
+        renderer_w = w;
+        renderer_h = h;
         renderer_w_div2 = w / 2.0;
         renderer_h_div2 = h / 2.0;
     }
+}
+int Renderer::get_render_w() const
+{
+    return renderer_w;
+}
+int Renderer::get_render_h() const
+{
+    return renderer_h;
+}
+std::unique_ptr<Texture> Renderer::make_texture_2d_array(int w,
+                                                         int h,
+                                                         int slices,
+                                                         Texture::Format format,
+                                                         bool is_srgb,
+                                                         int samples,
+                                                         void *pixels) const
+{
+    auto tex = std::unique_ptr<Texture>(new Texture(2, slices, w, h, format, is_srgb, samples, pixels));
+    return tex;
 }
 std::unique_ptr<Texture> Renderer::make_texture_target(int w,
                                                        int h,
                                                        Texture::Format format,
                                                        bool is_srgb,
-                                                       int samples) const
+                                                       int samples,
+                                                       void *pixels) const
 {
-    auto tex = std::unique_ptr<Texture>(new Texture(w, h, format, is_srgb, samples));
+    auto tex = std::unique_ptr<Texture>(new Texture(2, 1, w, h, format, is_srgb, samples, pixels));
     tex->make_targetable();
     return tex;
 }
@@ -1105,9 +1316,10 @@ std::unique_ptr<Texture> Renderer::create_texture_target(int w,
                                                          int h,
                                                          Texture::Format format,
                                                          bool is_srgb,
-                                                         int samples) const
+                                                         int samples,
+                                                         void *pixels) const
 {
-    return make_texture_target(w, h, format, is_srgb, samples);
+    return make_texture_target(w, h, format, is_srgb, samples, pixels);
 }
 void Renderer::draw_texture(const Texture &texture, const Rect &dst, const std::optional<Rect> &src_)
 {

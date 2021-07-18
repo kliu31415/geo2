@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <string>
+#include <array>
 
 namespace kx {namespace gfx {
 
@@ -13,13 +14,14 @@ class Renderer;
 
 class Font final
 {
+public:
+    static constexpr int MAX_FONT_SIZE = 128; ///any text larger than this will appear blurry
+    using ID_t = int;
+private:
     friend Renderer;
 
-    static constexpr int NUM_FONT_SIZES = 200; ///any text larger than this will appear blurry
-    static int num_fonts;
-
-    const int id;
-    unique_ptr_sdl<_TTF_Font> font_size[NUM_FONT_SIZES];
+    const ID_t id;
+    std::array<unique_ptr_sdl<_TTF_Font>, MAX_FONT_SIZE+1> font_of_size;
 
     Font();
 public:
