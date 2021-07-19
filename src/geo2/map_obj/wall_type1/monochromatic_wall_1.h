@@ -13,7 +13,7 @@ class MonochromaticWall_1 final: public Wall_Type1
     kx::gfx::LinearColor color;
     std::shared_ptr<RenderOpShader> op;
     std::shared_ptr<RenderOpGroup> op_group;
-    nonstd::span<float> op_iu;
+    kx::kx_span<float> op_iu;
 public:
     MonochromaticWall_1(const MapRect &position_, kx::gfx::LinearColor color_);
     void add_render_ops(const MapObjRenderArgs &args) override;

@@ -11,7 +11,7 @@ class TestLaser1 final: public Weapon
     double reload_counter;
     int ammo;
     std::array<std::shared_ptr<RenderOpShader>, 2> ops;
-    std::array<nonstd::span<float>, 2> op_ius;
+    std::array<kx::kx_span<float>, 2> op_ius;
 public:
     TestLaser1(const std::shared_ptr<map_obj::MapObject> &owner_);
     void run(const WeaponRunArgs &args) override;

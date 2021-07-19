@@ -1,11 +1,4 @@
 #include "kx/gfx/renderer.h"
-
-#ifdef KX_RENDERER_GL
-
-#endif
-
-
-#include "kx/gfx/renderer.h"
 #include "kx/io.h"
 
 #include <SDL2/SDL_ttf.h>
@@ -13,6 +6,9 @@
 #include <algorithm>
 #include <cmath>
 #include <climits>
+
+#include "ft2build.h"
+#include FT_FREETYPE_H
 
 #include "kx/debug.h"
 
@@ -172,10 +168,10 @@ Texture::Texture(int dim,
 
     //this doesn't apply to multisample textures
     if(samples == 1) {
-        glTexParameteri(binding_point, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(binding_point, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(binding_point, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-        glTexParameteri(binding_point, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+        glTextureParameteri(texture.id, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTextureParameteri(texture.id, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTextureParameteri(texture.id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTextureParameteri(texture.id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     }
 
     GLenum arg1;
@@ -245,10 +241,10 @@ Texture::Texture(SDL_Surface *s, bool is_srgb__):
     glGenTextures(1, &texture.id);
     glBindTexture(binding_point, texture.id);
 
-    glTexParameteri(binding_point, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(binding_point, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(binding_point, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(binding_point, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTextureParameteri(texture.id, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTextureParameteri(texture.id, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTextureParameteri(texture.id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTextureParameteri(texture.id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
     auto bpp = s->format->BytesPerPixel;
     //rn, there's no support for anything except 24-bit color with a possible alpha channel
@@ -435,22 +431,22 @@ void ShaderProgram::set_uniform4f(GLint loc, GLfloat v0, GLfloat v1, GLfloat v2,
     glUniform4f(loc, v0, v1, v2, v3);
 }
 
-void ShaderProgram::set_uniform1fv(GLint loc, nonstd::span<GLfloat> vals)
+void ShaderProgram::set_uniform1fv(GLint loc, kx::kx_span<GLfloat> vals)
 {
     k_expects(owner->get_cur_program({}) == program.id);
     glUniform1fv(loc, vals.size(), vals.begin());
 }
-void ShaderProgram::set_uniform2fv(GLint loc, nonstd::span<GLfloat> vals)
+void ShaderProgram::set_uniform2fv(GLint loc, kx::kx_span<GLfloat> vals)
 {
     k_expects(owner->get_cur_program({}) == program.id);
     glUniform2fv(loc, vals.size(), vals.begin());
 }
-void ShaderProgram::set_uniform3fv(GLint loc, nonstd::span<GLfloat> vals)
+void ShaderProgram::set_uniform3fv(GLint loc, kx::kx_span<GLfloat> vals)
 {
     k_expects(owner->get_cur_program({}) == program.id);
     glUniform3fv(loc, vals.size(), vals.begin());
 }
-void ShaderProgram::set_uniform4fv(GLint loc, nonstd::span<GLfloat> vals)
+void ShaderProgram::set_uniform4fv(GLint loc, kx::kx_span<GLfloat> vals)
 {
     k_expects(owner->get_cur_program({}) == program.id);
     glUniform4fv(loc, vals.size(), vals.begin());
@@ -1134,7 +1130,7 @@ void Renderer::draw_text_wrapped(std::string text, float x, float y, int sz, int
     Rect dst{x, y, (float)w, (float)h};
     draw_texture(*text_texture, dst);
 }
-std::unique_ptr<ASCII_Atlas> Renderer::make_ascii_atlas(const Font *font, int font_size)
+std::unique_ptr<ASCII_Atlas> Renderer::make_ascii_atlas(Font *font, int font_size)
 {
     k_expects(font_size>=1 && font_size<=Font::MAX_FONT_SIZE);
 
@@ -1142,26 +1138,60 @@ std::unique_ptr<ASCII_Atlas> Renderer::make_ascii_atlas(const Font *font, int fo
     atlas->font = font;
     atlas->font_size = font_size;
 
+    atlas->min_x1 = std::numeric_limits<float>::max();
+    atlas->max_x2 = -std::numeric_limits<float>::max();
+    atlas->min_y1 = std::numeric_limits<float>::max();
+    atlas->max_y2 = -std::numeric_limits<float>::max();
+
     std::array<unique_ptr_sdl<SDL_Surface>, ASCII_Atlas::MAX_ASCII_CHAR+1> char_surfaces;
 
     int max_w = 0;
     int max_h = 0;
 
-    //start at 1, not 0, because (char)0 is the string terminator, which causes TTF_RenderText
-    //to complain about text of zero width
-    for(int i=1; i<=ASCII_Atlas::MAX_ASCII_CHAR; i++) {
-        //-I assume TTF_RenderGlyph fills in the alpha bits of a surface with
-        //-nonzero alpha is where the glyph appears
-        char_surfaces[i] = TTF_RenderGlyph_Blended(font->font_of_size[font_size].get(),
-                                                   i,
-                                                   SDL_Color{0, 0, 0, 255});
-        k_assert(char_surfaces[i] != nullptr);
+    std::array<std::vector<uint8_t>, ASCII_Atlas::MAX_ASCII_CHAR+1> bitmap_buffer;
+    std::array<size_t, ASCII_Atlas::MAX_ASCII_CHAR+1> bitmap_pitch;
 
-        max_w = std::max(max_w, char_surfaces[i]->w);
-        max_h = std::max(max_h, char_surfaces[i]->h);
+    if(FT_Set_Pixel_Sizes(font->ft_face, 0, font_size))
+        log_error("FT_Set_Pixel_Sizes failed");
+    for(int c=0; c<=ASCII_Atlas::MAX_ASCII_CHAR; c++) {
+        auto glyph_idx = FT_Get_Char_Index(font->ft_face, c);
+        if(glyph_idx == 0) {
+            atlas->char_supported[c] = false;
+            continue;
+        } else
+            atlas->char_supported[c] = true;
+
+        if(FT_Load_Glyph(font->ft_face, glyph_idx, FT_LOAD_NO_BITMAP))
+            log_error("FT_Load_Glyph failed for \'" + to_str(c) + "\'");
+        if(FT_Render_Glyph(font->ft_face->glyph, FT_RENDER_MODE_NORMAL))
+            log_error("FT_Render_Glyph failed for \'" + to_str(c) + "\'");
+
+        auto &metrics = atlas->glyph_metrics[c];
+
+        metrics.w = font->ft_face->glyph->bitmap.width;
+        metrics.h = font->ft_face->glyph->bitmap.rows;
+        metrics.left_offset =  font->ft_face->glyph->bitmap_left;
+        metrics.top_offset  = -font->ft_face->glyph->bitmap_top;
+        metrics.advance = font->ft_face->glyph->advance.x / 64.0;
+
+        atlas->min_x1 = std::min(atlas->min_x1, metrics.left_offset);
+        atlas->max_x2 = std::max(atlas->max_x2, metrics.left_offset + metrics.w);
+        atlas->min_y1 = std::min(atlas->min_y1, metrics.top_offset);
+        atlas->max_y2 = std::max(atlas->max_y2, metrics.top_offset + metrics.h);
+
+        max_w = std::max(max_w, (int)metrics.w);
+        max_h = std::max(max_h, (int)metrics.h);
+
+        bitmap_pitch[c] = font->ft_face->glyph->bitmap.pitch;
+        int buffer_size = bitmap_pitch[c] * metrics.h;
+        bitmap_buffer[c] = std::vector<uint8_t>(buffer_size);
+        auto buffer = font->ft_face->glyph->bitmap.buffer;
+        std::copy_n((uint8_t*)buffer, buffer_size, bitmap_buffer[c].data());
+
     }
-    atlas->w_per_size = max_w / (double)font_size;
-    atlas->h_per_size = max_h / (double)font_size;
+
+    atlas->max_w = max_w;
+    atlas->max_h = max_h;
 
     auto bytes_per_slice = max_w * max_h;
     std::vector<uint8_t> pixels((ASCII_Atlas::MAX_ASCII_CHAR+1) * bytes_per_slice, 0);
@@ -1170,57 +1200,33 @@ std::unique_ptr<ASCII_Atlas> Renderer::make_ascii_atlas(const Font *font, int fo
     //GlyphMetrics has inaccurate values so I calculate them by scanning through the pixels myself.
     //e.g. if the global min_x=-10 and global max_x = 20, then x=7 is normalized to 17/30.
     //advance is normalized to max_w
-    for(int i=1; i<=ASCII_Atlas::MAX_ASCII_CHAR; i++) {
-        auto s = char_surfaces[i].get();
-
-        //all surfaces should be the same size (smaller glyphs will just take up less of their surface)
-        k_expects(s->w == max_w);
-        k_expects(s->h == max_h);
-
-        int advance;
-        TTF_GlyphMetrics(font->font_of_size[font_size].get(), i, nullptr, nullptr, nullptr, nullptr, &advance);
-
-        int min_x = std::numeric_limits<int>::max();
-        int max_x = 0;
-        int min_y = std::numeric_limits<int>::max();
-        int max_y = 0;
-
-        auto bpp = s->format->BytesPerPixel;
-        //we use uint32_t to access pixels so make sure they can fit in a uint32_t
-        k_expects(bpp <= 4);
-        //ensure alpha has 8 consecutive bits
-        k_expects(s->format->Amask / (s->format->Amask & (-s->format->Amask)) == 0xff);
-
-        SDL_LockSurface(s);
-
-        int Ashift = std::log2(s->format->Amask / 0xff);
-        for(int r=0; r < s->h; r++) {
-            for(int c=0; c < s->w; c++) {
-                auto pixel = *(uint32_t*)((uint8_t*)s->pixels + r * s->pitch + c * bpp + 4 - bpp);
-                uint8_t alpha = (s->format->Amask & pixel) >> Ashift;
-                if(alpha != 0) {
-                    min_x = std::min(min_x, c);
-                    max_x = std::max(max_x, c);
-                    min_y = std::min(min_y, r);
-                    max_y = std::max(max_y, r);
-                }
-                pixels[i*bytes_per_slice + (max_h-r-1)*max_w + c] = alpha;
+    for(int c=1; c<=ASCII_Atlas::MAX_ASCII_CHAR; c++) {
+        for(size_t row=0; row < atlas->glyph_metrics[c].h; row++) {
+            for(size_t col=0; col < atlas->glyph_metrics[c].w; col++) {
+                auto alpha = bitmap_buffer[c][row * bitmap_pitch[c] + col];
+                pixels[c*bytes_per_slice + (max_h-row-1)*max_w + col] = alpha;
             }
         }
+    }
 
-        //empty glyph
-        if(min_x == std::numeric_limits<int>::max()) {
-            min_x = 0;
-            min_y = 0;
+    for(auto &k1: atlas->kerning) {
+        static_assert(std::numeric_limits<std::remove_reference_t<decltype(*k1.begin())>>::has_signaling_NaN);
+        std::fill(k1.begin(), k1.end(), std::numeric_limits<float>::signaling_NaN());
+    }
+
+    for(int a=1; a<=ASCII_Atlas::MAX_ASCII_CHAR; a++) {
+        if(!atlas->char_supported[a])
+            continue;
+        for(int b=1; b<=ASCII_Atlas::MAX_ASCII_CHAR; b++) {
+            if(!atlas->char_supported[b])
+                continue;
+            auto idx_a = FT_Get_Char_Index(font->ft_face, a);
+            auto idx_b = FT_Get_Char_Index(font->ft_face, b);
+            FT_Vector kerning;
+            auto error = FT_Get_Kerning(font->ft_face, idx_a, idx_b, FT_KERNING_UNFITTED, &kerning);
+            k_assert(error == 0);
+            atlas->kerning[a][b] = kerning.x / 64.0;
         }
-
-        atlas->glyph_metrics[i].min_x = min_x / (double)max_w;
-        atlas->glyph_metrics[i].max_x = (max_x + 1) / (double)max_w;
-        atlas->glyph_metrics[i].min_y = min_y / (double)max_h;
-        atlas->glyph_metrics[i].max_y = (max_y + 1) / (double)max_h;
-        atlas->glyph_metrics[i].advance = advance / max_w;
-
-        SDL_UnlockSurface(s);
     }
 
     atlas->texture = make_texture_2d_array(max_w,
@@ -1232,14 +1238,9 @@ std::unique_ptr<ASCII_Atlas> Renderer::make_ascii_atlas(const Font *font, int fo
                                            pixels.data());
     atlas->texture->make_mipmaps();
     atlas->texture->set_min_filter(Texture::FilterAlgo::LinearMipmapLinear);
+    std::array<GLint, 4> swizzle_mask{GL_ONE, GL_ONE, GL_ONE, GL_RED};
+    glTextureParameteriv(atlas->texture->texture.id, GL_TEXTURE_SWIZZLE_RGBA, swizzle_mask.data());
     return atlas;
-}
-std::unique_ptr<MonofontAtlas> Renderer::create_monofont_atlas([[maybe_unused]] const Font &font,
-                                                               [[maybe_unused]] int font_size,
-                                                               [[maybe_unused]] SRGB_Color color)
-{
-    k_assert(false);
-    return nullptr;
 }
 void Renderer::set_target(Texture *target)
 {

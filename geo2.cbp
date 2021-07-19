@@ -13,6 +13,7 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-g" />
+					<Add option="-DGLIBCXX_DEBUG" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -166,6 +167,7 @@
 		<Unit filename="src/kx/gfx/renderer_types.h" />
 		<Unit filename="src/kx/io.cpp" />
 		<Unit filename="src/kx/io.h" />
+		<Unit filename="src/kx/kx_span.h" />
 		<Unit filename="src/kx/log.cpp" />
 		<Unit filename="src/kx/log.h" />
 		<Unit filename="src/kx/multithread/semaphore.h" />
@@ -184,9 +186,6 @@
 		<Unit filename="src/kx/util.cpp" />
 		<Unit filename="src/kx/util.h" />
 		<Unit filename="src/main.cpp" />
-		<Unit filename="src/span_lite.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>

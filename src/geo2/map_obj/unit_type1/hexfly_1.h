@@ -17,7 +17,7 @@ class Hexfly_1 final: public Unit_Type1
     double wing_freq;
 
     std::array<std::shared_ptr<RenderOpShader>, 8> ops;
-    std::array<nonstd::span<float>, 8> op_ius;
+    std::array<kx::kx_span<float>, 8> op_ius;
     std::shared_ptr<RenderOpGroup> op_group;
 
     float eye_w;

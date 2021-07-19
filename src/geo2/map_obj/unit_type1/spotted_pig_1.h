@@ -14,7 +14,7 @@ class Spotted_Pig_1 final: public Unit_Type1
     unit_movement::Algo1 movement_algo;
 
     std::array<std::shared_ptr<RenderOpShader>, 5> ops;
-    std::array<nonstd::span<float>, 5> op_ius;
+    std::array<kx::kx_span<float>, 5> op_ius;
     std::shared_ptr<RenderOpGroup> op_group;
 
     float eye_w;

@@ -4,7 +4,7 @@
 
 #include "kx/fixed_size_array.h"
 
-#include "span_lite.h"
+#include "kx/kx_span.h"
 #include <type_traits>
 #include <algorithm>
 #include <memory>
@@ -254,7 +254,7 @@ class Polygon final
     //note that one vertex is stored twice for efficiency purposes (i.e. begin()==rbegin())
     kx::FixedSizeArray<_MapCoord<float>> vertices;
 
-    template<class T> Polygon(nonstd::span<_MapCoord<T>> vertices_):
+    template<class T> Polygon(kx::kx_span<_MapCoord<T>> vertices_):
         vertices(vertices_.size()+1)
     {
         for(size_t i=0; i<vertices_.size(); i++)
@@ -319,7 +319,7 @@ public:
 
         return false;
     }
-    template<class T> static std::unique_ptr<Polygon> make(nonstd::span<_MapCoord<T>> vertices)
+    template<class T> static std::unique_ptr<Polygon> make(kx::kx_span<_MapCoord<T>> vertices)
     {
         std::unique_ptr<Polygon> ret(new Polygon(vertices));
         return ret;
@@ -354,7 +354,7 @@ class Polygon final
         vals = (float*)std::malloc(sizeof(float) * 2 * d_len);
     }
 
-    template<class T> Polygon(nonstd::span<_MapCoord<T>> vertices):
+    template<class T> Polygon(kx::kx_span<_MapCoord<T>> vertices):
         n(vertices.size())
     {
         auto d_len = get_d_len(n);
@@ -587,7 +587,7 @@ public:
 
         return false;
     }
-    template<class T> void remake(nonstd::span<_MapCoord<T>> vertices)
+    template<class T> void remake(kx::kx_span<_MapCoord<T>> vertices)
     {
         int new_n = vertices.size();
         auto d_len = get_d_len(new_n);
@@ -617,7 +617,7 @@ public:
         auto d_len = get_d_len(n);
         return _MapCoord<float>(vals[idx], vals[d_len + idx]);
     }
-    template<class T> static std::unique_ptr<Polygon> make(nonstd::span<_MapCoord<T>> vertices)
+    template<class T> static std::unique_ptr<Polygon> make(kx::kx_span<_MapCoord<T>> vertices)
     {
         std::unique_ptr<Polygon> ret(new Polygon(vertices));
         return ret;
@@ -629,7 +629,7 @@ public:
         for(size_t i=0; i<coords.size(); i+=2) {
             mc.emplace_back(coords[i], coords[i+1]);
         }
-        return make(nonstd::span<_MapCoord<T>>(mc.begin(), mc.end()));
+        return make(kx::kx_span<_MapCoord<T>>(mc.begin(), mc.end()));
     }
     static std::unique_ptr<Polygon> make_with_num_sides(int num_sides)
     {

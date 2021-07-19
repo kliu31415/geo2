@@ -2,14 +2,9 @@
 <CodeBlocks_layout_file>
 	<FileVersion major="1" minor="0" />
 	<ActiveTarget name="Release" />
-	<File name="src\geo2\master_instance.h" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\kx\kx_span.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="358" topLine="1" />
-		</Cursor>
-	</File>
-	<File name="src\kx\time.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="685" topLine="0" />
+			<Cursor1 position="304" topLine="2" />
 		</Cursor>
 	</File>
 	<File name="src\geo2\test.cpp" open="0" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -17,279 +12,19 @@
 			<Cursor1 position="377" topLine="12" />
 		</Cursor>
 	</File>
-	<File name="src\geo2\master_instance.cpp" open="0" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="2682" topLine="34" />
-		</Cursor>
-	</File>
-	<File name="src\kx\multithread\spinlock.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="2744" topLine="6" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\render_op.h" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="2654" topLine="80" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\map_obj\wall_type1\wall_type1.h" open="0" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="482" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\map_obj\map_object.h" open="0" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1176" topLine="18" />
-		</Cursor>
-	</File>
-	<File name="src\kx\gfx\font.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1209" topLine="29" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\map_obj\unit_type1\pig_1.cpp" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="3857" topLine="100" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\map_obj\map_obj_args.h" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="4557" topLine="256" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\texture_utils.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="2378" topLine="49" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\map_obj\projectile_type1\laser_proj_1.h" open="1" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="698" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\map_obj\floor_type1\test_terrain1.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="388" topLine="9" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\render_args.h" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="123" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\map_obj\unit_type1\hexfly_1.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1191" topLine="11" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\level_gen\test3.cpp" open="0" top="0" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1779" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\kx\util.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="254" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\kx\gfx\font.cpp" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1474" topLine="3" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\map_obj\unit_type1\hexfly_1.cpp" open="0" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="3596" topLine="75" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\game_render_op_list.h" open="0" top="0" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1053" topLine="10" />
-		</Cursor>
-	</File>
-	<File name="src\kx\time.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1188" topLine="28" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\weapon\weapon.h" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="903" topLine="18" />
-		</Cursor>
-	</File>
 	<File name="src\kx\multithread\semaphore.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="1126" topLine="31" />
 		</Cursor>
 	</File>
-	<File name="src\geo2\map_obj\wall_type1\wall_type1.cpp" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\geo2\render_op.h" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1383" topLine="11" />
+			<Cursor1 position="3022" topLine="90" />
 		</Cursor>
 	</File>
-	<File name="src\geo2\game.h" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\geo2\game_render_op_list.cpp" open="0" top="0" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1875" topLine="56" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\timer.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="635" topLine="2" />
-		</Cursor>
-	</File>
-	<File name="src\kx\log.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="864" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\map_obj\wall_type1\monochromatic_wall_1.cpp" open="0" top="0" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="372" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\map_obj\floor_type1\floor_type1.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="304" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\glad\glad.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="5229" topLine="192" />
-		</Cursor>
-	</File>
-	<File name="src\kx\gfx\kwindow.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="4163" topLine="78" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\map_obj\projectile_type1\projectile_type1.h" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="876" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\map_obj\floor_type1\floor_type1.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="146" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\kx\stats.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="101" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\kx\gfx\gfx.h" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="3286" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\level_gen\test2.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="549" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\geometry.h" open="0" top="0" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="13662" topLine="478" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\rng_args.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="209" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\kx\gfx\renderer.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="250" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\ceng1_data.h" open="0" top="0" tabpos="13" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="293" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\kx\fixed_size_array.h" open="0" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="416" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\map_obj\unit_type1\pig_1.h" open="1" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1071" topLine="11" />
-		</Cursor>
-	</File>
-	<File name="src\span_lite.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="254" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\map_obj\unit_type1\movement\algo1.cpp" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="602" topLine="69" />
-		</Cursor>
-	</File>
-	<File name="src\kx\debug.h" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1034" topLine="2" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\map_obj\unit_type1\spotted_pig_1.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="3949" topLine="93" />
-		</Cursor>
-	</File>
-	<File name="src\kx\stats.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1667" topLine="31" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\render_op.cpp" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="6949" topLine="201" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\map_obj\unit_type1\unit_type1.cpp" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1834" topLine="132" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\game.cpp" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="23086" topLine="546" />
-		</Cursor>
-	</File>
-	<File name="src\kx\gfx\gfx.cpp" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="11281" topLine="315" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\map_obj\unit_type1\player_type1.cpp" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="7852" topLine="189" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\map_obj\map_object.cpp" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="424" topLine="1" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\weapon\weapon.cpp" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="255" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\map_obj\unit_type1\movement\algo1.h" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="460" topLine="9" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\map_obj\floor_type1\test_terrain1.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="444" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\multithread\thread_pool.h" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1097" topLine="38" />
+			<Cursor1 position="3149" topLine="48" />
 		</Cursor>
 	</File>
 	<File name="src\geo2\map_obj\projectile_type1\basic_proj_1.h" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -297,19 +32,19 @@
 			<Cursor1 position="647" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="src\geo2\map_obj\floor_type1\monochromatic_floor_1.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\kx\log.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="533" topLine="0" />
+			<Cursor1 position="727" topLine="12" />
 		</Cursor>
 	</File>
-	<File name="src\kx\atomic\string.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\geo2\map_obj\unit_type1\spotted_pig_1.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="380" topLine="16" />
+			<Cursor1 position="3949" topLine="93" />
 		</Cursor>
 	</File>
-	<File name="src\geo2\map_obj\projectile_type1\projectile_type1.cpp" open="0" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\main.cpp" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1286" topLine="13" />
+			<Cursor1 position="247" topLine="0" />
 		</Cursor>
 	</File>
 	<File name="src\geo2\ceng1_obj.h" open="0" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -317,34 +52,34 @@
 			<Cursor1 position="150" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="src\kx\sdl_deleter.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\kx\time.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="3281" topLine="81" />
+			<Cursor1 position="685" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="src\kx\atomic\queue.h" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\kx\gfx\gl_renderer.cpp" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1304" topLine="24" />
+			<Cursor1 position="43772" topLine="1145" />
 		</Cursor>
 	</File>
-	<File name="src\kx\gfx\gl_renderer.cpp" open="1" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\geo2\map_obj\unit_type1\hexfly_1.cpp" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="45247" topLine="1196" />
+			<Cursor1 position="346" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="src\geo2\map_obj\projectile_type1\laser_proj_1.cpp" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\kx\multithread\spinlock.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1335" topLine="10" />
+			<Cursor1 position="2744" topLine="6" />
 		</Cursor>
 	</File>
-	<File name="src\geo2\map_obj\alive_status.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\geo2\geometry.h" open="0" top="0" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="551" topLine="2" />
+			<Cursor1 position="19085" topLine="607" />
 		</Cursor>
 	</File>
-	<File name="src\geo2\weapon\laser_1.cpp" open="0" top="0" tabpos="13" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\geo2\map_obj\unit_type1\movement\algo1.h" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1579" topLine="44" />
+			<Cursor1 position="460" topLine="9" />
 		</Cursor>
 	</File>
 	<File name="src\kx\io.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -352,49 +87,24 @@
 			<Cursor1 position="31" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="src\geo2\map_obj\wall_type1\monochromatic_wall_1.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\geo2\map_obj\floor_type1\test_terrain1.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="528" topLine="0" />
+			<Cursor1 position="388" topLine="9" />
 		</Cursor>
 	</File>
-	<File name="src\geo2\map_obj\floor_type1\monochromatic_floor_1.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\geo2\texture_utils.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="448" topLine="0" />
+			<Cursor1 position="2378" topLine="49" />
 		</Cursor>
 	</File>
-	<File name="src\main.cpp" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\geo2\render_args.h" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="702" topLine="0" />
+			<Cursor1 position="123" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="src\kx\gfx\renderer_types.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\kx\sdl_deleter.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="7377" topLine="248" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\map_obj\unit_type1\unit_type1.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="958" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\game_render_op_list.cpp" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="3365" topLine="62" />
-		</Cursor>
-	</File>
-	<File name="src\kx\sort.h" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="220" topLine="4" />
-		</Cursor>
-	</File>
-	<File name="src\kx\gfx\kwindow.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="4576" topLine="101" />
-		</Cursor>
-	</File>
-	<File name="src\geo2\map_obj\unit_type1\spotted_pig_1.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1103" topLine="12" />
+			<Cursor1 position="3281" topLine="81" />
 		</Cursor>
 	</File>
 	<File name="src\geo2\level_gen\test3.h" open="0" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -402,34 +112,114 @@
 			<Cursor1 position="169" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="src\kx\log.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\geo2\weapon\laser_1.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="727" topLine="12" />
+			<Cursor1 position="278" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="src\geo2\collision_engine1.h" open="0" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\kx\gfx\font.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="3507" topLine="82" />
+			<Cursor1 position="505" topLine="8" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\map_obj\wall_type1\monochromatic_wall_1.cpp" open="0" top="0" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="372" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\map_obj\wall_type1\wall_type1.cpp" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="534" topLine="9" />
 		</Cursor>
 	</File>
 	<File name="src\kx\gfx\gl_renderer.h" open="0" top="0" tabpos="14" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="6325" topLine="242" />
+			<Cursor1 position="6407" topLine="247" />
 		</Cursor>
 	</File>
-	<File name="src\geo2\collision_engine1.cpp" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\geo2\map_obj\unit_type1\unit_type1.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="15162" topLine="311" />
+			<Cursor1 position="958" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="src\geo2\rng.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\kx\gfx\gfx.cpp" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="33" topLine="0" />
+			<Cursor1 position="12139" topLine="336" />
 		</Cursor>
 	</File>
-	<File name="src\geo2\map_obj\unit_type1\player_type1.h" open="0" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\geo2\map_obj\unit_type1\hexfly_1.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1356" topLine="18" />
+			<Cursor1 position="498" topLine="11" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\render_op.cpp" open="1" top="1" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="10784" topLine="310" />
+		</Cursor>
+	</File>
+	<File name="src\kx\atomic\queue.h" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1304" topLine="24" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\map_obj\unit_type1\pig_1.h" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="409" topLine="10" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\map_obj\floor_type1\monochromatic_floor_1.cpp" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="830" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\map_obj\unit_type1\player_type1.cpp" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="7268" topLine="189" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\map_obj\projectile_type1\projectile_type1.cpp" open="0" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1286" topLine="13" />
+		</Cursor>
+	</File>
+	<File name="src\kx\stats.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1667" topLine="31" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\map_obj\floor_type1\floor_type1.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="146" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\map_obj\unit_type1\unit_type1.cpp" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1834" topLine="132" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\level_gen\test3.cpp" open="0" top="0" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1779" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\kx\gfx\renderer_types.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="7377" topLine="248" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\map_obj\map_object.h" open="0" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1176" topLine="18" />
+		</Cursor>
+	</File>
+	<File name="src\kx\time.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1188" topLine="28" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\collision_engine1.h" open="0" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2338" topLine="7" />
 		</Cursor>
 	</File>
 	<File name="src\geo2\map_obj\projectile_type1\basic_proj_1.cpp" open="0" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -437,9 +227,219 @@
 			<Cursor1 position="1249" topLine="17" />
 		</Cursor>
 	</File>
-	<File name="src\geo2\weapon\laser_1.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\kx\gfx\kwindow.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="289" topLine="0" />
+			<Cursor1 position="4576" topLine="101" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\map_obj\unit_type1\pig_1.cpp" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="5785" topLine="88" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\game.h" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1875" topLine="56" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\rng_args.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="209" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\kx\gfx\font.cpp" open="0" top="0" tabpos="13" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1475" topLine="39" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\master_instance.h" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="358" topLine="1" />
+		</Cursor>
+	</File>
+	<File name="src\kx\sort.h" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="220" topLine="4" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\ceng1_data.h" open="0" top="0" tabpos="13" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="293" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\rng.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="33" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\kx\log.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="864" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\map_obj\unit_type1\movement\algo1.cpp" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="602" topLine="69" />
+		</Cursor>
+	</File>
+	<File name="src\kx\util.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="254" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\master_instance.cpp" open="0" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2682" topLine="34" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\map_obj\map_obj_args.h" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="4557" topLine="256" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\weapon\weapon.h" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="903" topLine="18" />
+		</Cursor>
+	</File>
+	<File name="src\kx\fixed_size_array.h" open="0" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="416" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\map_obj\floor_type1\monochromatic_floor_1.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="402" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\weapon\weapon.cpp" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="255" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\kx\gfx\renderer.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="250" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\multithread\thread_pool.h" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1097" topLine="38" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\level_gen\test2.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="549" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\weapon\laser_1.cpp" open="0" top="0" tabpos="13" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1579" topLine="44" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\map_obj\wall_type1\monochromatic_wall_1.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="398" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\collision_engine1.cpp" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="15162" topLine="311" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\map_obj\projectile_type1\laser_proj_1.h" open="0" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="328" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\kx\gfx\gfx.h" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="3286" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\timer.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="635" topLine="2" />
+		</Cursor>
+	</File>
+	<File name="src\kx\atomic\string.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="380" topLine="16" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\map_obj\floor_type1\test_terrain1.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="362" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\map_obj\wall_type1\wall_type1.h" open="0" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="482" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\glad\glad.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="5229" topLine="192" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\map_obj\unit_type1\spotted_pig_1.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="417" topLine="10" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\map_obj\floor_type1\floor_type1.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="304" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\map_obj\map_object.cpp" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="424" topLine="1" />
+		</Cursor>
+	</File>
+	<File name="src\kx\gfx\kwindow.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="4163" topLine="78" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\map_obj\alive_status.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="551" topLine="2" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\map_obj\projectile_type1\laser_proj_1.cpp" open="1" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="483" topLine="10" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\map_obj\projectile_type1\projectile_type1.h" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="876" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\game_render_op_list.h" open="0" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="65" topLine="8" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\map_obj\unit_type1\player_type1.h" open="0" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="877" topLine="18" />
+		</Cursor>
+	</File>
+	<File name="src\kx\debug.h" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1034" topLine="2" />
+		</Cursor>
+	</File>
+	<File name="src\kx\stats.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="101" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\geo2\game.cpp" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="23086" topLine="546" />
 		</Cursor>
 	</File>
 </CodeBlocks_layout_file>

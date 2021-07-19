@@ -313,10 +313,6 @@ int init()
         log_error((std::string)"SDL_Init error: " + SDL_GetError());
         return -1;
     }
-    if(TTF_Init() < 0) {
-        log_error((std::string)"TTF_Init error: " + TTF_GetError());
-        return -2;
-    }
     if(IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG) < 0) {
         log_error((std::string)"IMG_Init error: " + IMG_GetError());
         return -3;
@@ -342,7 +338,7 @@ int init()
 
     SDL_StartTextInput(); //may or may not be necessary
 
-    Font::load_system_fonts({});
+    Font::init({});
 
     window_pool = std::make_unique<WindowPool>();
 
@@ -352,7 +348,7 @@ void quit()
 {
     window_pool = nullptr;
 
-    Font::close_all({});
+    Font::quit({});
 
     default_window_icon = nullptr;
 
@@ -367,7 +363,6 @@ void quit()
     global_events = std::queue<SDL_Event>();
 
     SDL_Quit();
-    TTF_Quit();
     IMG_Quit();
 }
 

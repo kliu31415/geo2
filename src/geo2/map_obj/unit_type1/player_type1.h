@@ -30,8 +30,8 @@ class Player_Type1 final: public Unit_Type1, public std::enable_shared_from_this
     std::shared_ptr<RenderOpShader> op1;
     std::shared_ptr<RenderOpShader> op2;
     std::shared_ptr<RenderOpGroup> op_group;
-    nonstd::span<float> op_iu1;
-    nonstd::span<float> op_iu2;
+    kx::kx_span<float> op_iu1;
+    kx::kx_span<float> op_iu2;
 
     double weapon_angle;
 

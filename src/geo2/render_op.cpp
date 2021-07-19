@@ -72,12 +72,12 @@ int IShader::get_max_instances() const
 
 using ByteFSA2D = kx::FixedSizeArray<kx::FixedSizeArray<uint8_t>>;
 
-template<class T> nonstd::span<T> to_span(const kx::FixedSizeArray<uint8_t> &data)
+template<class T> kx::kx_span<T> to_span(const kx::FixedSizeArray<uint8_t> &data)
 {
     return {(T*)data.begin(), (T*)data.end()};
 }
 void IShader::render(UBO_Allocator *ubo_allocator,
-                     nonstd::span<const ByteFSA2D*> instance_uniform_data,
+                     kx::kx_span<const ByteFSA2D*> instance_uniform_data,
                      kx::gfx::Renderer *rdr,
                      kx::Passkey<class RenderOpList>) const
 {
@@ -118,17 +118,17 @@ RenderOpShader::RenderOpShader(const IShader &shader_):
         instance_uniform_data[i] = kx::FixedSizeArray<uint8_t>(len);
     }
 }
-void RenderOpShader::set_instance_uniform(size_t uniform_id, nonstd::span<uint8_t> data)
+void RenderOpShader::set_instance_uniform(size_t uniform_id, kx::kx_span<uint8_t> data)
 {
     k_expects(data.size() == instance_uniform_data[uniform_id].size());
     std::copy(data.begin(), data.end(), instance_uniform_data[uniform_id].begin());
 }
-nonstd::span<uint8_t> RenderOpShader::map_instance_uniform(size_t uniform_id)
+kx::kx_span<uint8_t> RenderOpShader::map_instance_uniform(size_t uniform_id)
 {
     return to_span<uint8_t>(instance_uniform_data[uniform_id]);
 }
 
-Font::Font(kx::gfx::Renderer *rdr, const kx::gfx::Font *font):
+Font::Font(kx::gfx::Renderer *rdr, kx::gfx::Font *font):
     atlas(rdr->make_ascii_atlas(font, kx::gfx::Font::MAX_FONT_SIZE))
 {}
 
@@ -192,39 +192,44 @@ void RenderOpText::add_iu_data(std::vector<float> *iu_data,
     k_expects(horizontal_align == HorizontalAlign::Left);
     k_expects(vertical_align == VerticalAlign::Top);
 
-    double cur_x = x;
-    double cur_y = y;
+    //we access text[0] so return if it doesn't exist (in which case there's nothing to render anyway)
+    if(text.empty())
+        return;
+
+    double size_ratio = (double)font_size / font->atlas->font_size;
+
+    auto original_x = x - size_ratio * font->atlas->glyph_metrics[text[0]].left_offset;
+
+    double cur_x = original_x;
+    double cur_y = y - size_ratio * font->atlas->min_y1;
     double cur_w = 0;
 
-    float char_w = font->atlas->w_per_size;
-    float char_h = font->atlas->h_per_size;
-
+    char prev = -1;
     for(const auto &c: text) {
-        k_assert(c>=1 && c<=kx::gfx::ASCII_Atlas::MAX_ASCII_CHAR);
-        const auto &normalized_metrics = font->atlas->glyph_metrics[c];
-        std::remove_const_t<std::remove_reference_t<decltype(normalized_metrics)>> metrics;
-        metrics.min_x = font_size * char_w * normalized_metrics.min_x;
-        metrics.max_x = font_size * char_w * normalized_metrics.max_x;
-        metrics.min_y = font_size * char_h * normalized_metrics.min_y;
-        metrics.max_y = font_size * char_h * normalized_metrics.max_y;
-        metrics.advance = font_size * char_w * normalized_metrics.advance;
+        k_assert(c>=0 && font->atlas->char_supported[c]);
+        const auto &metrics = font->atlas->glyph_metrics[c];
 
         //if the assert fails, then our width is too small for the font size;
         //we can't even fit one character in the alloted width!
-        k_assert(metrics.advance <= w);
+        k_assert(metrics.advance * size_ratio <= w);
 
-        auto next_w = cur_w + metrics.advance;
+        if(prev != -1) {
+            cur_x += font->atlas->kerning[prev][c] * size_ratio;
+            cur_w += font->atlas->kerning[prev][c] * size_ratio;
+        }
+
+        auto next_w = cur_w + metrics.advance * size_ratio;
         if(next_w > w) {
             cur_w = 0;
-            cur_x = x;
+            cur_x = original_x;
             cur_y += font->atlas->font->get_recommended_line_skip(font_size);
         }
 
-        //[x1, y1] is the bottom left
-        auto x1 = rdr->x_to_ndc(cur_x + metrics.min_x);
-        auto x2 = rdr->x_to_ndc(cur_x + metrics.max_x);
-        auto y1 = rdr->y_to_ndc(cur_y + metrics.max_y);
-        auto y2 = rdr->y_to_ndc(cur_y + metrics.min_y);
+        //[x1, y1] is the top left
+        auto x1 = rdr->x_to_ndc(cur_x +  metrics.left_offset * size_ratio);
+        auto x2 = rdr->x_to_ndc(cur_x + (metrics.left_offset + metrics.w) * size_ratio);
+        auto y1 = rdr->y_to_ndc(cur_y +  metrics.top_offset * size_ratio);
+        auto y2 = rdr->y_to_ndc(cur_y + (metrics.top_offset + metrics.h) * size_ratio);
 
         iu_data->push_back(x1);
         iu_data->push_back(y1);
@@ -233,25 +238,18 @@ void RenderOpText::add_iu_data(std::vector<float> *iu_data,
 
         iu_data->push_back(font_size);
         iu_data->push_back(int_bits_to_float(c));
-
-        std::array<uint32_t, 4> data;
-        constexpr double SCALE = 65535;
-        data[0] = SCALE * normalized_metrics.min_x;
-        data[1] = SCALE * (1 - normalized_metrics.max_y);
-        data[2] = SCALE * normalized_metrics.max_x;
-        data[3] = SCALE * (1 - normalized_metrics.min_y);
-        data[2] -= data[0];
-        data[3] -= data[1];
-        iu_data->push_back(uint_bits_to_float((data[1]<<16) | data[0]));
-        iu_data->push_back(uint_bits_to_float((data[3]<<16) | data[2]));
+        iu_data->push_back(metrics.w / (double)font->atlas->max_w);
+        iu_data->push_back(metrics.h / (double)font->atlas->max_h);
 
         iu_data->push_back(color.r);
         iu_data->push_back(color.g);
         iu_data->push_back(color.b);
         iu_data->push_back(color.a);
 
-        cur_x += metrics.advance;
-        cur_w += metrics.advance;
+        cur_x += metrics.advance * size_ratio;
+        cur_w += metrics.advance * size_ratio;
+
+        prev = c;
     }
 }
 
@@ -359,7 +357,8 @@ void RenderOpList::render_internal(kx::gfx::KWindowRunning *kwin_r,
                    if(shader_iu_data.size()==(size_t)shader_op->shader->get_max_instances() ||
                     cur_shader!=shader_op->shader)
                     {
-                        cur_shader->render(ubo_allocator.get(), shader_iu_data, rdr, {});
+                        kx::kx_span<const ByteFSA2D*> spn(shader_iu_data.begin(), shader_iu_data.end());
+                        cur_shader->render(ubo_allocator.get(), spn, rdr, {});
                         shader_iu_data.clear();
                     }
                 } else if(!text_iu_data.empty()) {
@@ -371,7 +370,8 @@ void RenderOpList::render_internal(kx::gfx::KWindowRunning *kwin_r,
                 shader_iu_data.push_back(&shader_op->instance_uniform_data);
             } else if(auto text_op = dynamic_cast<RenderOpText*>(op.get())) {
                 if(cur_shader != nullptr) {
-                    cur_shader->render(ubo_allocator.get(), shader_iu_data, rdr, {});
+                    kx::kx_span<const ByteFSA2D*> spn(shader_iu_data.begin(), shader_iu_data.end());
+                    cur_shader->render(ubo_allocator.get(), spn, rdr, {});
                     cur_shader = nullptr;
                     shader_iu_data.clear();
                 }
@@ -388,9 +388,10 @@ void RenderOpList::render_internal(kx::gfx::KWindowRunning *kwin_r,
     }
 
     //render any buffered data
-    if(cur_shader != nullptr)
-        cur_shader->render(ubo_allocator.get(), shader_iu_data, rdr, {});
-    else if(!text_iu_data.empty()) {
+    if(cur_shader != nullptr) {
+        kx::kx_span<const ByteFSA2D*> spn(shader_iu_data.begin(), shader_iu_data.end());
+        cur_shader->render(ubo_allocator.get(), spn, rdr, {});
+    } else if(!text_iu_data.empty()) {
         render_text(rdr, cur_font, text_iu_data);
     }
 }

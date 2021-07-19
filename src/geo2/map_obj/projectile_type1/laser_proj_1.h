@@ -10,7 +10,7 @@ class LaserProj_1 final: public BasicProj_1
 {
     std::shared_ptr<RenderOpShader> op;
     std::shared_ptr<RenderOpGroup> op_group;
-    nonstd::span<float> op_iu;
+    kx::kx_span<float> op_iu;
     std::unique_ptr<Polygon> base_shape;
 public:
     LaserProj_1(const std::shared_ptr<MapObject> &owner_,

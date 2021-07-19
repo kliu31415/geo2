@@ -72,7 +72,7 @@ void GameRenderOpList::Shaders::init(kx::gfx::Renderer *rdr, kx::Passkey<GameRen
 
 void GameRenderOpList::Fonts::init(kx::gfx::Renderer *rdr, kx::Passkey<GameRenderOpList>)
 {
-    default_ = std::make_unique<Font>(rdr, kx::gfx::Font::DEFAULT.get());
+    default_ = std::make_unique<Font>(rdr, kx::gfx::Font::BLACK_CHANCERY.get());
 }
 GameRenderOpList::GameRenderOpList(kx::gfx::Renderer *renderer):
     cur_renderer(renderer)

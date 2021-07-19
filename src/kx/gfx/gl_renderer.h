@@ -9,7 +9,7 @@
 #include <SDL2/SDL.h>
 #include "glad/glad.h"
 
-#include "span_lite.h"
+#include "kx/kx_span.h"
 
 #include <string>
 #include <map>
@@ -184,10 +184,10 @@ public:
     void set_uniform3f(GLint loc, GLfloat v0, GLfloat v1, GLfloat v3);
     void set_uniform4f(GLint loc, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
 
-    void set_uniform1fv(GLint loc, nonstd::span<GLfloat> vals);
-    void set_uniform2fv(GLint loc, nonstd::span<GLfloat> vals);
-    void set_uniform3fv(GLint loc, nonstd::span<GLfloat> vals);
-    void set_uniform4fv(GLint loc, nonstd::span<GLfloat> vals);
+    void set_uniform1fv(GLint loc, kx::kx_span<GLfloat> vals);
+    void set_uniform2fv(GLint loc, kx::kx_span<GLfloat> vals);
+    void set_uniform3fv(GLint loc, kx::kx_span<GLfloat> vals);
+    void set_uniform4fv(GLint loc, kx::kx_span<GLfloat> vals);
 
     UBIndex get_UB_index(const GLchar *name);
 
@@ -243,23 +243,32 @@ public:
 
 struct GlyphMetrics
 {
-    float min_x;
-    float max_x;
-    float min_y;
-    float max_y;
+    float w;
+    float h;
+    float left_offset;
+    float top_offset;
     float advance;
 };
 
+//this should probably have immutable fields
 struct ASCII_Atlas
 {
     static constexpr int MAX_ASCII_CHAR = 127;
 
     const Font *font;
-    int font_size;
-    float w_per_size;
-    float h_per_size;
+    float font_size;
+    float max_w;
+    float max_h;
+
+    float min_x1;
+    float max_x2;
+    float min_y1;
+    float max_y2;
+
     std::unique_ptr<Texture> texture;
+    std::array<bool, MAX_ASCII_CHAR+1> char_supported;
     std::array<GlyphMetrics, MAX_ASCII_CHAR+1> glyph_metrics;
+    std::array<std::array<float, MAX_ASCII_CHAR+1>, MAX_ASCII_CHAR+1> kerning;
 };
 
 constexpr int NUM_SAMPLES_DEFAULT = 4;
@@ -493,11 +502,7 @@ public:
     void draw_text_wrapped(std::string text, float x, float y, int sz, int wrap_length,
                            SRGB_Color c = Color::BLACK);
 
-    std::unique_ptr<ASCII_Atlas> make_ascii_atlas(const Font *font,
-                                                  int font_size);
-    std::unique_ptr<MonofontAtlas> create_monofont_atlas(const Font &font,
-                                                         int font_size,
-                                                         SRGB_Color color);
+    std::unique_ptr<ASCII_Atlas> make_ascii_atlas(Font *font, int font_size);
 
     void set_target(Texture *target);
     Texture *get_target() const;

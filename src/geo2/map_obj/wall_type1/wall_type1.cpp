@@ -12,7 +12,7 @@ void Wall_Type1::init(const MapObjInitArgs &args)
                      {position.x + position.w, position.y},
                      {position.x + position.w, position.y + position.h},
                      {position.x, position.y + position.h}};
-    auto s = nonstd::span<MapCoord>(std::begin(verts), std::end(verts));
+    auto s = kx::kx_span<MapCoord>(std::begin(verts), std::end(verts));
     args.add_current_pos(Polygon::make(s));
 }
 void Wall_Type1::run1_mt(const MapObjRun1Args &args)

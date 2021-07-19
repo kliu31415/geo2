@@ -148,11 +148,12 @@ void Pig_1::add_render_ops(const MapObjRenderArgs &args)
         auto text = std::make_shared<RenderOpText>();
 
         text->set_text("The quick brown fox jumps over the lazy dog");
-        text->set_x(500);
-        text->set_y(500);
-        text->set_font_size(64);
+        text->set_x(0);
+        text->set_y(0);
+        text->set_font_size(50);
         text->set_font(args.fonts->default_.get());
         text->set_color(kx::gfx::LinearColor(0, 0, 8, 1));
+
         op_group->add_op(text);
     }
 

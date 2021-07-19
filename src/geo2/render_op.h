@@ -4,7 +4,7 @@
 #include "kx/gfx/font.h"
 #include "kx/fixed_size_array.h"
 
-#include "span_lite.h"
+#include "kx/kx_span.h"
 
 #include <vector>
 #include <cstdint>
@@ -56,7 +56,7 @@ public:
     int get_instance_uniform_size_bytes(size_t idx) const;
     int get_max_instances() const;
     void render(UBO_Allocator *ubo_allocator,
-                nonstd::span<const FSA<FSA<uint8_t>>*> instance_uniform_data,
+                kx::kx_span<const FSA<FSA<uint8_t>>*> instance_uniform_data,
                 kx::gfx::Renderer *rdr,
                 kx::Passkey<class RenderOpList>) const;
 
@@ -85,15 +85,15 @@ class RenderOpShader final: public RenderOp
     kx::FixedSizeArray<kx::FixedSizeArray<uint8_t>> instance_uniform_data;
 public:
     RenderOpShader(const IShader &shader_);
-    void set_instance_uniform(size_t uniform_id, nonstd::span<uint8_t> data);
-    nonstd::span<uint8_t> map_instance_uniform(size_t uniform_id);
+    void set_instance_uniform(size_t uniform_id, kx::kx_span<uint8_t> data);
+    kx::kx_span<uint8_t> map_instance_uniform(size_t uniform_id);
 };
 
 struct Font
 {
     std::unique_ptr<kx::gfx::ASCII_Atlas> atlas;
 
-    Font(kx::gfx::Renderer *rdr, const kx::gfx::Font *font_);
+    Font(kx::gfx::Renderer *rdr, kx::gfx::Font *font_);
 };
 
 class RenderOpText final: public RenderOp

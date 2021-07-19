@@ -182,7 +182,7 @@ void Player_Type1::run1_mt(const MapObjRun1Args &args)
                      {current_position.x + 0.5*PSL, current_position.y - 0.5*PSL},
                      {current_position.x + 0.5*PSL, current_position.y + 0.5*PSL},
                      {current_position.x - 0.5*PSL, current_position.y + 0.5*PSL}};
-    auto cur_span = nonstd::span<MapCoord>(std::begin(cur_v), std::end(cur_v));
+    auto cur_span = kx::kx_span<MapCoord>(std::begin(cur_v), std::end(cur_v));
 
     args.get_sole_current_pos()->remake(cur_span);
 
@@ -196,7 +196,7 @@ void Player_Type1::run1_mt(const MapObjRun1Args &args)
                          {desired_position.x + 0.5*PSL, desired_position.y + 0.5*PSL},
                          {desired_position.x - 0.5*PSL, desired_position.y + 0.5*PSL}};
 
-        auto des_span = nonstd::span<MapCoord>(std::begin(des_v), std::end(des_v));
+        auto des_span = kx::kx_span<MapCoord>(std::begin(des_v), std::end(des_v));
         args.get_sole_desired_pos()->remake(des_span);
     } else {
         args.set_move_intent(MoveIntent::StayAtCurrentPos);

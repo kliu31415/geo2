@@ -7,7 +7,7 @@
 
 #include "kx/fixed_size_array.h"
 
-#include "span_lite.h"
+#include "kx/kx_span.h"
 #include <type_traits>
 #include <cstdint>
 #include <memory>
@@ -74,7 +74,7 @@ class CollisionEngine1
     public:
         Grid()
         {}
-        void init_with_max_sizes(nonstd::span<int> max_sizes)
+        void init_with_max_sizes(kx::kx_span<int> max_sizes)
         {
             std::fill(std::begin(cur_size), std::end(cur_size), 0);
             offset[0] = 0;
