@@ -307,7 +307,7 @@
 	<cstring>
 	<climits>
 
-1626668684 source:d:\code\cbprojects\geo2\src\kx\gfx\font.cpp
+1626676804 source:d:\code\cbprojects\geo2\src\kx\gfx\font.cpp
 	"kx/gfx/font.h"
 	"kx/debug.h"
 	"ft2build.h"
@@ -324,9 +324,10 @@
 	"kx/gfx/gl_renderer.h"
 	"kx/gfx/vk_renderer.h"
 
-1626675650 source:d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.cpp
+1626681217 source:d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.cpp
 	"kx/gfx/renderer.h"
 	"kx/io.h"
+	"glad/glad.h"
 	<SDL2/SDL_ttf.h>
 	<SDL2/SDL_image.h>
 	<algorithm>
@@ -401,20 +402,14 @@
 1602827240 d:\code\cbprojects\geo2\src\kx\sdl_deleter.h
 	<memory>
 
-1625374547 d:\code\cbprojects\geo2\src\kx\gfx\renderer_types.h
-	"kx/sdl_deleter.h"
-	<SDL2/SDL_rect.h>
-	"glad/glad.h"
-	<SDL2/SDL_pixels.h>
+1626679423 d:\code\cbprojects\geo2\src\kx\gfx\renderer_types.h
 
-1626675471 d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.h
+1626681328 d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.h
 	"kx/gfx/font.h"
 	"kx/gfx/renderer_types.h"
 	"kx/sdl_deleter.h"
 	"kx/util.h"
 	"kx/time.h"
-	<SDL2/SDL.h>
-	"glad/glad.h"
 	"kx/kx_span.h"
 	<string>
 	<map>
@@ -604,7 +599,7 @@
 	<tuple>
 	<tuple>
 
-1626675670 source:d:\code\cbprojects\geo2\src\geo2\render_op.cpp
+1626676850 source:d:\code\cbprojects\geo2\src\geo2\render_op.cpp
 	"geo2/render_op.h"
 	"geo2/timer.h"
 	"geo2/texture_utils.h"
@@ -612,7 +607,7 @@
 	"kx/gfx/kwindow.h"
 	<cmath>
 
-1626672697 d:\code\cbprojects\geo2\src\geo2\render_op.h
+1626679173 d:\code\cbprojects\geo2\src\geo2\render_op.h
 	"kx/gfx/renderer_types.h"
 	"kx/gfx/font.h"
 	"kx/fixed_size_array.h"
@@ -644,10 +639,10 @@
 	<array>
 	<vector>
 
-1626674124 d:\code\cbprojects\geo2\src\geo2\geometry.h
-	<immintrin.h>
+1626679744 d:\code\cbprojects\geo2\src\geo2\geometry.h
 	"kx/fixed_size_array.h"
 	"kx/kx_span.h"
+	<immintrin.h>
 	<type_traits>
 	<algorithm>
 	<memory>
@@ -848,7 +843,7 @@
 	"kx/io.h"
 	<cmath>
 
-1626676038 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\pig_1.cpp
+1626676923 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\pig_1.cpp
 	"geo2/map_obj/unit_type1/pig_1.h"
 	"geo2/map_obj/map_obj_args.h"
 	<random>
@@ -1012,9 +1007,10 @@
 	<array>
 	<functional>
 
-1626638128 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\hexfly_1.cpp
+1626681275 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\hexfly_1.cpp
 	"geo2/map_obj/unit_type1/hexfly_1.h"
 	"geo2/map_obj/map_obj_args.h"
+	<cmath>
 	<random>
 
 1626634496 d:\code\cbprojects\geo2\src\geo2\texture_utils.h

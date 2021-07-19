@@ -101,7 +101,7 @@ void Font::init(const InitPkey&)
     MONO_DEFAULT = load("kx.mono.default", "kx_data/fonts/roboto_mono_regular.ttf");
     ROBOTO_MONO_REGULAR = load("kx.roboto_mono.regular", "kx_data/fonts/roboto_mono_regular.ttf");
     ROBOTO_MONO_LIGHT = load("kx.roboto_mono.light", "kx_data/fonts/roboto_mono_light.ttf");
-    BLACK_CHANCERY = load("kx.black_chancery", "kx_data/fonts/eutemia.ttf");
+    BLACK_CHANCERY = load("kx.black_chancery", "kx_data/fonts/black_chancery.ttf");
 }
 
 void Font::quit(const QuitPkey&)

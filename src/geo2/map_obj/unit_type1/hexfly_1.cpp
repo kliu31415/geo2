@@ -1,7 +1,10 @@
 #include "geo2/map_obj/unit_type1/hexfly_1.h"
 #include "geo2/map_obj/map_obj_args.h"
 
+#include <cmath>
 #include <random>
+
+constexpr auto M_PI = 3.14159265358979323846;
 
 namespace geo2 { namespace map_obj {
 

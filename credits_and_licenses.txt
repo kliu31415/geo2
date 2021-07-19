@@ -1,7 +1,10 @@
 SDL2 + extensions - zlib License
-curl - curl License
 mcfg thread - GNU LGPL 3.0
+libgcc - GPL v3 (Runtime Library Exception)
+libstdc++ - GPL v3 (Runtime Library Exception)
+libgomp - GPL v3 (Runtime Library Exception)
 libpng - libpng license
+zlib - zlib license
 freetype2 - freetype license
 
 Roboto Mono Font - Apache License 2.0

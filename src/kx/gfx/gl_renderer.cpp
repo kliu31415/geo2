@@ -1,8 +1,11 @@
 #include "kx/gfx/renderer.h"
 #include "kx/io.h"
 
+#include "glad/glad.h"
+
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
+
 #include <algorithm>
 #include <cmath>
 #include <climits>
@@ -21,6 +24,20 @@
 
 namespace kx { namespace gfx {
 
+static_assert(std::is_same_v<GLenum, uint32_t>);
+
+static_assert(sizeof(SRGB_Color) == 16);
+static_assert(offsetof(SRGB_Color, r) == 0);
+static_assert(offsetof(SRGB_Color, g) == 4);
+static_assert(offsetof(SRGB_Color, b) == 8);
+static_assert(offsetof(SRGB_Color, a) == 12);
+
+static_assert(sizeof(LinearColor) == 16);
+static_assert(offsetof(LinearColor, r) == 0);
+static_assert(offsetof(LinearColor, g) == 4);
+static_assert(offsetof(LinearColor, b) == 8);
+static_assert(offsetof(LinearColor, a) == 12);
+
 //non-macro version of SDL_L0_FUNC (the macro version can get the name of the func with "#func",
 //which is pretty useful, so the macro version is being used rn)
 //I THINK this works if args... contains a reference (std::forward should handle it) but I'm not sure
@@ -35,12 +52,30 @@ namespace kx { namespace gfx {
     #endif
 }*/
 
-static_assert(sizeof(LinearColor) == 16);
-static_assert(sizeof(SRGB_Color) == 16);
-static_assert(offsetof(LinearColor, r) == offsetof(SRGB_Color, r));
-static_assert(offsetof(LinearColor, g) == offsetof(SRGB_Color, g));
-static_assert(offsetof(LinearColor, b) == offsetof(SRGB_Color, b));
-static_assert(offsetof(LinearColor, a) == offsetof(SRGB_Color, a));
+void _GLDeleteShader::operator()(GLuint id) const
+{
+    glDeleteShader(id);
+}
+void _GLDeleteShaderProgram::operator()(GLuint id) const
+{
+    glDeleteProgram(id);
+}
+void _GLDeleteBuffer::operator()(GLuint id) const
+{
+    glDeleteBuffers(1, &id);
+}
+void _GLDeleteVAO::operator()(GLuint id) const
+{
+    glDeleteVertexArrays(1, &id);
+}
+void _GLDeleteTexture::operator()(GLuint id) const
+{
+    glDeleteTextures(1, &id);
+}
+void _GLDeleteFramebuffers::operator()(GLuint id) const
+{
+    glDeleteFramebuffers(1, &id);
+}
 
 LinearColor::LinearColor(float r_, float g_, float b_, float a_):
     r(r_), g(g_), b(b_), a(a_)
@@ -60,12 +95,6 @@ LinearColor::LinearColor(const SRGB_Color &color):
     a(color.a)
 {}
 
-SRGB_Color::SRGB_Color(SDL_Color sdl_color):
-    r(sdl_color.r / 255.999),
-    g(sdl_color.g / 255.999),
-    b(sdl_color.b / 255.999),
-    a(sdl_color.a / 255.999)
-{}
 SRGB_Color::SRGB_Color(float r_, float g_, float b_, float a_):
     r(r_), g(g_), b(b_), a(a_)
 {}
@@ -82,10 +111,6 @@ SRGB_Color::SRGB_Color(const LinearColor &color):
     b(linear_to_srgb(color.b)),
     a(color.a)
 {}
-SRGB_Color::operator SDL_Color() const
-{
-    return SDL_Color{(Uint8)(r*255.999), (Uint8)(g*255.999), (Uint8)(b*255.999), (Uint8)(a*255.999)};
-}
 
 Point::Point(float x_, float y_):
     x(x_),
@@ -338,15 +363,32 @@ void Texture::make_mipmaps()
 {
     glGenerateTextureMipmap(texture.id);
 }
+
+constexpr std::array<GLenum, 6> texture_filter_enum_convert {
+    GL_NEAREST,
+    GL_LINEAR,
+    GL_NEAREST_MIPMAP_NEAREST,
+    GL_NEAREST_MIPMAP_LINEAR,
+    GL_LINEAR_MIPMAP_NEAREST,
+    GL_LINEAR_MIPMAP_LINEAR
+};
+using TxFAlgo = Texture::FilterAlgo;
+static_assert(texture_filter_enum_convert[(int)TxFAlgo::Nearest] == GL_NEAREST);
+static_assert(texture_filter_enum_convert[(int)TxFAlgo::Linear] == GL_LINEAR);
+static_assert(texture_filter_enum_convert[(int)TxFAlgo::NearestMipmapNearest] == GL_NEAREST_MIPMAP_NEAREST);
+static_assert(texture_filter_enum_convert[(int)TxFAlgo::NearestMipmapLinear] == GL_NEAREST_MIPMAP_LINEAR);
+static_assert(texture_filter_enum_convert[(int)TxFAlgo::LinearMipmapNearest] == GL_LINEAR_MIPMAP_NEAREST);
+static_assert(texture_filter_enum_convert[(int)TxFAlgo::LinearMipmapLinear] == GL_LINEAR_MIPMAP_LINEAR);
+
 void Texture::set_min_filter(Texture::FilterAlgo algo)
 {
     k_expects(!is_multisample());
-    glTextureParameteri(texture.id, GL_TEXTURE_MIN_FILTER, (GLenum)algo);
+    glTextureParameteri(texture.id, GL_TEXTURE_MIN_FILTER, texture_filter_enum_convert[(int)algo]);
 }
 void Texture::set_mag_filter(Texture::FilterAlgo algo)
 {
     k_expects(!is_multisample());
-    glTextureParameteri(texture.id, GL_TEXTURE_MAG_FILTER, (GLenum)algo);
+    glTextureParameteri(texture.id, GL_TEXTURE_MAG_FILTER, texture_filter_enum_convert[(int)algo]);
 }
 
 Shader::Shader():
@@ -488,19 +530,7 @@ template<_BufferType T> void Buffer<T>::buffer_sub_data(GLintptr offset, const v
 {
     glNamedBufferSubData(buffer.id, offset, n, data);
 }
-template<_BufferType T> void *Buffer<T>::map_range(GLintptr offset,
-                                                   GLsizeiptr len,
-                                                   BufferRangeAccess access)
-{
-    return glMapNamedBufferRange(buffer.id, offset, len, (GLenum)access);
-}
-template<_BufferType T> void Buffer<T>::unmap()
-{
-    //GL_FALSE indicates an error has occurred, which should almost never happen;
-    //apparently, it can happen in Windows XP and below, but Windows Vista and
-    //later versions fix it. Idk about Linux/Mac.
-    k_assert(glUnmapNamedBuffer(buffer.id) != GL_FALSE);
-}
+
 template<_BufferType T> void Buffer<T>::invalidate()
 {
     glInvalidateBufferData(buffer.id);
@@ -573,6 +603,11 @@ Renderer::TextTexture::TextTexture(std::shared_ptr<Texture> text_texture_, Time 
     text_texture(std::move(text_texture_)),
     time_last_used(time_last_used_)
 {}
+
+void Renderer::GLDeleteContext::operator()(void *context) const
+{
+    SDL_GL_DeleteContext(context);
+}
 
 void Renderer::init_shaders()
 {
@@ -987,10 +1022,16 @@ std::shared_ptr<Texture> Renderer::get_text_texture(const std::string &text, int
 {
     k_expects(current_font != nullptr);
 
+    SDL_Color sdl_color{(Uint8)(c.r*255.99),
+                        (Uint8)(c.g*255.99),
+                        (Uint8)(c.b*255.99),
+                        (Uint8)(c.a*255.99)};
     //unwrapped text effectively has a wrap length of numeric_limits...max()
-    TextTextureCacheInfo cache_info(text, current_font->id, sz,
+    TextTextureCacheInfo cache_info(text,
+                                    current_font->id,
+                                    sz,
                                     std::numeric_limits<decltype(TextTextureCacheInfo::wrap_length)>::max(),
-                                    c.r*255.999, c.g*255.999, c.b*255.999, c.a*255.999);
+                                    sdl_color.r, sdl_color.g, sdl_color.b, sdl_color.a);
     auto current_time = Time::now();
     auto cached = text_cache.find(cache_info);
 
@@ -999,7 +1040,8 @@ std::shared_ptr<Texture> Renderer::get_text_texture(const std::string &text, int
     if(cached == text_cache.end()) { //the text texture doesn't exist in the cache, so create it
         if(text.size() > 0) { //passing in a string of length 0 returns an error
             auto desired_font = current_font->font_of_size[std::clamp(sz, 0, Font::MAX_FONT_SIZE)].get();
-            unique_ptr_sdl<SDL_Surface> temp_surface = TTF_RenderText_Blended(desired_font, text.c_str(), c);
+
+            unique_ptr_sdl<SDL_Surface> temp_surface = TTF_RenderText_Blended(desired_font, text.c_str(), sdl_color);
             if(temp_surface == nullptr)
                 log_error("TTF_RenderText_Blended returned nullptr: " + (std::string)SDL_GetError());
             text_texture = std::shared_ptr<Texture>(new Texture(temp_surface.get(), true));
@@ -1029,8 +1071,15 @@ std::shared_ptr<Texture> Renderer::get_text_texture_wrapped(std::string text, in
 {
     k_expects(current_font != nullptr);
 
-    TextTextureCacheInfo cache_info(text, current_font->id, sz, wrap_length,
-                                    c.r*255.999, c.g*255.999, c.b*255.999, c.a*255.999);
+    SDL_Color sdl_color{(Uint8)(c.r*255.99),
+                        (Uint8)(c.g*255.99),
+                        (Uint8)(c.b*255.99),
+                        (Uint8)(c.a*255.99)};
+    TextTextureCacheInfo cache_info(text,
+                                    current_font->id,
+                                    sz,
+                                    wrap_length,
+                                    sdl_color.r, sdl_color.g, sdl_color.b, sdl_color.a);
     auto current_time = Time::now();
     auto cached = text_cache.find(cache_info);
 
@@ -1064,7 +1113,9 @@ std::shared_ptr<Texture> Renderer::get_text_texture_wrapped(std::string text, in
                     text.pop_back();
                 }
                 auto desired_font = current_font->font_of_size[std::clamp(sz, 0, Font::MAX_FONT_SIZE)].get();
-                unique_ptr_sdl<SDL_Surface> temp_surface = TTF_RenderText_Blended(desired_font, this_line.c_str(), c);
+                unique_ptr_sdl<SDL_Surface> temp_surface = TTF_RenderText_Blended(desired_font,
+                                                                                  this_line.c_str(),
+                                                                                  sdl_color);
                 if(temp_surface == nullptr)
                     log_error("TTF_RenderText_Blended_Wrapped returned nullptr: " + (std::string)SDL_GetError());
                 text_lines.emplace_back(new Texture(temp_surface.get(), true));
@@ -1408,15 +1459,28 @@ void Renderer::draw_texture_ms(const Texture &texture, const Rect &dst, const st
     draw_arrays(DrawMode::TriangleStrip, 0, 4);
     Shaders.texture_vbo->invalidate();
 }
+
+constexpr std::array<GLenum, 4> blend_factor_enum_convert {
+    GL_ZERO,
+    GL_ONE,
+    GL_SRC_ALPHA,
+    GL_ONE_MINUS_SRC_ALPHA
+};
+static_assert(blend_factor_enum_convert[(int)BlendFactor::Zero] == GL_ZERO);
+static_assert(blend_factor_enum_convert[(int)BlendFactor::One] == GL_ONE);
+static_assert(blend_factor_enum_convert[(int)BlendFactor::SrcAlpha] == GL_SRC_ALPHA);
+static_assert(blend_factor_enum_convert[(int)BlendFactor::OneMinusSrcAlpha] == GL_ONE_MINUS_SRC_ALPHA);
+
 void Renderer::set_blend_factors(BlendFactor src, BlendFactor dst)
 {
     blend_factors = std::make_pair(src, dst);
-    glBlendFunc((GLenum)src, (GLenum)dst);
+    glBlendFunc(blend_factor_enum_convert[(int)src], blend_factor_enum_convert[(int)dst]);
 }
 void Renderer::set_blend_factors(const std::pair<BlendFactor, BlendFactor> &factors)
 {
     blend_factors = factors;
-    glBlendFunc((GLenum)factors.first, (GLenum)factors.second);
+    glBlendFunc(blend_factor_enum_convert[(int)factors.first],
+                blend_factor_enum_convert[(int)factors.second]);
 }
 const std::pair<BlendFactor, BlendFactor>& Renderer::get_blend_factors() const
 {
@@ -1474,17 +1538,26 @@ void Renderer::use_shader_program(const ShaderProgram &program)
         glUseProgram(program.program.id);
     }
 }
+constexpr std::array<GLenum, 3> draw_mode_enum_convert {
+    GL_TRIANGLES,
+    GL_TRIANGLE_FAN,
+    GL_TRIANGLE_STRIP
+};
+static_assert(draw_mode_enum_convert[(int)DrawMode::Triangles] == GL_TRIANGLES);
+static_assert(draw_mode_enum_convert[(int)DrawMode::TriangleFan] == GL_TRIANGLE_FAN);
+static_assert(draw_mode_enum_convert[(int)DrawMode::TriangleStrip] == GL_TRIANGLE_STRIP);
+
 void Renderer::draw_arrays(DrawMode mode, GLint first, GLsizei count)
 {
-    glDrawArrays((GLenum)mode, first, count);
+    glDrawArrays(draw_mode_enum_convert[(int)mode], first, count);
 }
 void Renderer::draw_arrays_instanced(DrawMode mode, GLint first, GLsizei count, GLsizei instance_cnt)
 {
-    glDrawArraysInstanced((GLenum)mode, first, count, instance_cnt);
+    glDrawArraysInstanced(draw_mode_enum_convert[(int)mode], first, count, instance_cnt);
 }
 void Renderer::draw_elements(DrawMode mode, GLint first, GLsizei count)
 {
-    glDrawElements((GLenum)mode, count, GL_UNSIGNED_INT, (void*)(first*sizeof(GLuint)));
+    glDrawElements(draw_mode_enum_convert[(int)mode], count, GL_UNSIGNED_INT, (void*)(first*sizeof(GLuint)));
 }
 void Renderer::set_active_texture(int tex_num)
 {

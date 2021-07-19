@@ -1,10 +1,10 @@
 #pragma once
 
+#include "kx/fixed_size_array.h"
+#include "kx/kx_span.h"
+
 #include <immintrin.h>
 
-#include "kx/fixed_size_array.h"
-
-#include "kx/kx_span.h"
 #include <type_traits>
 #include <algorithm>
 #include <memory>

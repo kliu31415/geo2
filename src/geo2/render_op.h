@@ -149,7 +149,7 @@ public:
 class RenderOpList
 {
     kx::gfx::UBIndex text_ascii_characters_ub_index;
-    GLint text_ascii_atlas_loc;
+    int text_ascii_atlas_loc;
     std::unique_ptr<kx::gfx::ShaderProgram> text_ascii;
 
     kx::gfx::Renderer *cur_renderer;

@@ -5,10 +5,6 @@
 #include "kx/sdl_deleter.h"
 #include "kx/util.h"
 #include "kx/time.h"
-
-#include <SDL2/SDL.h>
-#include "glad/glad.h"
-
 #include "kx/kx_span.h"
 
 #include <string>
@@ -17,15 +13,17 @@
 #include <set>
 #include <queue>
 
+struct SDL_Window;
+
 namespace kx { namespace gfx {
 
 template<class Deleter> class _GLUniqueObj final
 {
 public:
-    GLuint id;
+    uint32_t id;
 
     _GLUniqueObj() = default;
-    _GLUniqueObj(GLuint id_):
+    _GLUniqueObj(uint32_t id_):
         id(id_)
     {}
     ~_GLUniqueObj()
@@ -52,27 +50,27 @@ public:
 
 struct _GLDeleteShader final
 {
-    void operator()(GLuint id) const {glDeleteShader(id);}
+    void operator()(uint32_t id) const;
 };
 struct _GLDeleteShaderProgram final
 {
-    void operator()(GLuint id) const {glDeleteProgram(id);}
+    void operator()(uint32_t id) const;
 };
 struct _GLDeleteBuffer final
 {
-    void operator()(GLuint id) const {glDeleteBuffers(1, &id);}
+    void operator()(uint32_t id) const;
 };
 struct _GLDeleteVAO final
 {
-    void operator()(GLuint id) const {glDeleteVertexArrays(1, &id);}
+    void operator()(uint32_t id) const;
 };
 struct _GLDeleteTexture final
 {
-    void operator()(GLuint id) const {glDeleteTextures(1, &id);}
+    void operator()(uint32_t id) const;
 };
 struct _GLDeleteFramebuffers final
 {
-    void operator()(GLuint id) const {glDeleteFramebuffers(1, &id);}
+    void operator()(uint32_t id) const;
 };
 
 struct ColorMod
@@ -88,11 +86,17 @@ struct ColorMod
 class Texture
 {
 public:
-    enum class Format {RGBA8888, RGB888, RGBA16F, RGB16F, R8};
+    enum class Format {
+        RGBA8888,
+        RGB888,
+        RGBA16F,
+        RGB16F,
+        R8
+    };
 private:
     friend class Renderer;
 
-    static GLuint active_texture;
+    static uint32_t active_texture;
 
     _GLUniqueObj<_GLDeleteTexture> texture;
     _GLUniqueObj<_GLDeleteFramebuffers> framebuffer;
@@ -103,7 +107,7 @@ private:
     Format format;
     ColorMod color_mod;
     float alpha_mod;
-    GLenum binding_point; ///GL_TEXTURE_2D or GL_TEXTURE_2D_MULTISAMPLE (or the array equivalents)
+    uint32_t binding_point; //actually a GLenum
     int samples;
 
     Texture(int dim, int slices, int w_, int h_, Format format_, bool is_srgb__, int samples_, void *pixels);
@@ -126,12 +130,12 @@ public:
     void make_mipmaps();
 
     enum class FilterAlgo {
-        Nearest = GL_NEAREST,
-        Linear = GL_LINEAR,
-        NearestMipmapNearest = GL_NEAREST_MIPMAP_NEAREST,
-        NearestMipmapLinear = GL_NEAREST_MIPMAP_LINEAR,
-        LinearMipmapNearest = GL_LINEAR_MIPMAP_NEAREST,
-        LinearMipmapLinear = GL_LINEAR_MIPMAP_LINEAR
+        Nearest = 0,
+        Linear = 1,
+        NearestMipmapNearest = 2,
+        NearestMipmapLinear = 3,
+        LinearMipmapNearest = 4,
+        LinearMipmapLinear = 5
     };
 
     void set_min_filter(FilterAlgo algo);
@@ -145,7 +149,7 @@ protected:
     _GLUniqueObj<_GLDeleteShader> shader;
 
     Shader();
-    Shader(const std::string &file_name, GLenum shader_type);
+    Shader(const std::string &file_name, uint32_t shader_type);
 public:
 };
 
@@ -163,8 +167,8 @@ class FragShader final: public Shader
     FragShader(const std::string &file_name);
 };
 
-using UniformLoc = GLint;
-using UBIndex = GLuint;
+using UniformLoc = int;
+using UBIndex = uint32_t;
 
 class ShaderProgram
 {
@@ -174,29 +178,25 @@ class ShaderProgram
 
     ShaderProgram(Renderer *owner_, const VertShader &vert_shader, const FragShader &frag_shader);
 public:
-    UniformLoc get_uniform_loc(const GLchar *name);
+    UniformLoc get_uniform_loc(const char *name);
 
     //all set_uniform functions require the current program to be bound
-    void set_uniform1i(GLint loc, GLint val);
+    void set_uniform1i(int loc, int val);
 
-    void set_uniform1f(GLint loc, GLfloat v0);
-    void set_uniform2f(GLint loc, GLfloat v0, GLfloat v1);
-    void set_uniform3f(GLint loc, GLfloat v0, GLfloat v1, GLfloat v3);
-    void set_uniform4f(GLint loc, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
+    void set_uniform1f(int loc, float v0);
+    void set_uniform2f(int loc, float v0, float v1);
+    void set_uniform3f(int loc, float v0, float v1, float v3);
+    void set_uniform4f(int loc, float v0, float v1, float v2, float v3);
 
-    void set_uniform1fv(GLint loc, kx::kx_span<GLfloat> vals);
-    void set_uniform2fv(GLint loc, kx::kx_span<GLfloat> vals);
-    void set_uniform3fv(GLint loc, kx::kx_span<GLfloat> vals);
-    void set_uniform4fv(GLint loc, kx::kx_span<GLfloat> vals);
+    void set_uniform1fv(int loc, kx::kx_span<float> vals);
+    void set_uniform2fv(int loc, kx::kx_span<float> vals);
+    void set_uniform3fv(int loc, kx::kx_span<float> vals);
+    void set_uniform4fv(int loc, kx::kx_span<float> vals);
 
-    UBIndex get_UB_index(const GLchar *name);
+    UBIndex get_UB_index(const char *name);
 
-    void bind_UB(UBIndex ub_index, GLuint binding);
+    void bind_UB(UBIndex ub_index, uint32_t binding);
 };
-
-enum class BufferRangeAccess {Read = GL_MAP_READ_BIT,
-                              Write = GL_MAP_WRITE_BIT,
-                              ReadWrite = (GL_MAP_READ_BIT | GL_MAP_WRITE_BIT)};
 
 template<_BufferType T> class Buffer final
 {
@@ -209,10 +209,8 @@ template<_BufferType T> class Buffer final
     Buffer(Renderer *owner_);
 public:
     void ensure_active();
-    void buffer_data(const void *data, GLuint n);
-    void buffer_sub_data(GLintptr offset, const void *data, GLuint n);
-    [[nodiscard]] void *map_range(GLintptr offset, GLsizeiptr len, BufferRangeAccess access);
-    void unmap();
+    void buffer_data(const void *data, uint32_t n);
+    void buffer_sub_data(intptr_t offset, const void *data, uint32_t n);
     void invalidate();
 };
 
@@ -237,8 +235,8 @@ class VAO final
 public:
     void add_VBO(std::shared_ptr<VBO> vbo);
     void add_EBO(std::shared_ptr<EBO> ebo);
-    void vertex_attrib_pointer_f(GLuint pos, GLuint size, GLsizei stride, uintptr_t offset);
-    void enable_vertex_attrib_array(GLuint pos);
+    void vertex_attrib_pointer_f(uint32_t pos, uint32_t size, int stride, uintptr_t offset);
+    void enable_vertex_attrib_array(uint32_t pos);
 };
 
 struct GlyphMetrics
@@ -303,7 +301,7 @@ class Renderer final
 
     struct GLDeleteContext
     {
-        void operator()(void *context) const {SDL_GL_DeleteContext(context);}
+        void operator()(void *context) const;
     };
 
     SDL_Window *window;
@@ -335,10 +333,10 @@ class Renderer final
     {
         constexpr static size_t TRI_BUFFER_SIZE = 1e5;
 
-        GLuint cur_program;
-        GLuint active_VBO_id;
-        GLuint active_EBO_id;
-        GLuint active_UBO_id;
+        uint32_t cur_program;
+        uint32_t active_VBO_id;
+        uint32_t active_EBO_id;
+        uint32_t active_UBO_id;
 
         std::unique_ptr<ShaderProgram> triangle;
         std::unique_ptr<VAO> triangle_vao;
@@ -385,7 +383,7 @@ public:
     ///how long a text texture can go unused for before getting evicted (around 1s works well)
     static const Time::Delta TEXT_TEXTURE_CACHE_TIME;
 
-    Renderer(SDL_Window *window_, Uint32 flags);
+    Renderer(SDL_Window *window_, uint32_t flags);
 
     ///noncopyable because that's an AbstractWindow can only have one Renderer
     Renderer(const Renderer&) = delete;
@@ -564,10 +562,10 @@ public:
     template<class ...Args> std::unique_ptr<ShaderProgram> make_shader_program(Args &&...args)
         {return std::unique_ptr<ShaderProgram>(new ShaderProgram(this, std::forward<Args>(args)...));}
 
-    GLuint get_cur_program(Passkey<ShaderProgram>);
-    GLuint get_active_VBO_id(Passkey<VBO, VAO>);
-    GLuint get_active_EBO_id(Passkey<EBO>);
-    GLuint get_active_UBO_id(Passkey<UBO>);
+    uint32_t get_cur_program(Passkey<ShaderProgram>);
+    uint32_t get_active_VBO_id(Passkey<VBO, VAO>);
+    uint32_t get_active_EBO_id(Passkey<EBO>);
+    uint32_t get_active_UBO_id(Passkey<UBO>);
 
     /** If you call draw_arrays/draw_elements with a custom shader, then you must call
      *  prepare_for_custom_shader before calling any of the opengl related
@@ -587,11 +585,11 @@ public:
     void bind_VBO(const VBO&);
     void bind_EBO(const EBO&);
     void bind_UBO(const UBO&);
-    void bind_UB_base(GLuint index, const UBO&);
+    void bind_UB_base(uint32_t index, const UBO&);
     void use_shader_program(const ShaderProgram&);
-    void draw_arrays(DrawMode mode, GLint first, GLsizei count);
-    void draw_arrays_instanced(DrawMode mode, GLint first, GLsizei count, GLsizei instance_cnt);
-    void draw_elements(DrawMode mode, GLint first, GLsizei count);
+    void draw_arrays(DrawMode mode, int first, int count);
+    void draw_arrays_instanced(DrawMode mode, int first, int count, int instance_cnt);
+    void draw_elements(DrawMode mode, int first, int count);
     void set_active_texture(int tex_num);
     void bind_texture(const Texture &texture);
 

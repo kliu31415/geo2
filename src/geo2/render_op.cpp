@@ -198,9 +198,7 @@ void RenderOpText::add_iu_data(std::vector<float> *iu_data,
 
     double size_ratio = (double)font_size / font->atlas->font_size;
 
-    auto original_x = x - size_ratio * font->atlas->glyph_metrics[text[0]].left_offset;
-
-    double cur_x = original_x;
+    double cur_x = x - size_ratio * font->atlas->glyph_metrics[text[0]].left_offset;
     double cur_y = y - size_ratio * font->atlas->min_y1;
     double cur_w = 0;
 
@@ -221,7 +219,7 @@ void RenderOpText::add_iu_data(std::vector<float> *iu_data,
         auto next_w = cur_w + metrics.advance * size_ratio;
         if(next_w > w) {
             cur_w = 0;
-            cur_x = original_x;
+            cur_x = x - size_ratio * font->atlas->glyph_metrics[c].left_offset;
             cur_y += font->atlas->font->get_recommended_line_skip(font_size);
         }
 
