@@ -52,11 +52,17 @@ void CollisionEngine1::add_cur_to_grid(int idx, std::vector<CEng1Collision> *col
     auto add_obj_to_grid = [this, idx, collisions](const Polygon *polygon, int shape_id)
                             {
                                 auto aabb = polygon->get_AABB();
+                                //we don't have to update global_AABB because that's only used
+                                //for optimization (making the grid bounds as tight as possible)
+                                max_AABB_w = std::max(max_AABB_w, aabb.x2 - aabb.x1);
+                                max_AABB_h = std::max(max_AABB_h, aabb.y2 - aabb.y1);
                                 int x = x_to_grid_x(aabb.x1);
                                 int y = y_to_grid_y(aabb.y1);
                                 CEng1Obj obj(polygon, idx, shape_id);
                                 find_and_add_collisions_neq(collisions, obj);
                                 grid.get_ref(x, y).push_back(obj);
+
+
                             };
     (*ceng_data)[idx].for_each_cur(add_obj_to_grid);
 }
@@ -65,6 +71,10 @@ void CollisionEngine1::add_des_to_grid(int idx, std::vector<CEng1Collision> *col
     auto add_obj_to_grid = [this, idx, collisions](const Polygon *polygon, int shape_id)
                             {
                                 auto aabb = polygon->get_AABB();
+                                //we don't have to update global_AABB because that's only used
+                                //for optimization (making the grid bounds as tight as possible)
+                                max_AABB_w = std::max(max_AABB_w, aabb.x2 - aabb.x1);
+                                max_AABB_h = std::max(max_AABB_h, aabb.y2 - aabb.y1);
                                 int x = x_to_grid_x(aabb.x1);
                                 int y = y_to_grid_y(aabb.y1);
                                 CEng1Obj obj(polygon, idx, shape_id);
@@ -183,7 +193,9 @@ bool CollisionEngine1::des_cur_has_collision(int idx1, int idx2) const
 }
 CollisionEngine1::CollisionEngine1(std::shared_ptr<ThreadPool> thread_pool_):
     thread_pool(std::move(thread_pool_))
-{}
+{
+
+}
 void CollisionEngine1::reset()
 {
     grid.reset();
@@ -228,31 +240,99 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
     }
 
     //step 2
+    #ifdef GEO2_AVX2
+    const auto cum_stride = sizeof(CEng1Obj) * _mm256_set_epi64x(3, 2, 1, 0);
 
+    //the spec for gather doesn't require any alignment, so I'll comment out this assert...
+    //hopefully alignment isn't implicitly required
+    //k_assert((uintptr_t)active_objs.data() % 8 == 0);
+    auto base = (const long long int*)active_objs.data();
+    auto mm_vec_iterator = cum_stride;
+
+    auto mm_max_dimensions = _mm256_set1_ps(0);
+    auto mm_global_aabb_min = _mm256_set1_ps( std::numeric_limits<float>::max());
+    auto mm_global_aabb_max = _mm256_set1_ps(-std::numeric_limits<float>::max());
+
+    auto last_avx_idx = 4 * (active_objs.size() / 4);
+    //we grid things based on their top left corner, so calculate the global
+    //AABB based on top left corners only.
+    for(size_t i=0; i<last_avx_idx; i+=4) {
+        static_assert(offsetof(CEng1Obj, polygon) == 0);
+        static_assert(Polygon::offset_of_aabb() == 0);
+
+        static_assert(offsetof(AABB, x1) == 0);
+        static_assert(offsetof(AABB, y1) == 4);
+        static_assert(offsetof(AABB, x2) == 8);
+        static_assert(offsetof(AABB, y2) == 12);
+
+        static_assert(std::is_same_v<decltype(AABB::x1), float>);
+        static_assert(std::is_same_v<decltype(AABB::y1), float>);
+        static_assert(std::is_same_v<decltype(AABB::x2), float>);
+        static_assert(std::is_same_v<decltype(AABB::y2), float>);
+
+        //only holds for 64 bit compilers, but it shouldn't be hard to adapt this to 32-bit compilers in the future
+        static_assert(sizeof(CEng1Obj::polygon) == 8);
+
+        auto mm_x1y1_addr = _mm256_i64gather_epi64(base, mm_vec_iterator, 1);
+        auto mm_x2y2_addr = 8 + mm_x1y1_addr;
+
+        auto mm_x1y1_epi64 = _mm256_i64gather_epi64(nullptr, mm_x1y1_addr, 1);
+        auto mm_x2y2_epi64 = _mm256_i64gather_epi64(nullptr, mm_x2y2_addr, 1);
+
+        auto mm_x1y1 = *reinterpret_cast<__m256*>(&mm_x1y1_epi64);
+        auto mm_x2y2 = *reinterpret_cast<__m256*>(&mm_x2y2_epi64);
+
+        mm_max_dimensions = _mm256_max_ps(mm_max_dimensions, mm_x2y2 - mm_x1y1);
+        mm_global_aabb_min = _mm256_min_ps(mm_global_aabb_min, mm_x1y1);
+        mm_global_aabb_max = _mm256_max_ps(mm_global_aabb_max, mm_x1y1);
+
+        mm_vec_iterator += sizeof(CEng1Obj) * 4;
+    }
+    std::array<float, 8> mm_vals;
+
+    _mm256_storeu_ps(mm_vals.data(), mm_max_dimensions);
+    max_AABB_w = std::max(mm_vals[0], std::max(mm_vals[2], std::max(mm_vals[4], mm_vals[6])));
+    max_AABB_h = std::max(mm_vals[1], std::max(mm_vals[3], std::max(mm_vals[5], mm_vals[7])));
+
+    _mm256_storeu_ps(mm_vals.data(), mm_global_aabb_min);
+    global_AABB.x1 = std::min(mm_vals[0], std::min(mm_vals[2], std::min(mm_vals[4], mm_vals[6])));
+    global_AABB.y1 = std::min(mm_vals[1], std::min(mm_vals[3], std::min(mm_vals[5], mm_vals[7])));
+
+    _mm256_storeu_ps(mm_vals.data(), mm_global_aabb_max);
+    global_AABB.x2 = std::max(mm_vals[0], std::max(mm_vals[2], std::max(mm_vals[4], mm_vals[6])));
+    global_AABB.y2 = std::max(mm_vals[1], std::max(mm_vals[3], std::max(mm_vals[5], mm_vals[7])));
+
+    for(auto i=last_avx_idx; i<active_objs.size(); i++) {
+        const auto &aabb = active_objs[i].polygon->get_AABB();
+
+        max_AABB_w = std::max(max_AABB_w, aabb.x2 - aabb.x1);
+        max_AABB_h = std::max(max_AABB_h, aabb.y2 - aabb.y1);
+
+        global_AABB.x1 = std::min(global_AABB.x1, aabb.x1);
+        global_AABB.y1 = std::min(global_AABB.y1, aabb.y1);
+        global_AABB.x2 = std::max(global_AABB.x2, aabb.x1);
+        global_AABB.y2 = std::max(global_AABB.y2, aabb.y1);
+    }
+    #else
     //this until processing the active objects takes ~80us on Test2(40, 40)
-    //calculate the global AABB and the max AABB width/height
     max_AABB_w = 0.0f;
     max_AABB_h = 0.0f;
 
     //we grid things based on their top left corner, so calculate the global
     //AABB based on top left corners only.
     global_AABB = AABB::make_maxbad_AABB();
+    for(const auto &obj: active_objs) {
+        const auto &aabb = obj.polygon->get_AABB();
 
-    auto calc_global_AABB_and_get_dim = [this](const Polygon *polygon) -> void
-    {
-        const auto &aabb = polygon->get_AABB();
         max_AABB_w = std::max(max_AABB_w, aabb.x2 - aabb.x1);
         max_AABB_h = std::max(max_AABB_h, aabb.y2 - aabb.y1);
 
-        global_AABB.x1 = std::min(global_AABB.x1, polygon->get_AABB().x1);
-        global_AABB.x2 = std::max(global_AABB.x2, polygon->get_AABB().x1);
-        global_AABB.y1 = std::min(global_AABB.y1, polygon->get_AABB().y1);
-        global_AABB.y2 = std::max(global_AABB.y2, polygon->get_AABB().y1);
-    };
-
-    for(const auto &obj: active_objs) {
-        calc_global_AABB_and_get_dim(obj.polygon);
+        global_AABB.x1 = std::min(global_AABB.x1, aabb.x1);
+        global_AABB.x2 = std::max(global_AABB.x2, aabb.x1);
+        global_AABB.y1 = std::min(global_AABB.y1, aabb.y1);
+        global_AABB.y2 = std::max(global_AABB.y2, aabb.y1);
     }
+    #endif
 
     grid_rect_w = (global_AABB.x2 - global_AABB.x1) / GRID_LEN;
     grid_rect_h = (global_AABB.y2 - global_AABB.y1) / GRID_LEN;

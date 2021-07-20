@@ -24,7 +24,7 @@ namespace geo2 {
  *  so the CollisionEngine1 will own the Polygons.
  */
 
-class CollisionEngine1
+class alignas(16) CollisionEngine1
 {
     constexpr static int GRID_LEN = 128; //power of 2 is faster cuz mult turns into bitshift
 
@@ -89,6 +89,8 @@ class CollisionEngine1
     }
     */
 
+    std::vector<CEng1Obj> active_objs;
+
     std::shared_ptr<class ThreadPool> thread_pool;
 
     const std::vector<std::shared_ptr<map_obj::MapObject>> *map_objs;
@@ -96,7 +98,6 @@ class CollisionEngine1
 
     //afaik, the only way we modify ceng_data is calling set_move_intent in update_intent_after_collision
     std::vector<CEng1Data> *ceng_data;
-    std::vector<CEng1Obj> active_objs;
     Grid<CEng1Obj> grid;
 
     AABB global_AABB;

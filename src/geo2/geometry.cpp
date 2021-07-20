@@ -1,19 +1,170 @@
 #include "geo2/geometry.h"
+#include "kx/multithread/spinlock.h"
 
 #include <immintrin.h>
+#include <cstring>
+#include <cstdlib>
+
+//#define USE_POLYGON_ALLOCATOR
 
 namespace geo2 {
+
+inline constexpr uint32_t get_polygon_d_len(uint32_t n)
+{
+    return 8 * ((n + 7) / 8) + 1;
+}
+inline constexpr size_t get_polygon_size(uint32_t n)
+{
+    return sizeof(Polygon) + sizeof(float) * 2 * get_polygon_d_len(n);
+}
+
+class PolygonAllocator
+{
+    static constexpr auto ALL_ONES = std::numeric_limits<uint64_t>::max();
+    static_assert(__builtin_popcountll(ALL_ONES) == 64);
+
+    static constexpr size_t POLYGONS_PER_LEVEL = 1<<16;
+
+    static constexpr size_t LEVEL_POLYGON_SIZE_BYTES[] {
+        get_polygon_size(0*8 + 1),
+        get_polygon_size(1*8 + 1),
+        get_polygon_size(2*8 + 1),
+        get_polygon_size(3*8 + 1)
+    };
+
+    static constexpr size_t LEVEL_SIZE_BYTES[] {
+        POLYGONS_PER_LEVEL * LEVEL_POLYGON_SIZE_BYTES[0],
+        POLYGONS_PER_LEVEL * LEVEL_POLYGON_SIZE_BYTES[1],
+        POLYGONS_PER_LEVEL * LEVEL_POLYGON_SIZE_BYTES[2],
+        POLYGONS_PER_LEVEL * LEVEL_POLYGON_SIZE_BYTES[3]
+    };
+
+    static constexpr size_t CUM_LEVEL_SIZE_BYTES[] {
+        0,
+        LEVEL_SIZE_BYTES[0],
+        LEVEL_SIZE_BYTES[0] + LEVEL_SIZE_BYTES[1],
+        LEVEL_SIZE_BYTES[0] + LEVEL_SIZE_BYTES[1] + LEVEL_SIZE_BYTES[2]
+    };
+
+    void *base_addr;
+    //0 bit = in use, 1 bit = free
+    uint64_t L1;
+    uint64_t L2[64];
+    uint64_t L3[64][64];
+    kx::Spinlock<> lock;
+public:
+    PolygonAllocator()
+    {
+        for(int i=0; i<4; i++) {
+            for(int j=1; j<8; j++)
+                k_assert(get_polygon_size(i*8 + j) == get_polygon_size(i*8 + j + 1));
+        }
+
+        size_t num_bytes = 0;
+
+        for(int i=0; i<4; i++)
+            num_bytes += LEVEL_SIZE_BYTES[i];
+
+        base_addr = std::malloc(num_bytes);
+        if((uintptr_t)base_addr % 16 != 0)
+            kx::log_error("bad PolygonAllocator buffer alignment (needs to be a multiple of 16)");
+
+        L1 = ALL_ONES;
+        std::fill(std::begin(L2), std::end(L2), ALL_ONES);
+        for(auto &level: L3)
+            std::fill(std::begin(level), std::end(level), ALL_ONES);
+    }
+    ~PolygonAllocator()
+    {
+        /* //unfortunately, we can't rely on the order of static object destruction;
+           //i.e. perhaps this destructor is called before some static Polygons are destroyed
+        auto lg = lock.get_lock_guard();
+        k_expects(L1 == ALL_ONES); //if this is the case, all polygons have been freed
+        */
+        std::free(base_addr);
+    }
+    void *allocate(uint32_t n)
+    {
+        if(__builtin_expect(n<=0 || n>32, 0)) {
+            kx::log_error("PolygonAllocator got polygon with bad size (n = " + kx::to_str(n) + ")");
+            return nullptr;
+        }
+        auto level = (n-1)/8;
+
+        auto lg = lock.get_lock_guard();
+
+        auto relevant_L1 = (L1 & (((1ULL<<16) - 1) << (level*16)));
+        if(__builtin_expect(relevant_L1 == 0, 0)) {
+            kx::log_error("PolygonAllocator ran out of memory (level = " + kx::to_str(level) + ")");
+            return nullptr;
+        }
+
+        auto L1_bit = __builtin_ctzll(relevant_L1);
+        auto L2_bit = __builtin_ctzll(L2[L1_bit]);
+        auto L3_bit = __builtin_ctzll(L3[L1_bit][L2_bit]);
+
+        L3[L1_bit][L2_bit] ^= (1ULL << L3_bit);
+        L2[L1_bit] ^= (((uint64_t)(L3[L1_bit][L2_bit] == 0)) << L2_bit);
+        L1 ^= (((uint64_t)(L2[L1_bit] == 0)) << L1_bit);
+
+        auto ret_addr = (uintptr_t)base_addr;
+        ret_addr += CUM_LEVEL_SIZE_BYTES[level];
+        ret_addr += (64*64) * (L1_bit >> (level*16)) * LEVEL_POLYGON_SIZE_BYTES[level];
+        ret_addr += 64 * L2_bit * LEVEL_POLYGON_SIZE_BYTES[level];
+        ret_addr += L3_bit * LEVEL_POLYGON_SIZE_BYTES[level];
+        return (void*)ret_addr;
+    }
+    void deallocate(void *ptr)
+    {
+        auto offset = (uintptr_t)ptr - (uintptr_t)base_addr;
+
+        int L1_offset = 0;
+
+        int level = 0;
+        for(level=0; level<3; level++) {
+            if(offset < LEVEL_SIZE_BYTES[level]) {
+                break;
+            }
+            offset -= LEVEL_SIZE_BYTES[level];
+            L1_offset += 16;
+        }
+        offset /= LEVEL_POLYGON_SIZE_BYTES[level];
+
+        auto L1_bit = L1_offset + offset / (64*64);
+        auto L2_bit = (offset / 64) % 64;
+        auto L3_bit = offset % 64;
+
+        auto lg = lock.get_lock_guard();
+
+        L3[L1_bit][L2_bit] |= (1ULL << L3_bit);
+        L2[L1_bit] |= (1ULL << L2_bit);
+        L1 |= (1ULL << L1_bit);
+    }
+};
+
+inline PolygonAllocator *get_polygon_allocator()
+{
+    static PolygonAllocator alloc;
+    return &alloc;
+}
+//Declaring this ensures that the static field in the above function will be constructed
+//by the time main starts, which is good because it prevents data races
+auto dummy_polygon = Polygon::make_with_num_sides(1);
 
 //not necessary, but good for performance and ensures we've checked every field
 static_assert(sizeof(Polygon) == 20); //20 = sizeof(int) + sizeof(AABB)
 
 uint32_t Polygon::get_d_len(uint32_t n)
 {
-    return 8 * ((n + 7) / 8) + 1;
+    return get_polygon_d_len(n);
 }
-void* Polygon::operator new(size_t bytes, uint32_t n)
+void *Polygon::operator new([[maybe_unused]] size_t bytes, uint32_t n)
 {
-    return ::operator new(bytes + sizeof(float) * 2 * get_d_len(n));
+    #ifdef USE_POLYGON_ALLOCATOR
+    return get_polygon_allocator()->allocate(n);
+    #else
+    return ::operator new(get_polygon_size(n));
+    #endif
 }
 Polygon::Polygon(uint32_t num_sides):
     n(num_sides)
@@ -110,9 +261,17 @@ void Polygon::rotate_about_origin_internal(float theta)
         _mm256_storeu_ps(verts + d_len + i, mm_x * mm_sin_theta + mm_y * mm_cos_theta);
     }
 }
+inline float *Polygon::get_verts() const
+{
+    return (float*)((uint8_t*)this + sizeof(*this));
+}
 void Polygon::operator delete(void *ptr)
 {
+    #ifdef USE_POLYGON_ALLOCATOR
+    get_polygon_allocator()->deallocate(ptr);
+    #else
     ::operator delete(ptr);
+    #endif
 }
 std::unique_ptr<Polygon> Polygon::copy() const
 {
@@ -188,6 +347,13 @@ template<class T> void Polygon::remake(kx::kx_span<_MapCoord<T>> vertices)
 template void Polygon::remake<float>(kx::kx_span<_MapCoord<float>> vertices);
 template void Polygon::remake<double>(kx::kx_span<_MapCoord<double>> vertices);
 
+///0 <= idx <= n (note the <= n instead of < n)
+_MapCoord<float> Polygon::get_vertex(size_t idx) const
+{
+    auto d_len = get_d_len(n);
+    auto verts = get_verts();
+    return _MapCoord<float>(verts[idx], verts[d_len + idx]);
+}
 bool Polygon::has_collision(const Polygon &other) const
 {
     //TODO: ensure reflexivity, e.g. ensure a.has_collision(b) == b.has_collision(a).

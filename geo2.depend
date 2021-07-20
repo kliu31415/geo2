@@ -625,7 +625,7 @@
 1626569138 d:\code\cbprojects\geo2\src\geo2\game_render_op_list.h
 	"geo2/render_op.h"
 
-1626672698 d:\code\cbprojects\geo2\src\geo2\collision_engine1.h
+1626748893 d:\code\cbprojects\geo2\src\geo2\collision_engine1.h
 	"geo2/ceng1_obj.h"
 	"geo2/ceng1_data.h"
 	"geo2/map_obj/map_object.h"
@@ -638,14 +638,14 @@
 	<array>
 	<vector>
 
-1626747233 d:\code\cbprojects\geo2\src\geo2\geometry.h
+1626758339 d:\code\cbprojects\geo2\src\geo2\geometry.h
 	"kx/kx_span.h"
 	<memory>
 	<type_traits>
 	<algorithm>
 	<cmath>
 
-1626746729 source:d:\code\cbprojects\geo2\src\geo2\collision_engine1.cpp
+1626762826 source:d:\code\cbprojects\geo2\src\geo2\collision_engine1.cpp
 	"geo2/collision_engine1.h"
 	"geo2/multithread/thread_pool.h"
 	"geo2/timer.h"
@@ -837,7 +837,7 @@
 	"kx/io.h"
 	<cmath>
 
-1626676923 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\pig_1.cpp
+1626754309 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\pig_1.cpp
 	"geo2/map_obj/unit_type1/pig_1.h"
 	"geo2/map_obj/map_obj_args.h"
 	<random>
@@ -899,7 +899,7 @@
 1625284060 d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\simple_proj_1.h
 	"geo2/map_obj/projectile_type1/projectile_type1.h"
 
-1626638128 source:d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\laser_proj_1.cpp
+1626754318 source:d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\laser_proj_1.cpp
 	"geo2/map_obj/projectile_type1/laser_proj_1.h"
 	"geo2/map_obj/map_obj_args.h"
 	"geo2/render_op.h"
@@ -975,7 +975,7 @@
 	<array>
 	<functional>
 
-1626638128 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\spotted_pig_1.cpp
+1626754279 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\spotted_pig_1.cpp
 	"geo2/map_obj/unit_type1/spotted_pig_1.h"
 	"geo2/map_obj/map_obj_args.h"
 	<random>
@@ -1013,9 +1013,12 @@
 1626746978 d:\code\cbprojects\geo2\src\kx\kx_span.h
 	"kx/debug.h"
 
-1626747268 source:d:\code\cbprojects\geo2\src\geo2\geometry.cpp
+1626762873 source:d:\code\cbprojects\geo2\src\geo2\geometry.cpp
 	"geo2/geometry.h"
+	"kx/multithread/spinlock.h"
 	<immintrin.h>
+	<cstring>
+	<cstdlib>
 
 1626682481 source:d:\code\cbprojects\geo2\src\geo2\rng.cpp
 	"geo2/rng.h"

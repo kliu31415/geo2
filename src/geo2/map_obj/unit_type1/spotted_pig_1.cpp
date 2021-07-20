@@ -21,7 +21,7 @@ constexpr MapVec v0[]{{X_BEGIN, -0.5f*PART_H[0]},
                       {X_BEGIN + PART_W[0] + PART_W[1], -0.5f*PART_H[2]}};
 
 //starts at the bottom left and goes CCW
-const std::unique_ptr<Polygon> BASE_SHAPE = Polygon::make(
+const std::unique_ptr<const Polygon> BASE_SHAPE = Polygon::make(
     std::vector<float>{v0[0].x, v0[0].y + PART_H[0],
                        v0[1].x, v0[0].y + PART_H[0],
                        v0[1].x, v0[1].y + PART_H[1],

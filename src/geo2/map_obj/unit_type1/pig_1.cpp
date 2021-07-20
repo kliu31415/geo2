@@ -21,7 +21,7 @@ constexpr MapVec v0[]{{X_BEGIN, -0.5f*PART_H[0]},
                       {X_BEGIN + PART_W[0] + PART_W[1], -0.5f*PART_H[2]}};
 
 //starts at the bottom left and goes CCW
-const std::unique_ptr<Polygon> BASE_SHAPE = Polygon::make(
+const std::unique_ptr<const Polygon> PIG_BASE_SHAPE = Polygon::make(
     std::vector<float>{v0[0].x, v0[0].y + PART_H[0],
                        v0[1].x, v0[0].y + PART_H[0],
                        v0[1].x, v0[1].y + PART_H[1],
@@ -66,12 +66,12 @@ void Pig_1::run1_mt([[maybe_unused]] const MapObjRun1Args &args)
     movement_algo.run(algo_args);
 
     auto cur = args.get_sole_current_pos();
-    cur->copy_from(BASE_SHAPE.get());
+    cur->copy_from(PIG_BASE_SHAPE.get());
     cur->rotate_about_origin(movement_algo.get_current_angle());
     cur->translate(current_position.x, current_position.y);
 
     auto des = args.get_sole_desired_pos();
-    des->copy_from(BASE_SHAPE.get());
+    des->copy_from(PIG_BASE_SHAPE.get());
     des->rotate_about_origin(movement_algo.get_desired_angle());
     auto desired_position = movement_algo.get_desired_position();
     des->translate(desired_position.x, desired_position.y);

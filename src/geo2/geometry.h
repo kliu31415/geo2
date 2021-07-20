@@ -185,30 +185,30 @@ template<class T> struct _AABB
     ///The AABB covers [x1, x2) x [y1, y2). This means X and Y don't
     ///overlap if they touch on an edge, but they do if X==Y.
     T x1;
-    T x2;
     T y1;
+    T x2;
     T y2;
 
     _AABB()
     {}
-    _AABB(T x1_, T x2_, T y1_, T y2_):
+    _AABB(T x1_, T y1_, T x2_, T y2_):
          x1(x1_),
-         x2(x2_),
          y1(y1_),
+         x2(x2_),
          y2(y2_)
     {}
     inline void combine(const _AABB &other)
     {
         x1 = std::min(x1, other.x1);
-        x2 = std::max(x2, other.x2);
         y1 = std::min(y1, other.y1);
+        x2 = std::max(x2, other.x2);
         y2 = std::max(y2, other.y2);
     }
     template<class T2> inline void combine(const _MapCoord<T2> &coord)
     {
         x1 = std::min(x1, coord.x);
-        x2 = std::max(x2, coord.x);
         y1 = std::min(y1, coord.y);
+        x2 = std::max(x2, coord.x);
         y2 = std::max(y2, coord.y);
     }
     inline bool overlaps(const _AABB &other) const
@@ -225,8 +225,8 @@ template<class T> struct _AABB
     {
         _AABB ret;
         ret.x1 = std::numeric_limits<T>::max();
-        ret.x2 = std::numeric_limits<T>::min();
         ret.y1 = std::numeric_limits<T>::max();
+        ret.x2 = std::numeric_limits<T>::min();
         ret.y2 = std::numeric_limits<T>::min();
         return ret;
     }
@@ -264,11 +264,13 @@ class Polygon final
     void translate_internal(float dx, float dy);
     void rotate_about_origin_internal(float theta);
 
-    inline float *get_verts() const
-    {
-        return (float*)((uint8_t*)this + sizeof(*this));
-    }
+    inline float *get_verts() const;
 public:
+    static constexpr size_t offset_of_aabb()
+    {
+        return offsetof(Polygon, aabb);
+    }
+
     static void operator delete(void *ptr);
     std::unique_ptr<Polygon> copy() const;
     void copy_from(const Polygon *other);
@@ -289,20 +291,16 @@ public:
 
     template<class T> void rotate_about_origin_and_translate(float theta, const _MapVec<T> &v);
 
+    template<class T> void remake(kx::kx_span<_MapCoord<T>> vertices);
+
+    ///0 <= idx <= n (note the <= n instead of < n)
+    _MapCoord<float> get_vertex(size_t idx) const;
+    bool has_collision(const Polygon &other) const;
+
     inline const AABB &get_AABB() const
     {
         return aabb;
     }
-    template<class T> void remake(kx::kx_span<_MapCoord<T>> vertices);
-
-    ///0 <= idx <= n (note the <= n instead of < n)
-    inline _MapCoord<float> get_vertex(size_t idx) const
-    {
-        auto d_len = get_d_len(n);
-        auto verts = get_verts();
-        return _MapCoord<float>(verts[idx], verts[d_len + idx]);
-    }
-    bool has_collision(const Polygon &other) const;
 
     static std::unique_ptr<Polygon> make_with_num_sides(int num_sides);
     template<class T> static std::unique_ptr<Polygon> make(kx::kx_span<_MapCoord<T>> vertices);
