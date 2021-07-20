@@ -16,7 +16,7 @@ public:
 
     kx_span(T *begin_, T *end_):
         data(begin_),
-        len(((uintptr_t)end_ - (uintptr_t)begin_) / sizeof(T))
+        len(end_ - begin_)
     {}
 
     template<class Iter, std::enable_if_t<std::is_same_v<class std::iterator_traits<Iter>::value_type, T>, int> = 0>
@@ -33,6 +33,16 @@ public:
     const T &operator [] (int idx) const
     {
         k_expects(idx>=0 && (size_t)idx<len);
+        return data[idx];
+    }
+    T &operator [] (uint32_t idx)
+    {
+        k_expects(idx < len);
+        return data[idx];
+    }
+    const T &operator [] (uint32_t idx) const
+    {
+        k_expects(idx < len);
         return data[idx];
     }
     T &operator [] (size_t idx)

@@ -626,7 +626,7 @@ Game::Game():
      */
 
 
-    generate_and_start_level(Level::Name::Test3);
+    generate_and_start_level(Level::Name::Test2);
 }
 Game::~Game()
 {}

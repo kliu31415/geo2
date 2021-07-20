@@ -1,8 +1,6 @@
 #pragma once
 
 #include <limits>
-#include <intrin.h>
-#include <immintrin.h>
 #include <cstdint>
 
 namespace geo2 {
@@ -21,15 +19,7 @@ public:
     {
         return std::numeric_limits<uint64_t>::max();
     }
-    Xorshift64RNG()
-    {
-        x = 0;
-        //WARNING: rdseed isn't supported by older CPUs (e.g. pre-Broadwell)
-        //_rdseed64_step(&x);
-        x += __rdtsc();
-        //prevent a seed of 0
-        x |= 0x1;
-    }
+    Xorshift64RNG();
     //Marsaglia's xorshift
     inline uint64_t operator()()
     {

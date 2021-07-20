@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1626665598 source:d:\code\cbprojects\geo2\src\main.cpp
+1626743488 source:d:\code\cbprojects\geo2\src\main.cpp
 	"geo2/test.h"
 	"geo2/master_instance.h"
 	"kx/gfx/gfx.h"
@@ -526,7 +526,7 @@
 	<vector>
 	<cstdint>
 
-1626638128 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
+1626746666 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
 	"geo2/map_obj/floor_type1/test_terrain1.h"
 	"geo2/game_render_op_list.h"
 	"geo2/game.h"
@@ -607,7 +607,7 @@
 	"kx/gfx/kwindow.h"
 	<cmath>
 
-1626679173 d:\code\cbprojects\geo2\src\geo2\render_op.h
+1626682128 d:\code\cbprojects\geo2\src\geo2\render_op.h
 	"kx/gfx/renderer_types.h"
 	"kx/gfx/font.h"
 	"kx/fixed_size_array.h"
@@ -616,7 +616,6 @@
 	<cstdint>
 	<memory>
 	<string>
-	<variant>
 
 1626658100 source:d:\code\cbprojects\geo2\src\geo2\game_render_op_list.cpp
 	"geo2/game_render_op_list.h"
@@ -639,19 +638,14 @@
 	<array>
 	<vector>
 
-1626679744 d:\code\cbprojects\geo2\src\geo2\geometry.h
-	"kx/fixed_size_array.h"
+1626747233 d:\code\cbprojects\geo2\src\geo2\geometry.h
 	"kx/kx_span.h"
-	<immintrin.h>
+	<memory>
 	<type_traits>
 	<algorithm>
-	<memory>
-	<optional>
 	<cmath>
-	<vector>
-	<array>
 
-1625987507 source:d:\code\cbprojects\geo2\src\geo2\collision_engine1.cpp
+1626746729 source:d:\code\cbprojects\geo2\src\geo2\collision_engine1.cpp
 	"geo2/collision_engine1.h"
 	"geo2/multithread/thread_pool.h"
 	"geo2/timer.h"
@@ -954,10 +948,8 @@
 	"geo2/map_obj/unit_type1/unit_type1.h"
 	"geo2/map_obj/map_obj_args.h"
 
-1626325102 d:\code\cbprojects\geo2\src\geo2\rng.h
+1626682466 d:\code\cbprojects\geo2\src\geo2\rng.h
 	<limits>
-	<intrin.h>
-	<immintrin.h>
 	<cstdint>
 
 1625883187 d:\code\cbprojects\geo2\src\geo2\rng_args.h
@@ -1018,6 +1010,14 @@
 	<memory>
 	<cstring>
 
-1626674024 d:\code\cbprojects\geo2\src\kx\kx_span.h
+1626746978 d:\code\cbprojects\geo2\src\kx\kx_span.h
 	"kx/debug.h"
+
+1626747268 source:d:\code\cbprojects\geo2\src\geo2\geometry.cpp
+	"geo2/geometry.h"
+	<immintrin.h>
+
+1626682481 source:d:\code\cbprojects\geo2\src\geo2\rng.cpp
+	"geo2/rng.h"
+	<intrin.h>
 

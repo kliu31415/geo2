@@ -10,7 +10,6 @@
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <variant>
 
 namespace kx { namespace gfx {
     class Renderer;

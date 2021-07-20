@@ -6,6 +6,7 @@ libgomp - GPL v3 (Runtime Library Exception)
 libpng - libpng license
 zlib - zlib license
 freetype2 - freetype license
+glad - MIT License
 
 Roboto Mono Font - Apache License 2.0
 Black Chancery Font - Public Domain

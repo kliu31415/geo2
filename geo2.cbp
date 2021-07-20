@@ -55,6 +55,7 @@
 		<Unit filename="src/geo2/game_render_op_list.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="src/geo2/geometry.cpp" />
 		<Unit filename="src/geo2/geometry.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
@@ -122,6 +123,7 @@
 		<Unit filename="src/geo2/render_op.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="src/geo2/rng.cpp" />
 		<Unit filename="src/geo2/rng.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>

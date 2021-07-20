@@ -203,54 +203,15 @@ void CollisionEngine1::set2(const std::vector<std::shared_ptr<map_obj::MapObject
 }
 std::vector<CEng1Collision> CollisionEngine1::find_collisions()
 {
-    //this until processing the active objects takes ~80us on Test2(40, 40)
-    //calculate the global AABB and the max AABB width/height
-    max_AABB_w = 0.0f;
-    max_AABB_h = 0.0f;
-
-    //we grid things based on their top left corner, so calculate the global
-    //AABB based on top left corners only.
-    global_AABB = AABB::make_maxbad_AABB();
-
-    auto calc_global_AABB_and_get_dim = [this](const Polygon *polygon, int) -> void
-    {
-        const auto &aabb = polygon->get_AABB();
-        max_AABB_w = std::max(max_AABB_w, aabb.x2 - aabb.x1);
-        max_AABB_h = std::max(max_AABB_h, aabb.y2 - aabb.y1);
-
-        global_AABB.x1 = std::min(global_AABB.x1, polygon->get_AABB().x1);
-        global_AABB.x2 = std::max(global_AABB.x2, polygon->get_AABB().x1);
-        global_AABB.y1 = std::min(global_AABB.y1, polygon->get_AABB().y1);
-        global_AABB.y2 = std::max(global_AABB.y2, polygon->get_AABB().y1);
-    };
-
-    for(auto &cdata: *ceng_data) {
-        if(cdata.get_move_intent()==MoveIntent::StayAtCurrentPos ||
-           cdata.get_move_intent()==MoveIntent::GoToDesiredPos)
-        {
-            cdata.for_each(calc_global_AABB_and_get_dim);
-        }
-    }
-
-    grid_rect_w = (global_AABB.x2 - global_AABB.x1) / GRID_LEN;
-    grid_rect_h = (global_AABB.y2 - global_AABB.y1) / GRID_LEN;
-
-    //make a list of the active objects and put them in a spatial partition grid
+    //step 1
     active_objs.clear();
 
     //~150us on Test2(40, 40)
     for(size_t i=0; i<ceng_data->size(); i++) {
         auto add_active_obj = [this, i](const Polygon *polygon, int shape_idx) -> void
                             {
-                                const auto &aabb = polygon->get_AABB();
-
-                                int x = x_to_grid_x(aabb.x1);
-                                int y = y_to_grid_y(aabb.y1);
-
                                 CEng1Obj obj(polygon, i, shape_idx);
-
                                 active_objs.push_back(obj);
-                                grid.get_ref(x, y).push_back(obj);
                             };
 
         auto move_intent = (*ceng_data)[i].get_move_intent();
@@ -266,6 +227,45 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
         }
     }
 
+    //step 2
+
+    //this until processing the active objects takes ~80us on Test2(40, 40)
+    //calculate the global AABB and the max AABB width/height
+    max_AABB_w = 0.0f;
+    max_AABB_h = 0.0f;
+
+    //we grid things based on their top left corner, so calculate the global
+    //AABB based on top left corners only.
+    global_AABB = AABB::make_maxbad_AABB();
+
+    auto calc_global_AABB_and_get_dim = [this](const Polygon *polygon) -> void
+    {
+        const auto &aabb = polygon->get_AABB();
+        max_AABB_w = std::max(max_AABB_w, aabb.x2 - aabb.x1);
+        max_AABB_h = std::max(max_AABB_h, aabb.y2 - aabb.y1);
+
+        global_AABB.x1 = std::min(global_AABB.x1, polygon->get_AABB().x1);
+        global_AABB.x2 = std::max(global_AABB.x2, polygon->get_AABB().x1);
+        global_AABB.y1 = std::min(global_AABB.y1, polygon->get_AABB().y1);
+        global_AABB.y2 = std::max(global_AABB.y2, polygon->get_AABB().y1);
+    };
+
+    for(const auto &obj: active_objs) {
+        calc_global_AABB_and_get_dim(obj.polygon);
+    }
+
+    grid_rect_w = (global_AABB.x2 - global_AABB.x1) / GRID_LEN;
+    grid_rect_h = (global_AABB.y2 - global_AABB.y1) / GRID_LEN;
+
+    //step 3
+    for(const auto &obj: active_objs) {
+        const auto &aabb = obj.polygon->get_AABB();
+        int x = x_to_grid_x(aabb.x1);
+        int y = y_to_grid_y(aabb.y1);
+        grid.get_ref(x, y).push_back(obj);
+    }
+
+    //step 4
     size_t num_threads = 1 + thread_pool->size();
 
     std::vector<std::vector<CEng1Collision>> collisions(num_threads);
