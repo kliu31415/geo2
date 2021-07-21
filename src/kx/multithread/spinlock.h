@@ -1,5 +1,6 @@
 #pragma once
 
+#include "kx/multithread/spinlock_wait_strategy.h"
 #include "kx/debug.h"
 #include "kx/util.h"
 
@@ -9,8 +10,6 @@
 #include <atomic>
 
 namespace kx {
-
-enum class SpinlockWaitStrategy {DontWait, mm_pause, Yield};
 
 /** This is a spinlock with exclusive ownership.
  *  Locking has acquire semantics and unlocking has release semantics.

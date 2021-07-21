@@ -19,6 +19,8 @@ static_assert(std::is_same_v<mouse_state_t, decltype(SDL_GetMouseState(nullptr, 
 static_assert(std::is_same_v<window_flags_t, decltype(SDL_GetWindowFlags(nullptr))>);
 static_assert(std::is_same_v<keyboard_state_t, decltype(SDL_GetKeyboardState(nullptr))>);
 
+static_assert(sizeof(SDL_Event_Placeholder) == sizeof(SDL_Event));
+
 static_assert(DEFAULT_WINDOW_FLAGS == SDL_WINDOW_SHOWN);
 static_assert(WINDOW_POS_CENTERED == SDL_WINDOWPOS_CENTERED);
 
@@ -66,8 +68,6 @@ public:
         windows[flags].push_back(window);
     }
 };
-
-static_assert(sizeof(SDL_Event_Placeholder) == sizeof(SDL_Event));
 
 bool AbstractWindow::InputQueue::poll(SDL_Event *input_arg)
 {

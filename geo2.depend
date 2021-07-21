@@ -227,7 +227,7 @@
 	<vector>
 	<cmath>
 
-1626835544 source:d:\code\cbprojects\geo2\src\kx\gfx\gfx.cpp
+1626836949 source:d:\code\cbprojects\geo2\src\kx\gfx\gfx.cpp
 	"kx/gfx/gfx.h"
 	"kx/gfx/renderer.h"
 	"kx/util.h"
@@ -646,7 +646,7 @@
 	<array>
 	<vector>
 
-1626828528 d:\code\cbprojects\geo2\src\geo2\geometry.h
+1626837814 d:\code\cbprojects\geo2\src\geo2\geometry.h
 	"kx/kx_span.h"
 	<memory>
 	<type_traits>
@@ -744,7 +744,8 @@
 1623731223 d:\code\cbprojects\geo2\src\geo2\timer.h
 	<profileapi.h>
 
-1623830140 d:\code\cbprojects\geo2\src\kx\multithread\spinlock.h
+1626837627 d:\code\cbprojects\geo2\src\kx\multithread\spinlock.h
+	"kx/multithread/spinlock_wait_strategy.h"
 	"kx/debug.h"
 	"kx/util.h"
 	<cstdint>
@@ -1038,4 +1039,71 @@
 	<cstdint>
 
 1626834326 d:\code\cbprojects\geo2\src\geo2\library_pointers.h
+
+1626837610 d:\code\cbprojects\geo2\src\kx\multithread\spinlock_wait_strategy.h
+
+1626837685 source:d:\code\cbprojects\geo2\src\precompiled_headers.h
+	"kx/atomic/queue.h"
+	"kx/atomic/stack.h"
+	"kx/atomic/string.h"
+	"kx/gfx/font.h"
+	"kx/gfx/gfx.h"
+	"kx/gfx/renderer.h"
+	"kx/gfx/kwindow.h"
+	"kx/gfx/renderer_types.h"
+	"kx/multithread/semaphore.h"
+	"kx/multithread/shared_lock_set.h"
+	"kx/multithread/shared_spinlock.h"
+	"kx/multithread/spinlock.h"
+	"kx/debug.h"
+	"kx/fixed_size_array.h"
+	"kx/io.h"
+	"kx/kx_span.h"
+	"kx/log.h"
+	"kx/sdl_deleter.h"
+	"kx/sort.h"
+	"kx/stats.h"
+	"kx/time.h"
+	"kx/util.h"
+
+1600658839 d:\code\cbprojects\geo2\src\kx\atomic\stack.h
+	"kx/util.h"
+	<stack>
+	<mutex>
+	<utility>
+
+1603156772 d:\code\cbprojects\geo2\src\kx\atomic\string.h
+	"kx/debug.h"
+	<string>
+	<mutex>
+
+1626837575 d:\code\cbprojects\geo2\src\kx\multithread\semaphore.h
+	"kx/util.h"
+	"kx/debug.h"
+	<cstdint>
+	<mutex>
+	<condition_variable>
+
+1610075250 d:\code\cbprojects\geo2\src\kx\multithread\shared_lock_set.h
+	"kx/util.h"
+	"kx/debug.h"
+	"kx/multithread/shared_spinlock.h"
+	<mutex>
+	<shared_mutex>
+	<memory>
+	<map>
+	<string>
+
+1626837622 d:\code\cbprojects\geo2\src\kx\multithread\shared_spinlock.h
+	"kx/multithread/spinlock_wait_strategy.h"
+	"kx/debug.h"
+	"kx/util.h"
+	<cstdint>
+	<xmmintrin.h>
+	<thread>
+	<atomic>
+
+1623050957 d:\code\cbprojects\geo2\src\kx\sort.h
+	<algorithm>
+	<cstdint>
 

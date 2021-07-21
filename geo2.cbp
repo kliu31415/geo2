@@ -33,6 +33,8 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 			<Add option="-Isrc" />
+			<Add option="-Winvalid-pch" />
+			<Add option='-include &quot;precompiled_headers.h&quot;' />
 			<Add option="-DKX_RENDERER_GL" />
 			<Add directory="src" />
 		</Compiler>
@@ -180,6 +182,9 @@
 		<Unit filename="src/kx/multithread/spinlock.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="src/kx/multithread/spinlock_wait_strategy.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="src/kx/sdl_deleter.cpp" />
 		<Unit filename="src/kx/sdl_deleter.h" />
 		<Unit filename="src/kx/sort.h" />
@@ -190,6 +195,10 @@
 		<Unit filename="src/kx/util.cpp" />
 		<Unit filename="src/kx/util.h" />
 		<Unit filename="src/main.cpp" />
+		<Unit filename="src/precompiled_headers.h">
+			<Option compile="1" />
+			<Option weight="0" />
+		</Unit>
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>

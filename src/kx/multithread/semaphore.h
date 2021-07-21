@@ -37,7 +37,7 @@ public:
     {
         k_expects(num_permits > 0);
         std::unique_lock<std::mutex> lk(mtx);
-        cv.wait(lk, []{return num_permits <= permits});
+        cv.wait(lk, [=]{return num_permits <= permits;});
         k_assert(lk.owns_lock()); //checking to make sure I understand cv.wait()'s postcondition
         permits -= num_permits;
     }
