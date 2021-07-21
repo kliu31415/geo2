@@ -10,8 +10,9 @@
 
 namespace kx {
 
-LogMessage::LogMessage(const std::string &msg_, Type type_):
-    message(msg_), type(type_)
+LogMessage::LogMessage(std::string_view msg_, Type type_):
+    message(msg_),
+    type(type_)
 {}
 static std::deque<LogMessage> log_records;
 static std::mutex log_mutex;
@@ -21,7 +22,7 @@ void toggle_log_timestamps(bool toggle)
 {
     log_timestamps.store(toggle, std::memory_order_relaxed);
 }
-void log(const std::string &msg, LogMessage::Type type)
+void log(std::string_view message, LogMessage::Type type)
 {
     //acquire the mutex here so we can load log_timestamps
     std::lock_guard<std::mutex> lg(log_mutex);
@@ -48,9 +49,9 @@ void log(const std::string &msg, LogMessage::Type type)
         break;
     }
     std::string indented_msg;
-    for(size_t i=0; i<msg.size(); i++) {
-        indented_msg += msg[i];
-        if(msg[i] == '\n') {
+    for(size_t i=0; i<message.size(); i++) {
+        indented_msg += message[i];
+        if(message[i] == '\n') {
             for(size_t j=0; j<part1.size(); j++)
                 indented_msg += ' ';
         }
@@ -64,21 +65,21 @@ void log(const std::string &msg, LogMessage::Type type)
     if(log_records.size() > MAX_LOG_RECORDS_SIZE)
         log_records.pop_front();
 }
-void log_info(const std::string &msg)
+void log_info(std::string_view message)
 {
-    log(msg, LogMessage::Type::Info);
+    log(message, LogMessage::Type::Info);
 }
-void log_warning(const std::string &msg)
+void log_warning(std::string_view message)
 {
-    log(msg, LogMessage::Type::Warning);
+    log(message, LogMessage::Type::Warning);
 }
-void log_error(const std::string &msg)
+void log_error(std::string_view message)
 {
-    log(msg, LogMessage::Type::Error);
+    log(message, LogMessage::Type::Error);
 }
-void log_fatal(const std::string &msg)
+void log_fatal(std::string_view message)
 {
-    log(msg, LogMessage::Type::Fatal);
+    log(message, LogMessage::Type::Fatal);
 }
 void clear_log()
 {

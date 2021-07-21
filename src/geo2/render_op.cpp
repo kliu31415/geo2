@@ -46,13 +46,13 @@ IShader::IShader(const std::shared_ptr<kx::gfx::ShaderProgram> &program_,
     draw_mode(draw_mode_),
     count(count_)
 {}
-void IShader::add_UB(const std::string &name, int global_data_sz, int instance_data_sz)
+void IShader::add_UB(std::string_view name, int global_data_sz, int instance_data_sz)
 {
     k_expects(global_data_sz + instance_data_sz*max_instances <= MAX_RO_UBO_SIZE);
     k_expects(UBs.size() < MAX_RO_NUM_UBOS);
 
     UB ub;
-    ub.index = program->get_UB_index(name.c_str());
+    ub.index = program->get_UB_index(name.data());
     ub.global_data_size = global_data_sz;
     ub.instance_data_size = instance_data_sz;
     UBs.push_back(std::move(ub));
@@ -142,7 +142,7 @@ RenderOpText::RenderOpText():
     horizontal_align(HorizontalAlign::Left),
     vertical_align(VerticalAlign::Top)
 {}
-void RenderOpText::set_text(const std::string &text_)
+void RenderOpText::set_text(std::string_view text_)
 {
     text = text_;
 }

@@ -27,10 +27,10 @@ template<class T> void println(T &&s)
 void println();
 void flush();
 
-bool folder_exists(const std::string &path);
-void make_folder(const std::string &path); ///the path may or may not end in ('/' or '\\')
+bool folder_exists(std::string_view path);
+void make_folder(std::string_view path); ///the path may or may not end in ('/' or '\\')
 
-///thread-safe as long as the file isn't being modified
-std::optional<std::string> read_binary_file(const std::string &file_path);
+///thread-safe as long as the file isn't being modified by someone else
+std::optional<std::string> read_binary_file(std::string_view file_path);
 
 }}

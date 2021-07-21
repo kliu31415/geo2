@@ -6,9 +6,9 @@
 #include "geo2/map_obj/unit_type1/spotted_pig_1.h"
 #include "geo2/map_obj/unit_type1/hexfly_1.h"
 
-namespace geo2 {
+namespace geo2 { namespace level_gen {
 
-Level LevelGenerator<Level::Name::Test3>::generate([[maybe_unused]] Game *game)
+Level LevelGenerator<LevelName::Test3>::generate([[maybe_unused]] Game *game)
 {
     using namespace map_obj;
 
@@ -56,4 +56,4 @@ Level LevelGenerator<Level::Name::Test3>::generate([[maybe_unused]] Game *game)
     return level;
 }
 
-}
+}}

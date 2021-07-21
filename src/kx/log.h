@@ -16,15 +16,15 @@ struct LogMessage final
 {
     std::string message;
     enum class Type {Info, Warning, Error, Fatal} type;
-    LogMessage(const std::string &msg_, Type type_);
+    LogMessage(std::string_view msg_, Type type_);
 };
 
 void toggle_log_timestamps(bool toggle);
-void log(const std::string &msg, LogMessage::Type type);
-void log_info(const std::string &msg);
-void log_warning(const std::string &msg);
-void log_error(const std::string &msg);
-void log_fatal(const std::string &msg);
+void log(std::string_view message, LogMessage::Type type);
+void log_info(std::string_view message);
+void log_warning(std::string_view message);
+void log_error(std::string_view message);
+void log_fatal(std::string_view message);
 void clear_log();
 
 }

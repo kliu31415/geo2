@@ -44,7 +44,7 @@ protected:
     std::deque<std::optional<SDL_Event>> input_deque;
 
     KWindow(GfxLibrary *library,
-            const std::string &title,
+            std::string_view title,
             int x, int y, int w, int h,
             window_flags_t window_flags,
             SRGB_Color background_color);
@@ -58,7 +58,7 @@ public:
     enum class Status{Running, AlreadyFinishedRunning, JustFinishedRunning};
 
     static std::shared_ptr<KWindow> make(GfxLibrary *library,
-                                         const std::string &title,
+                                         std::string_view title,
                                          int x, int y, int w, int h,
                                          window_flags_t window_flags = DEFAULT_WINDOW_FLAGS,
                                          SRGB_Color background_color_ = Color::WHITE);

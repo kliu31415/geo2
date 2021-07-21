@@ -2,9 +2,9 @@
 
 #include "geo2/map_obj/wall_type1/monochromatic_wall_1.h"
 
-namespace geo2 {
+namespace geo2 { namespace level_gen {
 
-Level LevelGenerator<Level::Name::Test2>::generate([[maybe_unused]] Game *game)
+Level LevelGenerator<LevelName::Test2>::generate([[maybe_unused]] Game *game)
 {
     using namespace map_obj;
 
@@ -26,4 +26,4 @@ Level LevelGenerator<Level::Name::Test2>::generate([[maybe_unused]] Game *game)
     return level;
 }
 
-}
+}}

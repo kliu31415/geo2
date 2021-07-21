@@ -49,7 +49,7 @@ public:
         explicit Delta(int ticks, Length length);
         explicit Delta(int64_t ticks, Length length);
         explicit Delta(double ticks, Length length);
-        Delta(const std::string &time_str, Format format);
+        Delta(std::string_view time_str, Format format);
 
         int64_t to_int64(Length length) const;
         double to_double(Length length) const;
@@ -102,7 +102,7 @@ public:
     explicit Time(int64_t ticks, Length length);
     explicit Time(double ticks, Length length);
     ///TODO: Ensure (Year, month, date) (which assign to *this) work
-    Time(const std::string &time_str, Format format); ///supports years in [1971, 2037]
+    Time(std::string_view time_str, Format format); ///supports years in [1971, 2037]
 
     static Time now(); ///returns UTC + the user-set timezone offset
     static Time now_ET(); ///eastern time
@@ -126,7 +126,7 @@ public:
     bool is_multiple_of(Delta delta) const;
 
     std::string to_str(Format format) const;
-    std::string to_str(const std::string &format_str) const;
+    std::string to_str(std::string_view format_str) const;
 
     /** operator time_t() leads to implicit conversions since time_t is typedefed as a
      *  integer type, so we make this a non-operator function instead.

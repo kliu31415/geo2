@@ -21,11 +21,11 @@ void flush()
     std::lock_guard<std::mutex> lg(print_mutex);
     std::cout.flush();
 }
-bool folder_exists(const std::string &path)
+bool folder_exists(std::string_view path)
 {
     struct stat info;
 
-    if(stat(path.c_str(), &info) != 0) {
+    if(stat(path.data(), &info) != 0) {
         //no permission to access
         return false;
     } else if(info.st_mode & S_IFDIR) {
@@ -36,7 +36,7 @@ bool folder_exists(const std::string &path)
         return false;
     }
 }
-void make_folder(const std::string &path) //the path may or may not end in ('/' or '\\')
+void make_folder(std::string_view path) //the path may or may not end in ('/' or '\\')
 {
     //We can only create one level of folders at a time, so we have to create each level
     //of folders one at a time. In addition, don't try recreating any folders that already
@@ -47,21 +47,21 @@ void make_folder(const std::string &path) //the path may or may not end in ('/' 
            !folder_exists(path.substr(0, i)))
         {
             #ifdef _WIN32
-            if(mkdir(path.substr(0, i).c_str()) != 0)
-                log_error("failed to make folder " + path.substr(0, i));
+            if(mkdir(path.substr(0, i).data()) != 0)
+                log_error("failed to make folder " + (std::string)path.substr(0, i));
             #else
             //UNTESTED! (but should work)
-            if(mkdir(path.substr(0, i).c_str(), S_IRWXU | S_IRWXG | S_IRWXO) != 0)
-                log_error("failed to make folder " + path.substr(0, i));
+            if(mkdir(path.substr(0, i).data(), S_IRWXU | S_IRWXG | S_IRWXO) != 0)
+                log_error("failed to make folder " + (std::string)path.substr(0, i));
             #endif
         }
     }
 }
-std::optional<std::string> read_binary_file(const std::string &file_path)
+std::optional<std::string> read_binary_file(std::string_view file_path)
 {
-    std::ifstream file(file_path, std::ios::binary);
+    std::ifstream file(file_path.data(), std::ios::binary);
     if(file.fail()) {
-        log_error("failed to open file \"" + file_path + "\"");
+        log_error("failed to open file \"" + to_str(file_path) + "\"");
         return {};
     }
     file.seekg(0, std::ios::end);

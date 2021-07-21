@@ -92,7 +92,7 @@ protected:
     Renderer *rdr();
 
     AbstractWindow(GfxLibrary *library,
-                   const std::string &title,
+                   std::string_view title,
                    int x, int y, int w, int h,
                    window_flags_t window_flags);
 public:
@@ -131,12 +131,12 @@ public:
 class DWindow final: public AbstractWindow
 {
     DWindow(GfxLibrary *library,
-            const std::string &title,
+            std::string_view title,
             int x, int y, int w, int h,
             window_flags_t window_flags);
 public:
     static std::shared_ptr<DWindow> make(GfxLibrary *library,
-                                         const std::string &title,
+                                         std::string_view title,
                                          int x, int y, int w, int h,
                                          window_flags_t window_flags = DEFAULT_WINDOW_FLAGS);
 

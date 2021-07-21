@@ -50,7 +50,7 @@ public:
             const kx::gfx::DrawMode draw_mode_,
             int count_);
 
-    void add_UB(const std::string &name, int global_data_sz, int instance_data_sz);
+    void add_UB(std::string_view name, int global_data_sz, int instance_data_sz);
     size_t get_num_UBs() const;
     int get_instance_uniform_size_bytes(size_t idx) const;
     int get_max_instances() const;
@@ -117,7 +117,7 @@ private:
     VerticalAlign vertical_align;
 public:
     RenderOpText();
-    void set_text(const std::string &text_);
+    void set_text(std::string_view text);
     void set_font(const Font *font_);
     void set_color(const kx::gfx::LinearColor &color_);
     void set_font_size(float size_);

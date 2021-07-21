@@ -54,20 +54,20 @@ class FontLibrary
     std::shared_ptr<Font> font_black_chancery;
 
     FT_LibraryRec_ *ft_library;
-    std::map<std::string, std::shared_ptr<Font> > fonts;
+    std::map<std::string, std::shared_ptr<Font>, std::less<>> fonts;
 public:
-    static constexpr const char *FONT_DEFAULT = "kx.default";
-    static constexpr const char *FONT_MONO_DEFAULT = "kx.mono.default";
-    static constexpr const char *FONT_ROBOTO_MONO_REGULAR = "kx.roboto_mono.regular";
-    static constexpr const char *FONT_ROBOTO_MONO_LIGHT = "kx.roboto_mono.light";
-    static constexpr const char *FONT_BLACK_CHANCERY = "kx.black_chancery";
+    static constexpr std::string_view FONT_DEFAULT = "kx.default";
+    static constexpr std::string_view FONT_MONO_DEFAULT = "kx.mono.default";
+    static constexpr std::string_view FONT_ROBOTO_MONO_REGULAR = "kx.roboto_mono.regular";
+    static constexpr std::string_view FONT_ROBOTO_MONO_LIGHT = "kx.roboto_mono.light";
+    static constexpr std::string_view FONT_BLACK_CHANCERY = "kx.black_chancery";
 
     FontLibrary();
     ~FontLibrary();
 
-    std::shared_ptr<Font> get_font(const char *font_name);
-    std::shared_ptr<Font> load(const char *font_name, const char *file);
-    void close(const std::string &font_name);
+    std::shared_ptr<Font> get_font(std::string_view font_name);
+    std::shared_ptr<Font> load(std::string_view font_name, std::string_view file);
+    void close(std::string_view font_name);
 
     FontLibrary(const FontLibrary&) = delete;
     FontLibrary& operator = (const FontLibrary&) = delete;

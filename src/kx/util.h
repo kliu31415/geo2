@@ -124,7 +124,7 @@ std::vector<T> flatten_vec2D(const std::vector<std::vector<T>> &input)
 }
 
 [[gnu::pure]]
-std::vector<std::string> split_str(const std::string &str, char by);
+std::vector<std::string> split_str(std::string_view str, char by);
 
 /** I haven't rigorously checked leading_digit for bugs
   * (idk if it might bug out occasionally due to finite precision floats)

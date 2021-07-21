@@ -5,6 +5,7 @@
 #include "geo2/ceng1_data.h"
 #include "geo2/rng.h"
 #include "geo2/library_pointers.h"
+#include "geo2/level.h"
 
 #include "kx/gfx/renderer.h"
 #include "kx/gfx/kwindow.h"
@@ -15,24 +16,6 @@
 
 namespace geo2 {
 
-struct Level
-{
-    enum class Name {
-        NotSet,
-        Test1,
-        Test2,
-        Test3,
-    };
-    std::vector<std::shared_ptr<map_obj::MapObject>> to_add;
-    std::vector<std::shared_ptr<map_obj::MapObject>> map_objs;
-    std::vector<CEng1Data> ceng_data;
-    double time_to_complete;
-    double player_start_x;
-    double player_start_y;
-};
-
-template<enum Level::Name> class LevelGenerator;
-
 class Game final
 {
     std::unique_ptr<struct _gfx> gfx; ///PImpl
@@ -40,7 +23,7 @@ class Game final
     std::shared_ptr<map_obj::Player_Type1> player;
     std::vector<std::shared_ptr<map_obj::MapObject>> map_objs;
 
-    Level::Name cur_level;
+    LevelName cur_level;
     int64_t cur_level_tick;
     double cur_level_time;
     double cur_level_time_left;
@@ -60,16 +43,22 @@ class Game final
     std::vector<CEng1Data> ceng_data;
     std::unique_ptr<class CollisionEngine1> collision_engine;
 
-    void generate_and_start_level(Level::Name level_name);
+    void generate_and_start_level(LevelName level_name);
 
-    void process_added_map_objs();
+    void run_player(double tick_len,
+                    MapCoord cursor_pos,
+                    kx::gfx::mouse_state_t mouse_state,
+                    kx::gfx::keyboard_state_t keyboard_state);
     void run1(double tick_len);
-    void run3(double tick_len);
     void run_collision_engine();
+    void run3(double tick_len);
+    void process_added_map_objs();
+    void process_deleted_map_objs();
+
     void advance_one_tick(double tick_len,
                           MapCoord cursor_pos,
                           kx::gfx::mouse_state_t mouse_state,
-                          const uint8_t *keyboard_state);
+                          kx::gfx::keyboard_state_t keyboard_state);
 
     std::shared_ptr<kx::gfx::Texture> render(kx::gfx::FontLibrary *font_library,
                                              kx::gfx::KWindowRunning *kwin_r,

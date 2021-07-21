@@ -149,7 +149,7 @@ protected:
     _GLUniqueObj<_GLDeleteShader> shader;
 
     Shader();
-    Shader(const std::string &file_name, uint32_t shader_type);
+    Shader(std::string_view file_name, uint32_t shader_type);
 public:
 };
 
@@ -157,14 +157,14 @@ class VertShader final: public Shader
 {
     friend class Renderer;
     VertShader() = default;
-    VertShader(const std::string &file_name);
+    VertShader(std::string_view file_name);
 };
 
 class FragShader final: public Shader
 {
     friend class Renderer;
     FragShader() = default;
-    FragShader(const std::string &file_name);
+    FragShader(std::string_view file_name);
 };
 
 using UniformLoc = int;
@@ -287,7 +287,7 @@ class Renderer final
         const int wrap_length;
         const uint8_t r, g, b, a;
 
-        TextTextureCacheInfo(std::string text_, int font_id_, int size_,
+        TextTextureCacheInfo(std::string_view text_, int font_id_, int size_,
                              int wrap_length_,
                              uint8_t r_, uint8_t g_, uint8_t b_, uint8_t a_);
         bool operator < (const TextTextureCacheInfo &other) const;
@@ -487,7 +487,7 @@ public:
     void set_font(std::shared_ptr<const Font> font);
     const std::shared_ptr<const Font> &get_font() const;
 
-    std::shared_ptr<Texture> get_text_texture(const std::string &text,
+    std::shared_ptr<Texture> get_text_texture(std::string_view file_name,
                                               int sz,
                                               SRGB_Color c = Color::BLACK);
     ///no const reference to the string because we mutate it

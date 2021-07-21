@@ -398,12 +398,12 @@ Shader::Shader():
 static constexpr size_t INFO_LOG_SIZE = 1024;
 static thread_local std::string info_log(INFO_LOG_SIZE, '\0');
 
-Shader::Shader(const std::string &file_name, GLenum shader_type)
+Shader::Shader(std::string_view file_name, GLenum shader_type)
 {
     shader.id = glCreateShader(shader_type);
-    auto shader_src_opt = io::read_binary_file(file_name.c_str());
+    auto shader_src_opt = io::read_binary_file(file_name.data());
     if(!shader_src_opt) {
-        log_error("failed to open shader file \"" + file_name + "\"");
+        log_error("failed to open shader file \"" + (std::string)file_name + "\"");
     }
     auto shader_src = *shader_src_opt;
     auto shader_src_cstr = shader_src.c_str();
@@ -414,15 +414,15 @@ Shader::Shader(const std::string &file_name, GLenum shader_type)
     if(!success) {
         GLsizei len;
         glGetShaderInfoLog(shader.id, INFO_LOG_SIZE, &len, info_log.data());
-        log_error("Shader \"" + file_name + "\" compilation failed: " + info_log.substr(0, len));
+        log_error("Shader \"" + (std::string)file_name + "\" compilation failed: " + info_log.substr(0, len));
     }
 }
 
-VertShader::VertShader(const std::string &file_name):
+VertShader::VertShader(std::string_view file_name):
     Shader(file_name, GL_VERTEX_SHADER)
 {}
 
-FragShader::FragShader(const std::string &file_name):
+FragShader::FragShader(std::string_view file_name):
     Shader(file_name, GL_FRAGMENT_SHADER)
 {}
 
@@ -571,10 +571,10 @@ void VAO::enable_vertex_attrib_array(GLuint pos)
 
 const Time::Delta Renderer::TEXT_TEXTURE_CACHE_TIME(1.1, Time::Length::second);
 
-Renderer::TextTextureCacheInfo::TextTextureCacheInfo(std::string text_, int font_id_, int size_,
+Renderer::TextTextureCacheInfo::TextTextureCacheInfo(std::string_view text_, int font_id_, int size_,
                                                      int wrap_length_,
                                                      uint8_t r_, uint8_t g_, uint8_t b_, uint8_t a_):
-    text(std::move(text_)),
+    text(text_),
     font_id(font_id_),
     size(size_),
     wrap_length(wrap_length_),
@@ -1008,7 +1008,7 @@ const std::shared_ptr<const Font> &Renderer::get_font() const
 {
     return current_font;
 }
-std::shared_ptr<Texture> Renderer::get_text_texture(const std::string &text, int sz, SRGB_Color c)
+std::shared_ptr<Texture> Renderer::get_text_texture(std::string_view text, int sz, SRGB_Color c)
 {
     k_expects(current_font != nullptr);
 
@@ -1031,7 +1031,7 @@ std::shared_ptr<Texture> Renderer::get_text_texture(const std::string &text, int
         if(text.size() > 0) { //passing in a string of length 0 returns an error
             auto desired_font = current_font->font_of_size[std::clamp(sz, 0, Font::MAX_FONT_SIZE)].get();
 
-            unique_ptr_sdl<SDL_Surface> temp_surface = TTF_RenderText_Blended(desired_font, text.c_str(), sdl_color);
+            unique_ptr_sdl<SDL_Surface> temp_surface = TTF_RenderText_Blended(desired_font, text.data(), sdl_color);
             if(temp_surface == nullptr)
                 log_error("TTF_RenderText_Blended returned nullptr: " + (std::string)SDL_GetError());
             text_texture = std::shared_ptr<Texture>(new Texture(temp_surface.get(), true));

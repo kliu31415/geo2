@@ -1,13 +1,15 @@
 #pragma once
 
-#include "geo2/game.h"
+#include "geo2/level_gen/level_generator.h"
 
-namespace geo2 {
+namespace geo2 { class Game;}
 
-template<> class LevelGenerator<Level::Name::Test2>
+namespace geo2 { namespace level_gen {
+
+template<> class LevelGenerator<LevelName::Test2>
 {
 public:
     Level generate(Game *game);
 };
 
-}
+}}

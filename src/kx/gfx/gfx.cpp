@@ -39,7 +39,7 @@ class WindowPool
     //window_flags to window
     std::map<window_flags_t, std::vector<shared_ptr_sdl<SDL_Window>>> windows;
 public:
-    shared_ptr_sdl<SDL_Window> get_window(const std::string &title,
+    shared_ptr_sdl<SDL_Window> get_window(std::string_view title,
                                           int x, int y, int w, int h,
                                           window_flags_t window_flags)
     {
@@ -49,7 +49,7 @@ public:
             auto &windows_vec = windows_find->second;
             auto window = windows_vec.back();
             windows_vec.pop_back();
-            SDL_SetWindowTitle(window.get(), title.c_str());
+            SDL_SetWindowTitle(window.get(), title.data());
             SDL_SetWindowPosition(window.get(), x, y);
             SDL_SetWindowSize(window.get(), w, h);
             SDL_ShowWindow(window.get());
@@ -57,13 +57,15 @@ public:
         }
 
         //if none exist, create one
-        auto sdl_window = SDL_CreateWindow(title.c_str(), x, y, w, h, window_flags);
+        auto sdl_window = SDL_CreateWindow(title.data(), x, y, w, h, window_flags);
         auto window = shared_ptr_sdl<SDL_Window>(sdl_window);
         windows[window_flags].push_back(window);
         return window;
     }
     void close_window(const shared_ptr_sdl<SDL_Window> &window)
     {
+        //I think nullptr works, but the doc doesn't explicitly say so
+        //SDL_SetWindowIcon(window.get(), nullptr);
         auto flags = SDL_GetWindowFlags(window.get());
         windows[flags].push_back(window);
     }
@@ -107,7 +109,7 @@ static constexpr auto RENDERER_FLAGS = SDL_RENDERER_PRESENTVSYNC |
 static constexpr auto RENDERER_FLAGS = 0;
 #endif
 AbstractWindow::AbstractWindow(GfxLibrary *library_,
-                               const std::string &title,
+                               std::string_view title,
                                int x, int y, int w, int h,
                                window_flags_t window_flags):
     library(library_)
@@ -213,14 +215,14 @@ AbstractWindow::InputQueue *AbstractWindow::get_input_queue(Passkey<GfxLibrary>)
 }
 
 DWindow::DWindow(GfxLibrary *library_,
-                 const std::string &title,
+                 std::string_view title,
                  int x, int y, int w, int h,
                  window_flags_t window_flags):
     AbstractWindow(library_, title, x, y, w, h, window_flags)
 {}
 
 std::shared_ptr<DWindow> DWindow::make(GfxLibrary *library,
-                                       const std::string &title,
+                                       std::string_view title,
                                        int x, int y, int w, int h,
                                        window_flags_t window_flags)
 {

@@ -42,7 +42,7 @@ Time::Delta::Delta(int64_t ticks, Length length):
 Time::Delta::Delta(double ticks, Length length):
     ns(ticks * to_ns(length))
 {}
-Time::Delta::Delta(const std::string &time_str, Format format)
+Time::Delta::Delta(std::string_view time_str, Format format)
 {
     switch(format) {
     case Format::HH_MM_SS_ffffff: {
@@ -251,7 +251,7 @@ Time::Time(double ticks, Length length):
     ns_since_epoch(ticks * to_ns(length))
 {}
 
-Time::Time(const std::string &time_str, Format format)
+Time::Time(std::string_view time_str, Format format)
 {
     //We use k_expects on the year/month/day instead of k_ensures because if those checks fail,
     //it's much more likely to be an error in the user input (preconditions) than our internal
@@ -511,13 +511,13 @@ std::string Time::to_str(Format format) const
     }
     return "unsupported time format";
 }
-std::string Time::to_str(const std::string &format_str) const
+std::string Time::to_str(std::string_view format_str) const
 {
     if(ns_since_epoch == -1)
         return "time_na";
     std::tm tm = *this;
     std::stringstream ss;
-    ss << std::put_time(&tm, format_str.c_str());
+    ss << std::put_time(&tm, format_str.data());
     return ss.str();
 }
 std::time_t Time::to_time_t() const

@@ -19,18 +19,18 @@ ScopeGuard::~ScopeGuard()
     func();
 }
 
-std::vector<std::string> split_str(const std::string &str, char by)
+std::vector<std::string> split_str(std::string_view str, char by)
 {
     std::vector<std::string> parts;
     size_t i = 0;
     size_t j = 0;
     for(; i<str.size(); i++) {
         if(str[i] == by) {
-            parts.push_back(str.substr(j, i-j));
+            parts.push_back((std::string)str.substr(j, i-j));
             j = i+1;
         }
     }
-    parts.push_back(str.substr(j, i-j));
+    parts.push_back((std::string)str.substr(j, i-j));
     return parts;
 }
 

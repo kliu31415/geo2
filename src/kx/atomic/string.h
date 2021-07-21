@@ -14,7 +14,7 @@ class AtomicString final
     std::mutex mtx;
 public:
     AtomicString() {}
-    AtomicString(const std::string &s)
+    AtomicString(std::string_view s)
     {
         std::lock_guard<std::mutex> lg(mtx);
         str = s;
@@ -37,7 +37,7 @@ public:
         std::lock_guard<std::mutex> lg(mtx);
         str.clear();
     }
-    void operator += (const std::string &other)
+    void operator += (std::string_view other)
     {
         std::lock_guard<std::mutex> lg(mtx);
         str += other;

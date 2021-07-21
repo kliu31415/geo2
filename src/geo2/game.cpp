@@ -19,9 +19,6 @@
 
 #include <SDL2/SDL_scancode.h>
 
-#include <thread>
-#include <cmath>
-
 namespace geo2 {
 
 struct _gfx
@@ -197,36 +194,35 @@ constexpr float TILES_PER_SCREEN = 3060;
 constexpr double MENU_OFFSET = 0.85;
 constexpr int PREV_MOUSE_X_NOT_SET = -123456;
 
-void Game::generate_and_start_level(Level::Name level_name)
+void Game::generate_and_start_level(LevelName level_name)
 {
-    using namespace kx;
-    using namespace map_obj;
+    using namespace level_gen;
 
     Level level;
 
     switch(level_name) {
-    case Level::Name::NotSet:
-        log_error("attempting to generate level NotSet, which is invalid");
+    case LevelName::NotSet:
+        kx::log_error("attempting to generate level NotSet, which is invalid");
         break;
-    case Level::Name::Test1: {
+    case LevelName::Test1:
         for(int i=0; i<200; i++) {
             for(int j=0; j<200; j++) {
                 MapCoord pos(0.1*i, 0.1*j);
-                level.map_objs.push_back(std::make_shared<TestTerrain1>(pos));
+                level.map_objs.push_back(std::make_shared<map_obj::TestTerrain1>(pos));
             }
         }
         level.time_to_complete = 120;
         level.player_start_x = 10;
         level.player_start_y = 10;
-        break;}
-    case Level::Name::Test2:
-        level = LevelGenerator<Level::Name::Test2>().generate(this);
         break;
-    case Level::Name::Test3:
-        level = LevelGenerator<Level::Name::Test3>().generate(this);
+    case LevelName::Test2:
+        level = LevelGenerator<LevelName::Test2>().generate(this);
+        break;
+    case LevelName::Test3:
+        level = LevelGenerator<LevelName::Test3>().generate(this);
         break;
     default:
-        log_error("Game attempted to generate unknown level");
+        kx::log_error("Game attempted to generate unknown level");
     }
 
     prev_mouse_x = PREV_MOUSE_X_NOT_SET;
@@ -241,19 +237,34 @@ void Game::generate_and_start_level(Level::Name level_name)
     cur_level = level_name;
     player->set_position({level.player_start_x, level.player_start_y}, {});
 }
-void Game::process_added_map_objs()
+
+void Game::run_player(double tick_len,
+                      MapCoord cursor_pos,
+                      kx::gfx::mouse_state_t mouse_state,
+                      kx::gfx::keyboard_state_t keyboard_state)
 {
-    ceng_data.resize(map_objs.size() + map_objs_to_add.size());
-    map_obj::MapObjInitArgs args;
-    args.set_rng(&rngs[0]);
-    size_t ceng_data_idx = map_objs.size();
-    for(auto &mobj: map_objs_to_add) {
-        args.set_ceng_data(&ceng_data[ceng_data_idx]);
-        mobj->init(args);
-        ceng_data_idx++;
-    }
-    map_objs.insert(map_objs.end(), map_objs_to_add.begin(), map_objs_to_add.end());
-    map_objs_to_add.clear();
+    map_obj::PlayerRunSpecialArgs player_args;
+    player_args.tick_len = tick_len;
+
+    auto keystate = keyboard_state;
+    player_args.left_pressed = keystate[SDL_SCANCODE_A];
+    player_args.right_pressed = keystate[SDL_SCANCODE_D];
+    player_args.up_pressed = keystate[SDL_SCANCODE_W];
+    player_args.down_pressed = keystate[SDL_SCANCODE_S];
+
+    weapon::WeaponRunArgs weapon_args;
+    weapon_args.set_map_objs_to_add(&map_objs_to_add);
+    auto player_pos = player->get_position();
+    weapon_args.set_owner_info(weapon::WeaponOwnerInfo(player_pos, map_obj::Player_Type1::WEAPON_OFFSET));
+    weapon_args.set_cursor_pos(cursor_pos);
+    weapon_args.tick_len = tick_len;
+    weapon_args.cur_level_time = cur_level_time;
+    weapon_args.set_mouse_state(mouse_state);
+    weapon_args.set_angle(std::atan2(cursor_pos.y - player_pos.y, cursor_pos.x - player_pos.x));
+    weapon_args.set_rng(&rngs[0]);
+    player_args.weapon_run_args = weapon_args;
+
+    player->run_special(player_args, {});
 }
 void Game::run1(double tick_len)
 {
@@ -438,10 +449,54 @@ void Game::run3(double tick_len)
         i.clear();
     }
 }
+void Game::process_added_map_objs()
+{
+    //everything in map_objs_to_add is moved to map_objs
+    ceng_data.resize(map_objs.size() + map_objs_to_add.size());
+    map_obj::MapObjInitArgs args;
+    args.set_rng(&rngs[0]);
+    size_t ceng_data_idx = map_objs.size();
+    for(auto &mobj: map_objs_to_add) {
+        args.set_ceng_data(&ceng_data[ceng_data_idx]);
+        mobj->init(args);
+        ceng_data_idx++;
+    }
+    map_objs.insert(map_objs.end(), map_objs_to_add.begin(), map_objs_to_add.end());
+    map_objs_to_add.clear();
+}
+void Game::process_deleted_map_objs()
+{
+    //-remove all map objects that want to be removed
+    //-note that we should preserve the order to prevent rendering glitches
+    // (if two things have the same priority, then their order in map_objs
+    // determines which one is rendered first, so should keep all relative
+    // orders, (this is a similar concept to stable sort))
+    if(!idx_to_delete.empty()) {
+        int first_idx = std::numeric_limits<decltype(first_idx)>::max();
+        //note that duplicate indices won't cause bugs (yet), but they're messy
+        //so they're not recommended
+        for(const auto &idx: idx_to_delete) {
+            k_assert(idx < (int)map_objs.size());
+            map_objs[idx] = nullptr;
+            first_idx = std::min(first_idx, idx);
+        }
+        size_t after_idx = first_idx;
+        for(size_t i=first_idx+1; i<map_objs.size(); i++) {
+            if(map_objs[i] != nullptr) {
+                ceng_data[after_idx] = std::move(ceng_data[i]);
+                map_objs[after_idx] = std::move(map_objs[i]);
+                after_idx++;
+            }
+        }
+        ceng_data.resize(after_idx);
+        map_objs.resize(after_idx);
+        idx_to_delete.clear();
+    }
+}
 void Game::advance_one_tick(double tick_len,
                             MapCoord cursor_pos,
                             kx::gfx::mouse_state_t mouse_state,
-                            const uint8_t *keyboard_state)
+                            kx::gfx::keyboard_state_t keyboard_state)
 {
     //move forward a tick
     cur_level_time += tick_len;
@@ -464,29 +519,7 @@ void Game::advance_one_tick(double tick_len,
      *   perform a more complicated operation.
      */
 
-    //process input
-    map_obj::PlayerRunSpecialArgs player_args;
-    player_args.tick_len = tick_len;
-
-    auto keystate = keyboard_state;
-    player_args.left_pressed = keystate[SDL_SCANCODE_A];
-    player_args.right_pressed = keystate[SDL_SCANCODE_D];
-    player_args.up_pressed = keystate[SDL_SCANCODE_W];
-    player_args.down_pressed = keystate[SDL_SCANCODE_S];
-
-    weapon::WeaponRunArgs weapon_args;
-    weapon_args.set_map_objs_to_add(&map_objs_to_add);
-    auto player_pos = player->get_position();
-    weapon_args.set_owner_info(weapon::WeaponOwnerInfo(player_pos, map_obj::Player_Type1::WEAPON_OFFSET));
-    weapon_args.set_cursor_pos(cursor_pos);
-    weapon_args.tick_len = tick_len;
-    weapon_args.cur_level_time = cur_level_time;
-    weapon_args.set_mouse_state(mouse_state);
-    weapon_args.set_angle(std::atan2(cursor_pos.y - player_pos.y, cursor_pos.x - player_pos.x));
-    weapon_args.set_rng(&rngs[0]);
-    player_args.weapon_run_args = weapon_args;
-
-    player->run_special(player_args, {});
+    run_player(tick_len, cursor_pos, mouse_state, keyboard_state);
 
     //~100us on Test2(40, 40)
     run1(tick_len);
@@ -494,36 +527,10 @@ void Game::advance_one_tick(double tick_len,
     //~400us on Test2(40, 40)
     run_collision_engine();
 
-    //run3
     run3(tick_len);
 
-    //-remove all map objects that want to be removed
-    //-note that we should preserve the order to prevent rendering glitches
-    // (if two things have the same priority, then their order in map objs
-    // determines which one is on top, so we have to keep all relative orders).
-    if(!idx_to_delete.empty()) {
-        int first_idx = std::numeric_limits<decltype(first_idx)>::max();
-        //note that duplicate indices won't cause bugs (yet), but they're messy
-        //so they're not recommended
-        for(const auto &idx: idx_to_delete) {
-            k_assert(idx < (int)map_objs.size());
-            map_objs[idx] = nullptr;
-            first_idx = std::min(first_idx, idx);
-        }
-        size_t after_idx = first_idx;
-        for(size_t i=first_idx+1; i<map_objs.size(); i++) {
-            if(map_objs[i] != nullptr) {
-                ceng_data[after_idx] = std::move(ceng_data[i]);
-                map_objs[after_idx] = std::move(map_objs[i]);
-                after_idx++;
-            }
-        }
-        ceng_data.resize(after_idx);
-        map_objs.resize(after_idx);
-        idx_to_delete.clear();
-    }
+    process_deleted_map_objs();
 
-    //everything in map_objs_to_add is moved to map_objs
     process_added_map_objs();
 }
 std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::FontLibrary *font_library,
@@ -628,7 +635,7 @@ Game::Game():
      *  is empty by the time it wakes up.
      */
 
-    generate_and_start_level(Level::Name::Test2);
+    generate_and_start_level(LevelName::Test2);
 }
 Game::~Game()
 {}

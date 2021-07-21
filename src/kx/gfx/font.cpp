@@ -11,8 +11,10 @@
 #include <memory>
 #include <string>
 #include <atomic>
+#include <cstring>
 
 namespace kx { namespace gfx {
+
 std::atomic<Font::ID_t> num_fonts(0);
 
 Font::Font():
@@ -75,7 +77,7 @@ FontLibrary::~FontLibrary()
     TTF_Quit();
 }
 
-std::shared_ptr<Font> FontLibrary::get_font(const char *font_name)
+std::shared_ptr<Font> FontLibrary::get_font(std::string_view font_name)
 {
     auto font = fonts.find(font_name);
     if(font == fonts.end())
@@ -83,17 +85,17 @@ std::shared_ptr<Font> FontLibrary::get_font(const char *font_name)
     else
         return font->second;
 }
-std::shared_ptr<Font> FontLibrary::load(const char *font_name, const char *file)
+std::shared_ptr<Font> FontLibrary::load(std::string_view font_name, std::string_view file)
 {
     if(fonts.find(font_name) != fonts.end()) {
-        log_error((std::string)"Attempted to load a font with name \"" + font_name +
+        log_error((std::string)"Attempted to load a font with name \"" + to_str(font_name) +
                   "\", but a font with that name already exists");
         return nullptr;
     }
 
     std::shared_ptr<Font> font = std::shared_ptr<Font>(new Font());
 
-    if(FT_New_Face(ft_library, file, 0, &font->ft_face)) {
+    if(FT_New_Face(ft_library, file.data(), 0, &font->ft_face)) {
         log_error("error loading FT_Face from file \"" + (std::string)file + "\"");
     }
     if(!(font->ft_face->face_flags & FT_FACE_FLAG_SCALABLE)) {
@@ -101,30 +103,31 @@ std::shared_ptr<Font> FontLibrary::load(const char *font_name, const char *file)
     }
 
     for(int i=0; i<=Font::MAX_FONT_SIZE; i++)
-        font->font_of_size[i] = unique_ptr_sdl<TTF_Font>(TTF_OpenFont(file, i));
+        font->font_of_size[i] = unique_ptr_sdl<TTF_Font>(TTF_OpenFont(file.data(), i));
 
     if(font->font_of_size[0] == nullptr) {
         log_error((std::string)"TTF_GetError(): " + TTF_GetError());
         return nullptr;
     }
 
-    fonts[font_name] = font;
+    fonts.emplace(font_name, font);
 
     return font;
 }
-void FontLibrary::close(const std::string &font_name)
+void FontLibrary::close(std::string_view font_name)
 {
     auto font = fonts.find(font_name);
     if(font != fonts.end()) {
         if(font->second.use_count() != 1) {
-            log_warning("removing font " + font_name + " from the db, but " +
+            log_warning("removing font " + to_str(font_name) + " from the db, but " +
                         to_str(font->second.use_count() - 1) +
                         " other owning pointers exist, so the memory won't be freed");
         }
         fonts.erase(font);
+    } else {
+        log_error("Failed to erase font with name \"" + to_str(font_name) +
+                  "\", as no fonts with that name exist");
     }
-    log_error("Failed to erase font with name \"" + font_name +
-              "\", as no fonts with that name exist");
 }
 
 }}
