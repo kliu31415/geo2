@@ -23,13 +23,13 @@ public:
     MapObjInitArgs(MapObjInitArgs&&) = delete;
     MapObjInitArgs & operator = (MapObjInitArgs&&) = delete;
 
-    inline void add_current_pos(std::unique_ptr<Polygon> &&polygon) const
+    inline void add_current_pos_polygon_with_num_sides(uint32_t num_sides) const
     {
-        data->add_current_pos(std::move(polygon));
+        data->add_current_pos_polygon_with_num_sides(num_sides);
     }
-    inline void add_desired_pos(std::unique_ptr<Polygon> &&polygon) const
+    inline void add_desired_pos_polygon_with_num_sides(uint32_t num_sides) const
     {
-        data->add_desired_pos(std::move(polygon));
+        data->add_desired_pos_polygon_with_num_sides(num_sides);
     }
     inline Polygon *get_sole_current_pos() const
     {
@@ -114,13 +114,13 @@ public:
     CEng1DataMutatorAttorney(CEng1DataMutatorAttorney&&) = delete;
     CEng1DataMutatorAttorney & operator = (CEng1DataMutatorAttorney&&) = delete;
 
-    inline void add_current_pos(std::unique_ptr<Polygon> &&polygon) const
+    inline void add_current_pos_polygon_with_num_sides(uint32_t num_sides) const
     {
-        (*ceng_data)[idx].add_current_pos(std::move(polygon));
+        (*ceng_data)[idx].add_current_pos_polygon_with_num_sides(num_sides);
     }
-    inline void add_desired_pos(std::unique_ptr<Polygon> &&polygon)  const
+    inline void add_desired_pos_polygon_with_num_sides(uint32_t num_sides) const
     {
-        (*ceng_data)[idx].add_desired_pos(std::move(polygon));
+        (*ceng_data)[idx].add_desired_pos_polygon_with_num_sides(num_sides);
     }
     inline Polygon *get_sole_current_pos() const
     {

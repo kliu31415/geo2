@@ -80,26 +80,26 @@ class CEng1Data final
 
     MoveIntent move_intent;
 
-    template<class Func> inline static void for_each(const PolygonData &data, Func &&func)
+    template<class Func> inline static void for_each(const PolygonData &data, const Func &func)
     {
-        if(data.num_polygons == 1) {
-            std::forward<Func>(func)(data.ptr.get(), 0);
+        if(__builtin_expect(data.num_polygons == 1, 1)) {
+            func(data.ptr.get(), 0);
         } else if(data.num_polygons > 1) {
             for(size_t i=0; i<data.vec->size(); i++) {
-                std::forward<Func>(func)((*data.vec)[i].get(), i);
+                func((*data.vec)[i].get(), i);
             }
         }
     }
 public:
     CEng1Data() = default;
 
-    inline void add_current_pos(std::unique_ptr<Polygon> &&polygon)
+    inline void add_current_pos_polygon_with_num_sides(uint32_t num_sides)
     {
-        cur.push_back(std::move(polygon));
+        cur.push_back(Polygon::make_with_num_sides(num_sides));
     }
-    inline void add_desired_pos(std::unique_ptr<Polygon> &&polygon)
+    inline void add_desired_pos_polygon_with_num_sides(uint32_t num_sides)
     {
-        des.push_back(std::move(polygon));
+        des.push_back(Polygon::make_with_num_sides(num_sides));
     }
     inline Polygon *get_sole_current_pos()
     {
@@ -129,18 +129,18 @@ public:
     {
         move_intent = new_intent;
     }
-    template<class Func> inline void for_each_cur(Func &&func)
+    template<class Func> inline void for_each_cur(const Func &func)
     {
-        for_each(cur, std::forward<Func>(func));
+        for_each(cur, func);
     }
-    template<class Func> inline void for_each_des(Func &&func)
+    template<class Func> inline void for_each_des(const Func &func)
     {
-        for_each(des, std::forward<Func>(func));
+        for_each(des, func);
     }
-    template<class Func> inline void for_each(Func &&func)
+    template<class Func> inline void for_each(const Func &func)
     {
-        for_each(cur, std::forward<Func>(func));
-        for_each(des, std::forward<Func>(func));
+        for_each(cur, func);
+        for_each(des, func);
     }
 
     ///TODO: add support for multiple shapes and deleting

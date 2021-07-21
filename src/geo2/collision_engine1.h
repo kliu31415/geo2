@@ -24,7 +24,7 @@ namespace geo2 {
  *  so the CollisionEngine1 will own the Polygons.
  */
 
-class alignas(16) CollisionEngine1
+class CollisionEngine1
 {
     constexpr static int GRID_LEN = 128; //power of 2 is faster cuz mult turns into bitshift
 

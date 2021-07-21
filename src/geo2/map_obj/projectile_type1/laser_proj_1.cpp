@@ -30,8 +30,8 @@ LaserProj_1::LaserProj_1(const std::shared_ptr<MapObject> &owner_,
 {}
 void LaserProj_1::init(const MapObjInitArgs &args)
 {
-     args.add_current_pos(Polygon::make_with_num_sides(3));
-     args.add_desired_pos(Polygon::make_with_num_sides(3));
+    args.add_current_pos_polygon_with_num_sides(3);
+    args.add_desired_pos_polygon_with_num_sides(3);
 }
 void LaserProj_1::add_render_ops(const MapObjRenderArgs &args)
 {
@@ -70,7 +70,7 @@ void LaserProj_1::add_render_ops(const MapObjRenderArgs &args)
 }
 void LaserProj_1::copy_base_shape_into(Polygon *p) const
 {
-    p->copy_from(base_shape.get());
+    p->copy_from(*base_shape);
 }
 
 }}

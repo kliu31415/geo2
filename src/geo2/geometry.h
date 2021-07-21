@@ -273,7 +273,7 @@ public:
 
     static void operator delete(void *ptr);
     std::unique_ptr<Polygon> copy() const;
-    void copy_from(const Polygon *other);
+    void copy_from(const Polygon &other);
 
     /** Polygons are only heap-allocatable; note that vertices are stored
      *  just past the end of the polygon, so sizeof(Polygon) is inaccurate,
@@ -302,7 +302,7 @@ public:
         return aabb;
     }
 
-    static std::unique_ptr<Polygon> make_with_num_sides(int num_sides);
+    static std::unique_ptr<Polygon> make_with_num_sides(uint32_t num_sides);
     template<class T> static std::unique_ptr<Polygon> make(kx::kx_span<_MapCoord<T>> vertices);
     template<class T> static std::unique_ptr<Polygon> make(const std::vector<T> &coords);
 };

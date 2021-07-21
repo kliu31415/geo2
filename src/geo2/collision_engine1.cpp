@@ -218,12 +218,11 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
     //step 1
     active_objs.clear();
 
-    //~150us on Test2(40, 40)
+    //~50us on Test2(40, 40)
     for(size_t i=0; i<ceng_data->size(); i++) {
         auto add_active_obj = [this, i](const Polygon *polygon, int shape_idx) -> void
                             {
-                                CEng1Obj obj(polygon, i, shape_idx);
-                                active_objs.push_back(obj);
+                                active_objs.emplace_back(polygon, i, shape_idx);
                             };
 
         auto move_intent = (*ceng_data)[i].get_move_intent();
@@ -235,19 +234,17 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
             //-NotSet is the correct move intent if we don't want to add any shapes
             //-RemoveShapes would also work, as it also results in no shapes being
             // added, but we prefer NotSet for cleanliness
-            k_expects(move_intent == MoveIntent::NotSet);
+            k_assert(move_intent == MoveIntent::NotSet);
         }
     }
 
     //step 2
-    #ifdef GEO2_AVX2
-    const auto cum_stride = sizeof(CEng1Obj) * _mm256_set_epi64x(3, 2, 1, 0);
-
+    #if 0 //#ifdef __AVX2__
     //the spec for gather doesn't require any alignment, so I'll comment out this assert...
     //hopefully alignment isn't implicitly required
     //k_assert((uintptr_t)active_objs.data() % 8 == 0);
-    auto base = (const long long int*)active_objs.data();
-    auto mm_vec_iterator = cum_stride;
+    auto active_objs_base_ptr = (long long int*)active_objs.data();
+    auto mm_vec_iterator = sizeof(CEng1Obj) * _mm256_set_epi64x(3, 2, 1, 0);
 
     auto mm_max_dimensions = _mm256_set1_ps(0);
     auto mm_global_aabb_min = _mm256_set1_ps( std::numeric_limits<float>::max());
@@ -273,7 +270,7 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
         //only holds for 64 bit compilers, but it shouldn't be hard to adapt this to 32-bit compilers in the future
         static_assert(sizeof(CEng1Obj::polygon) == 8);
 
-        auto mm_x1y1_addr = _mm256_i64gather_epi64(base, mm_vec_iterator, 1);
+        auto mm_x1y1_addr = _mm256_i64gather_epi64(active_objs_base_ptr, mm_vec_iterator, 1);
         auto mm_x2y2_addr = 8 + mm_x1y1_addr;
 
         auto mm_x1y1_epi64 = _mm256_i64gather_epi64(nullptr, mm_x1y1_addr, 1);
@@ -282,11 +279,11 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
         auto mm_x1y1 = *reinterpret_cast<__m256*>(&mm_x1y1_epi64);
         auto mm_x2y2 = *reinterpret_cast<__m256*>(&mm_x2y2_epi64);
 
-        mm_max_dimensions = _mm256_max_ps(mm_max_dimensions, mm_x2y2 - mm_x1y1);
+        mm_vec_iterator += sizeof(CEng1Obj) * 4;
+
         mm_global_aabb_min = _mm256_min_ps(mm_global_aabb_min, mm_x1y1);
         mm_global_aabb_max = _mm256_max_ps(mm_global_aabb_max, mm_x1y1);
-
-        mm_vec_iterator += sizeof(CEng1Obj) * 4;
+        mm_max_dimensions = _mm256_max_ps(mm_max_dimensions, mm_x2y2 - mm_x1y1);
     }
     std::array<float, 8> mm_vals;
 
@@ -338,10 +335,11 @@ std::vector<CEng1Collision> CollisionEngine1::find_collisions()
     grid_rect_h = (global_AABB.y2 - global_AABB.y1) / GRID_LEN;
 
     //step 3
+    //~100us on Test2(40, 40)
     for(const auto &obj: active_objs) {
         const auto &aabb = obj.polygon->get_AABB();
-        int x = x_to_grid_x(aabb.x1);
-        int y = y_to_grid_y(aabb.y1);
+        auto x = x_to_grid_x(aabb.x1);
+        auto y = y_to_grid_y(aabb.y1);
         grid.get_ref(x, y).push_back(obj);
     }
 

@@ -37,8 +37,8 @@ const std::unique_ptr<const Polygon> BASE_SHAPE = Polygon::make(
 
 void Spotted_Pig_1::init(const MapObjInitArgs &args)
 {
-    args.add_current_pos(Polygon::make_with_num_sides(12));
-    args.add_desired_pos(Polygon::make_with_num_sides(12));
+    args.add_current_pos_polygon_with_num_sides(12);
+    args.add_desired_pos_polygon_with_num_sides(12);
 }
 
 constexpr double MAX_SPEED = 50;
@@ -66,12 +66,12 @@ void Spotted_Pig_1::run1_mt([[maybe_unused]] const MapObjRun1Args &args)
     movement_algo.run(algo_args);
 
     auto cur = args.get_sole_current_pos();
-    cur->copy_from(BASE_SHAPE.get());
+    cur->copy_from(*BASE_SHAPE);
     cur->rotate_about_origin(movement_algo.get_current_angle());
     cur->translate(current_position.x, current_position.y);
 
     auto des = args.get_sole_desired_pos();
-    des->copy_from(BASE_SHAPE.get());
+    des->copy_from(*BASE_SHAPE);
     des->rotate_about_origin(movement_algo.get_desired_angle());
     auto desired_position = movement_algo.get_desired_position();
     des->translate(desired_position.x, desired_position.y);

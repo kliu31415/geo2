@@ -163,6 +163,8 @@ void *Polygon::operator new([[maybe_unused]] size_t bytes, uint32_t n)
     #ifdef USE_POLYGON_ALLOCATOR
     return get_polygon_allocator()->allocate(n);
     #else
+    //n==0 shouldn't happen in general; there are also functions here that assume >0 vertices
+    k_expects(n > 0);
     return ::operator new(get_polygon_size(n));
     #endif
 }
@@ -201,8 +203,14 @@ void Polygon::calc_aabb()
     auto verts = get_verts();
 
     auto d_len = get_d_len(n);
-    aabb = AABB::make_maxbad_AABB();
-    for(uint32_t i=0; i<n; i++) {
+
+    //not much benefit to using AVX2 here because you would need to do a
+    //horizontal min or max on a 8-float vector at the end
+    aabb.x1 = verts[0];
+    aabb.y1 = verts[d_len];
+    aabb.x2 = verts[0];
+    aabb.y2 = verts[d_len];
+    for(uint32_t i=1; i<n; i++) {
         _MapCoord<float> c(verts[i], verts[d_len + i]);
         aabb.combine(c);
     }
@@ -281,14 +289,14 @@ std::unique_ptr<Polygon> Polygon::copy() const
     std::copy(get_verts(), get_verts() + 2*d_len, ret->get_verts());
     return ret;
 }
-void Polygon::copy_from(const Polygon *other)
+void Polygon::copy_from(const Polygon &other)
 {
-    k_expects(n == other->n);
+    k_expects(n == other.n);
 
     auto d_len = get_d_len(n);
 
-    aabb = other->aabb;
-    std::copy(other->get_verts(), other->get_verts() + 2*d_len, get_verts());
+    aabb = other.aabb;
+    std::copy(other.get_verts(), other.get_verts() + 2*d_len, get_verts());
 }
 void Polygon::translate(float dx, float dy)
 {
@@ -371,37 +379,46 @@ bool Polygon::has_collision(const Polygon &other) const
     //https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
     //Note that this DOESN'T handle parallel lines properly, but that's usually OK.
 
-    auto this_n = get_num_vertices();
+    auto this_n = this->get_num_vertices();
     auto other_n = other.get_num_vertices();
     auto this_d_len = get_d_len(this_n);
     auto other_d_len = get_d_len(other_n);
+    float* this_verts;
+    float* other_verts;
 
     //check if it is faster to do it the other way
-    if(this_n * other_d_len > other_n * this_d_len)
-        return other.has_collision(*this);
+    if(this_n * other_d_len > other_n * this_d_len) {
+        other_n = this->get_num_vertices();
+        this_n = other.get_num_vertices();
+        this_d_len = get_d_len(this_n);
+        other_d_len = get_d_len(other_n);
+        this_verts = other.get_verts();
+        other_verts = get_verts();
+    } else {
+        this_verts = get_verts();
+        other_verts = other.get_verts();
+    }
 
-    if(!get_AABB().overlaps(other.get_AABB()))
+    if(!this->get_AABB().overlaps(other.get_AABB()))
         return false;
 
     const auto mm0 = _mm256_set1_ps(0);
     const auto mm1 = _mm256_set1_ps(1);
 
-    auto verts = get_verts();
-
     for(uint32_t i=1; i<=this_n; i++) {
 
-        const auto Px = _mm256_set1_ps(verts[i-1]);
-        const auto Py = _mm256_set1_ps(verts[this_d_len + i-1]);
-        const auto Rx = _mm256_set1_ps(verts[i] - verts[i-1]);
-        const auto Ry = _mm256_set1_ps(verts[this_d_len + i] - verts[this_d_len + i-1]);
+        const auto Px = _mm256_set1_ps(this_verts[i-1]);
+        const auto Py = _mm256_set1_ps(this_verts[this_d_len + i-1]);
+        const auto Rx = _mm256_set1_ps(this_verts[i] - this_verts[i-1]);
+        const auto Ry = _mm256_set1_ps(this_verts[this_d_len + i] - this_verts[this_d_len + i-1]);
 
         for(uint32_t j=1; j<other_d_len; j+=8) {
 
-            auto Qx = _mm256_loadu_ps(other.get_verts() + j-1);
-            auto Qy = _mm256_loadu_ps(other.get_verts() + other_d_len + j-1);
+            auto Qx = _mm256_loadu_ps(other_verts + j-1);
+            auto Qy = _mm256_loadu_ps(other_verts + other_d_len + j-1);
 
-            auto Sx = _mm256_loadu_ps(other.get_verts() + j) - Qx;
-            auto Sy = _mm256_loadu_ps(other.get_verts() + other_d_len + j) - Qy;
+            auto Sx = _mm256_loadu_ps(other_verts + j) - Qx;
+            auto Sy = _mm256_loadu_ps(other_verts + other_d_len + j) - Qy;
 
             auto Ry_times_Sx = Ry * Sx;
 
@@ -441,7 +458,7 @@ bool Polygon::has_collision(const Polygon &other) const
 
     return false;
 }
-std::unique_ptr<Polygon> Polygon::make_with_num_sides(int num_sides)
+std::unique_ptr<Polygon> Polygon::make_with_num_sides(uint32_t num_sides)
 {
     return std::unique_ptr<Polygon>(new (num_sides) Polygon(num_sides));
 }

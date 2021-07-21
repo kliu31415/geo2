@@ -161,8 +161,8 @@ void Player_Type1::run_special(const PlayerRunSpecialArgs &args, kx::Passkey<Gam
 }
 void Player_Type1::init([[maybe_unused]] const MapObjInitArgs &args)
 {
-    args.add_current_pos(Polygon::make_with_num_sides(4));
-    args.add_desired_pos(Polygon::make_with_num_sides(4));
+    args.add_current_pos_polygon_with_num_sides(4);
+    args.add_desired_pos_polygon_with_num_sides(4);
 
     try {
         weapons.push_back(std::make_shared<weapon::TestLaser1>(shared_from_this()));

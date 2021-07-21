@@ -34,7 +34,6 @@
 			<Add option="-fexceptions" />
 			<Add option="-Isrc" />
 			<Add option="-DKX_RENDERER_GL" />
-			<Add option="-DGEO2_AVX2" />
 			<Add directory="src" />
 		</Compiler>
 		<Unit filename="src/geo2/ceng1_data.h">

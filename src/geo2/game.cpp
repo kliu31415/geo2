@@ -625,7 +625,6 @@ Game::Game():
      *  is empty by the time it wakes up.
      */
 
-
     generate_and_start_level(Level::Name::Test2);
 }
 Game::~Game()
