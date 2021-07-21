@@ -23,7 +23,7 @@ class Font;
 
 using mouse_state_t = decltype(SDL_GetMouseState(nullptr, nullptr));
 
-class Library final
+class GfxLibrary final
 {
     const Uint8 *keyboard_state;
     Uint32 mouse_state;
@@ -31,11 +31,13 @@ class Library final
     int mouse_y;
     ///events not associated with any SDL_Window (currently unused)
     std::queue<SDL_Event> global_events;
+
     std::map<Uint32, std::weak_ptr<class AbstractWindow> > ID_to_window;
     shared_ptr_sdl<SDL_Surface> default_window_icon;
+    std::unique_ptr<class WindowPool> window_pool;
 public:
-    Library();
-    ~Library();
+    GfxLibrary();
+    ~GfxLibrary();
 
     const Uint8 *get_keyboard_state() const;
     mouse_state_t get_mouse_state() const;
@@ -46,6 +48,7 @@ public:
     void clean_memory(); ///removes old/unused stuff from memory. Ideally call this at least once per second.
 
     shared_ptr_sdl<SDL_Surface> get_default_window_icon(Passkey<AbstractWindow>);
+    WindowPool *get_window_pool(Passkey<AbstractWindow>);
     void add_window_to_db(std::shared_ptr<class AbstractWindow> window);
     std::vector<int> get_active_window_IDs() const;
 };
@@ -69,16 +72,16 @@ class AbstractWindow: public std::enable_shared_from_this<AbstractWindow>
 
     shared_ptr_sdl<SDL_Window> sdl_window;
     std::unique_ptr<Renderer> renderer_;
-    Library *library;
+    GfxLibrary *library;
 protected:
     InputQueue input;
 
     Renderer *rdr();
 
-    AbstractWindow(Library *library, const std::string &title, int x, int y, int w, int h, Uint32 window_flags);
+    AbstractWindow(GfxLibrary *library, const std::string &title, int x, int y, int w, int h, Uint32 window_flags);
 public:
     ///weak_ptrs to dead windows will be automatically removed in gfx::clean_memory, so =default is fine
-    virtual ~AbstractWindow() = default;
+    virtual ~AbstractWindow();
 
     ///noncopyable because you can't copy a window
     AbstractWindow(const AbstractWindow&) = delete;
@@ -95,8 +98,7 @@ public:
     int get_sdl_window_id() const;
     bool is_focused() const;
     void clean_memory();
-    Library *get_library();
-    InputQueue *get_input_queue(Passkey<Library>);
+    InputQueue *get_input_queue(Passkey<GfxLibrary>);
 
     friend class RendererAtny;
     struct RendererAtny ///Attorney-Client idiom
@@ -112,9 +114,9 @@ public:
  */
 class DWindow final: public AbstractWindow
 {
-    DWindow(Library *library, const std::string &title, int x, int y, int w, int h, Uint32 window_flags);
+    DWindow(GfxLibrary *library, const std::string &title, int x, int y, int w, int h, Uint32 window_flags);
 public:
-    static std::shared_ptr<DWindow> make(Library *library,
+    static std::shared_ptr<DWindow> make(GfxLibrary *library,
                                          const std::string &title,
                                          int x, int y, int w, int h,
                                          Uint32 window_flags = SDL_WINDOW_SHOWN);

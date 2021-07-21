@@ -13,7 +13,8 @@ static_assert(sizeof(int) == 4);
 int main()
 {
     using namespace kx;
-    gfx::Library library;
+    gfx::GfxLibrary gfx_library;
+    gfx::FontLibrary font_library;
 
     //don't use cout; use io::print instead (which uses cout internally)
     std::ios::sync_with_stdio(false);
@@ -23,6 +24,6 @@ int main()
     //The next line makes now() return seconds since epoch in our local timezone
     Time::set_now_utc_offset(Time::Delta(-5, Time::Length::hour));
 
-    geo2::run(&library);
+    geo2::run({&gfx_library, &font_library});
     return 0;
 }

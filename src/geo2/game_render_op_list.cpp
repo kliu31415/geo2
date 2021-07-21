@@ -70,15 +70,17 @@ void GameRenderOpList::Shaders::init(kx::gfx::Renderer *rdr, kx::Passkey<GameRen
                        "block1", 0, 6*4*sizeof(float));
 }
 
-void GameRenderOpList::Fonts::init(kx::gfx::Renderer *rdr, kx::Passkey<GameRenderOpList>)
+void GameRenderOpList::Fonts::init(kx::gfx::FontLibrary *font_library,
+                                   kx::gfx::Renderer *rdr,
+                                   kx::Passkey<GameRenderOpList>)
 {
-    default_ = std::make_unique<Font>(rdr, kx::gfx::Font::BLACK_CHANCERY.get());
+    default_ = std::make_unique<Font>(rdr, font_library->get_font(kx::gfx::FontLibrary::FONT_BLACK_CHANCERY).get());
 }
-GameRenderOpList::GameRenderOpList(kx::gfx::Renderer *renderer):
+GameRenderOpList::GameRenderOpList(kx::gfx::FontLibrary *font_library, kx::gfx::Renderer *renderer):
     cur_renderer(renderer)
 {
     shaders.init(cur_renderer, {});
-    fonts.init(cur_renderer, {});
+    fonts.init(font_library, cur_renderer, {});
 }
 void GameRenderOpList::render([[maybe_unused]] const Game &game,
                               kx::gfx::KWindowRunning *kwin_r,

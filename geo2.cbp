@@ -66,6 +66,9 @@
 		<Unit filename="src/geo2/level_gen/test3.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="src/geo2/library_pointers.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="src/geo2/map_obj/alive_status.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>

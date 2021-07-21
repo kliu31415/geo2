@@ -879,9 +879,9 @@ Renderer::Renderer(SDL_Window *window_, [[maybe_unused]] Uint32 flags):
             log_error(SDL_GetError());
         return context;
     }()),
-    current_font(Font::DEFAULT),
+    current_font(nullptr),
     show_fps_toggle(false),
-    fps_font(Font::DEFAULT),
+    fps_font(nullptr),
     fps_color(gfx::Color::BLACK),
     render_target(nullptr),
     Shaders()
@@ -1000,18 +1000,8 @@ void Renderer::invert_rect_colors([[maybe_unused]] const gfx::Rect &rect)
     k_assert(false);
 }
 
-void Renderer::set_font(std::string font_name)
-{
-    auto font = Font::get_font(font_name);
-    if(font == nullptr) {
-        log_error("Failed to find font with name \"" + font_name + "\", as no fonts with that name exist");
-        return;
-    }
-    current_font = font;
-}
 void Renderer::set_font(std::shared_ptr<const Font> font)
 {
-    k_expects(font != nullptr);
     current_font = std::move(font);
 }
 const std::shared_ptr<const Font> &Renderer::get_font() const

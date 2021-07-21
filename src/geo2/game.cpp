@@ -45,10 +45,10 @@ struct _gfx
     std::shared_ptr<kx::gfx::VBO> full_target_vbo;
     std::array<float, 16> full_target;
 
-    _gfx(kx::gfx::Renderer *rdr):
+    _gfx(kx::gfx::FontLibrary *font_library, kx::gfx::Renderer *rdr):
         cur_renderer(rdr)
     {
-        render_op_list = std::make_unique<GameRenderOpList>(rdr);
+        render_op_list = std::make_unique<GameRenderOpList>(font_library, rdr);
 
         auto bloom1_vert = rdr->make_vert_shader("geo2_data/shaders/bloom1_1.vert");
         auto bloom1_frag = rdr->make_frag_shader("geo2_data/shaders/bloom1_1.frag");
@@ -524,7 +524,8 @@ void Game::advance_one_tick(double tick_len,
     //everything in map_objs_to_add is moved to map_objs
     process_added_map_objs();
 }
-std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
+std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::FontLibrary *font_library,
+                                               kx::gfx::KWindowRunning *kwin_r,
                                                int render_w, int render_h,
                                                int map_render_w,
                                                float tile_len)
@@ -534,7 +535,7 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::KWindowRunning *kwin_r,
     //create the texture where the map will be rendered; note that this isn't the whole screen.
     auto rdr = kwin_r->rdr();
     if(gfx==nullptr || rdr!=gfx->cur_renderer) {
-        gfx = std::make_unique<_gfx>(rdr);
+        gfx = std::make_unique<_gfx>(font_library, rdr);
     }
     float w = render_w;
     float h = render_h;
@@ -634,16 +635,17 @@ inline float lerp(double a, double b, double t)
 {
     return a*(1-t) + b*t;
 }
-std::shared_ptr<kx::gfx::Texture> Game::run(kx::gfx::KWindowRunning *kwin_r,
+std::shared_ptr<kx::gfx::Texture> Game::run(const LibraryPointers &libraries,
+                                            kx::gfx::KWindowRunning *kwin_r,
                                             int render_w, int render_h)
 {
     constexpr int TICKS_PER_FRAME = 10;
 
-    auto library = kwin_r->get_library();
+    auto gfx_library = libraries.gfx_library;
 
     //using lerped mouse positions allows for smoother laser beams when rapidly moving the mouse
-    int mouse_x = library->get_mouse_x();
-    int mouse_y = library->get_mouse_y();
+    int mouse_x = gfx_library->get_mouse_x();
+    int mouse_y = gfx_library->get_mouse_y();
     if(prev_mouse_x == PREV_MOUSE_X_NOT_SET) {
         prev_mouse_x = mouse_x;
         prev_mouse_y = mouse_y;
@@ -662,15 +664,15 @@ std::shared_ptr<kx::gfx::Texture> Game::run(kx::gfx::KWindowRunning *kwin_r,
 
         advance_one_tick(1.0 / 1440.0,
                          player->get_position() + offset,
-                         library->get_mouse_state(),
-                         library->get_keyboard_state());
+                         gfx_library->get_mouse_state(),
+                         gfx_library->get_keyboard_state());
     }
 
     prev_mouse_x = mouse_x;
     prev_mouse_y = mouse_y;
 
     //a few hundred ms (integrated GPU, 1920x1080, Test3)
-    auto ret = render(kwin_r, render_w, render_h, render_w*MENU_OFFSET, tile_len);
+    auto ret = render(libraries.font_library, kwin_r, render_w, render_h, render_w*MENU_OFFSET, tile_len);
     return ret;
 }
 }

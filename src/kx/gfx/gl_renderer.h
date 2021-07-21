@@ -483,7 +483,6 @@ public:
 
     void invert_rect_colors(const gfx::Rect &rect);
 
-    void set_font(std::string font_name);
     void set_font(std::shared_ptr<const Font> font);
     const std::shared_ptr<const Font> &get_font() const;
 

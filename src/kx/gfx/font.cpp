@@ -13,9 +13,6 @@
 #include <atomic>
 
 namespace kx { namespace gfx {
-
-FT_Library ft_library;
-
 std::atomic<Font::ID_t> num_fonts(0);
 
 Font::Font():
@@ -25,69 +22,23 @@ Font::Font():
     k_expects(id != std::numeric_limits<ID_t>::max());
 }
 
-std::map<std::string, std::shared_ptr<Font> > fonts;
-
-std::shared_ptr<Font> Font::DEFAULT;
-std::shared_ptr<Font> Font::MONO_DEFAULT;
-std::shared_ptr<Font> Font::ROBOTO_MONO_REGULAR;
-std::shared_ptr<Font> Font::ROBOTO_MONO_LIGHT;
-std::shared_ptr<Font> Font::BLACK_CHANCERY;
-
-std::shared_ptr<Font> Font::get_font(const std::string &font_name)
+int Font::get_height(int size) const
 {
-    auto font = fonts.find(font_name);
-    if(font == fonts.end())
-        return nullptr;
-    else
-        return font->second;
+    k_expects(size>=1 && size<=MAX_FONT_SIZE);
+    return TTF_FontHeight(font_of_size[size].get());
 }
-std::shared_ptr<Font> Font::load(const std::string &font_name, const std::string &file)
+int Font::get_recommended_line_skip(int size) const
 {
-    if(fonts.find(font_name) != fonts.end()) {
-        log_error((std::string)"Attempted to load a font with name \"" + font_name +
-                  "\", but a font with that name already exists");
-        return nullptr;
-    }
-
-    std::shared_ptr<Font> font = std::shared_ptr<Font>(new Font());
-
-    if(FT_New_Face(ft_library, file.c_str(), 0, &font->ft_face)) {
-        log_error("error loading FT_Face from file \"" + file + "\"");
-    }
-    if(!(font->ft_face->face_flags & FT_FACE_FLAG_SCALABLE)) {
-        log_error("FT_Face is not scalable");
-    }
-
-    for(int i=0; i<=MAX_FONT_SIZE; i++)
-        font->font_of_size[i] = unique_ptr_sdl<TTF_Font>(TTF_OpenFont(file.c_str(), i));
-
-    if(font->font_of_size[0] == nullptr) {
-        log_error((std::string)"TTF_GetError(): " + TTF_GetError());
-        return nullptr;
-    }
-
-    fonts[font_name] = font;
-
-    return font;
+    k_expects(size>=1 && size<=MAX_FONT_SIZE);
+    return TTF_FontLineSkip(font_of_size[size].get());
 }
-int Font::close(const std::string &font_name)
+
+static std::atomic<int> init_count(0);
+FontLibrary::FontLibrary()
 {
-    auto font = fonts.find(font_name);
-    if(font != fonts.end()) {
-        if(font->second.use_count() != 1) {
-            log_warning("removing font " + font_name + " from the db, but " +
-                        to_str(font->second.use_count() - 1) +
-                        " other owning pointers exist, so the memory won't be freed");
-        }
-        fonts.erase(font);
-        return 0;
-    }
-    log_error("Failed to erase font with name \"" + font_name +
-              "\", as no fonts with that name exist");
-    return -1;
-}
-void Font::init(Passkey<Library>)
-{
+    //this should be a singleton (at least for now)
+    k_assert(init_count.fetch_add(1) == 0);
+
     if(FT_Init_FreeType(&ft_library)) {
         log_error("FT_Init_FreeType failed");
     }
@@ -97,21 +48,21 @@ void Font::init(Passkey<Library>)
     }
 
     //make sure to set all of these to nullptr when closing
-    DEFAULT = load("kx.default", "kx_data/fonts/roboto_mono_regular.ttf");
-    MONO_DEFAULT = load("kx.mono.default", "kx_data/fonts/roboto_mono_regular.ttf");
-    ROBOTO_MONO_REGULAR = load("kx.roboto_mono.regular", "kx_data/fonts/roboto_mono_regular.ttf");
-    ROBOTO_MONO_LIGHT = load("kx.roboto_mono.light", "kx_data/fonts/roboto_mono_light.ttf");
-    BLACK_CHANCERY = load("kx.black_chancery", "kx_data/fonts/black_chancery.ttf");
+    font_default = load(FONT_DEFAULT, "kx_data/fonts/roboto_mono_regular.ttf");
+    font_mono_default = load(FONT_MONO_DEFAULT, "kx_data/fonts/roboto_mono_regular.ttf");
+    font_roboto_mono_regular = load(FONT_ROBOTO_MONO_REGULAR, "kx_data/fonts/roboto_mono_regular.ttf");
+    font_roboto_mono_light = load(FONT_ROBOTO_MONO_LIGHT, "kx_data/fonts/roboto_mono_light.ttf");
+    font_black_chancery = load(FONT_BLACK_CHANCERY, "kx_data/fonts/black_chancery.ttf");
 }
 
-void Font::quit(Passkey<Library>)
+FontLibrary::~FontLibrary()
 {
     //make sure there are no more references to these
-    DEFAULT = nullptr;
-    MONO_DEFAULT = nullptr;
-    ROBOTO_MONO_REGULAR = nullptr;
-    ROBOTO_MONO_LIGHT = nullptr;
-    BLACK_CHANCERY = nullptr;
+    font_default = nullptr;
+    font_mono_default = nullptr;
+    font_roboto_mono_regular = nullptr;
+    font_roboto_mono_light = nullptr;
+    font_black_chancery = nullptr;
 
     for(const auto &font: fonts) {
         if(font.second.use_count() > 1)
@@ -123,15 +74,57 @@ void Font::quit(Passkey<Library>)
     FT_Done_FreeType(ft_library);
     TTF_Quit();
 }
-int Font::get_height(int size) const
+
+std::shared_ptr<Font> FontLibrary::get_font(const char *font_name)
 {
-    k_expects(size>=1 && size<=MAX_FONT_SIZE);
-    return TTF_FontHeight(font_of_size[size].get());
+    auto font = fonts.find(font_name);
+    if(font == fonts.end())
+        return nullptr;
+    else
+        return font->second;
 }
-int Font::get_recommended_line_skip(int size) const
+std::shared_ptr<Font> FontLibrary::load(const char *font_name, const char *file)
 {
-    k_expects(size>=1 && size<=MAX_FONT_SIZE);
-    return TTF_FontLineSkip(font_of_size[size].get());
+    if(fonts.find(font_name) != fonts.end()) {
+        log_error((std::string)"Attempted to load a font with name \"" + font_name +
+                  "\", but a font with that name already exists");
+        return nullptr;
+    }
+
+    std::shared_ptr<Font> font = std::shared_ptr<Font>(new Font());
+
+    if(FT_New_Face(ft_library, file, 0, &font->ft_face)) {
+        log_error("error loading FT_Face from file \"" + (std::string)file + "\"");
+    }
+    if(!(font->ft_face->face_flags & FT_FACE_FLAG_SCALABLE)) {
+        log_error("FT_Face is not scalable");
+    }
+
+    for(int i=0; i<=Font::MAX_FONT_SIZE; i++)
+        font->font_of_size[i] = unique_ptr_sdl<TTF_Font>(TTF_OpenFont(file, i));
+
+    if(font->font_of_size[0] == nullptr) {
+        log_error((std::string)"TTF_GetError(): " + TTF_GetError());
+        return nullptr;
+    }
+
+    fonts[font_name] = font;
+
+    return font;
+}
+void FontLibrary::close(const std::string &font_name)
+{
+    auto font = fonts.find(font_name);
+    if(font != fonts.end()) {
+        if(font->second.use_count() != 1) {
+            log_warning("removing font " + font_name + " from the db, but " +
+                        to_str(font->second.use_count() - 1) +
+                        " other owning pointers exist, so the memory won't be freed");
+        }
+        fonts.erase(font);
+    }
+    log_error("Failed to erase font with name \"" + font_name +
+              "\", as no fonts with that name exist");
 }
 
 }}

@@ -43,7 +43,7 @@ struct KWindow::KItemOwnerPtr
 };
 
 
-KWindow::KWindow(Library *library_,
+KWindow::KWindow(GfxLibrary *library_,
                  const std::string &title,
                  int x, int y, int w, int h,
                  Uint32 window_flags,
@@ -55,7 +55,7 @@ KWindow::KWindow(Library *library_,
     background_color(background_color_)
 {}
 
-std::shared_ptr<KWindow> KWindow::make(Library *library,
+std::shared_ptr<KWindow> KWindow::make(GfxLibrary *library,
                                        const std::string &title,
                                        int x, int y, int w, int h,
                                        Uint32 window_flags,

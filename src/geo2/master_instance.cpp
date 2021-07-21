@@ -79,33 +79,36 @@ public:
     }
 };
 
-void run(kx::gfx::Library *library)
+void run(const LibraryPointers &libraries)
 {
 
     using namespace kx;
 
-    auto instance = std::make_shared<MasterInstance>(gfx::Rect(0, 0, SCREEN_W, SCREEN_H));
+    auto instance = std::make_shared<MasterInstance>(libraries, gfx::Rect(0, 0, SCREEN_W, SCREEN_H));
 
-    auto window = gfx::KWindow::make(library,
+    auto window = gfx::KWindow::make(libraries.gfx_library,
                                      "geo2",
                                      SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                      SCREEN_W, SCREEN_H,
                                      SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_FULLSCREEN);
+    auto mono_default = libraries.font_library->get_font(kx::gfx::FontLibrary::FONT_MONO_DEFAULT);
+    gfx::AbstractWindow::RendererAtny::set_fps_font(window.get(), mono_default);
     gfx::AbstractWindow::RendererAtny::show_fps(window.get(), true);
     gfx::AbstractWindow::RendererAtny::set_fps_color(window.get(), gfx::Color::CYAN);
     window->add_item_front(instance);
 
     while(true) {
-        library->update_input();
+        libraries.gfx_library->update_input();
         if(window->run() != gfx::KWindow::Status::Running)
             break;
-        library->clean_memory();
+        libraries.gfx_library->clean_memory();
     }
 }
 
-MasterInstance::MasterInstance(const kx::gfx::Rect &render_rect_):
+MasterInstance::MasterInstance(const LibraryPointers &libraries_, const kx::gfx::Rect &render_rect_):
     KItem(render_rect_),
     state(State::InGame),
+    libraries(libraries_),
     game(std::make_unique<Game>())
 {
 
@@ -133,7 +136,7 @@ std::shared_ptr<kx::gfx::Texture> MasterInstance::run(kx::gfx::KWindowRunning *k
     std::shared_ptr<gfx::Texture> return_texture;
     switch(state) {
     case State::InGame:
-        return_texture = game->run(kwin_r, gfx->render_w, gfx->render_h);
+        return_texture = game->run(libraries, kwin_r, gfx->render_w, gfx->render_h);
         break;
     case State::MainMenu:
         break;

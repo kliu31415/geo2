@@ -6,15 +6,21 @@
 #include <memory>
 #include <string>
 #include <array>
+#include <map>
 
 struct FT_FaceRec_;
+struct FT_LibraryRec_;
 
-namespace kx {namespace gfx {
+namespace kx { namespace gfx {
 
 class Renderer;
 
+/** This and related functions (like Renderer::make_ASCII_atlas) aren't thread-safe
+ *  because freetype2 isn't
+ */
 class Font final
 {
+    friend class FontLibrary;
 public:
     static constexpr int MAX_FONT_SIZE = 128; ///any text larger than this will appear blurry
     using ID_t = int;
@@ -27,19 +33,6 @@ private:
 
     Font();
 public:
-    ///System fonts loaded upon gfx::init
-    static std::shared_ptr<Font> DEFAULT;
-    static std::shared_ptr<Font> MONO_DEFAULT;
-    static std::shared_ptr<Font> ROBOTO_MONO_REGULAR;
-    static std::shared_ptr<Font> ROBOTO_MONO_LIGHT;
-    static std::shared_ptr<Font> BLACK_CHANCERY;
-
-    static std::shared_ptr<Font> get_font(const std::string &font_name);
-    static std::shared_ptr<Font> load(const std::string &font_name, const std::string &file);
-    static int close(const std::string &font_name);
-    static void init(Passkey<class Library>);
-    static void quit(Passkey<class Library>);
-
     int get_height(int size) const;
     int get_recommended_line_skip(int size) const;
 
@@ -50,6 +43,36 @@ public:
     ///Fonts aren't movable because there's an internal map that holds pointers to them
     Font(Font&&) = delete;
     Font &operator = (Font&&) = delete;
+};
+
+class FontLibrary
+{
+    std::shared_ptr<Font> font_default;
+    std::shared_ptr<Font> font_mono_default;
+    std::shared_ptr<Font> font_roboto_mono_regular;
+    std::shared_ptr<Font> font_roboto_mono_light;
+    std::shared_ptr<Font> font_black_chancery;
+
+    FT_LibraryRec_ *ft_library;
+    std::map<std::string, std::shared_ptr<Font> > fonts;
+public:
+    static constexpr const char *FONT_DEFAULT = "kx.default";
+    static constexpr const char *FONT_MONO_DEFAULT = "kx.mono.default";
+    static constexpr const char *FONT_ROBOTO_MONO_REGULAR = "kx.roboto_mono.regular";
+    static constexpr const char *FONT_ROBOTO_MONO_LIGHT = "kx.roboto_mono.light";
+    static constexpr const char *FONT_BLACK_CHANCERY = "kx.black_chancery";
+
+    FontLibrary();
+    ~FontLibrary();
+
+    std::shared_ptr<Font> get_font(const char *font_name);
+    std::shared_ptr<Font> load(const char *font_name, const char *file);
+    void close(const std::string &font_name);
+
+    FontLibrary(const FontLibrary&) = delete;
+    FontLibrary& operator = (const FontLibrary&) = delete;
+    FontLibrary(FontLibrary&&) = delete;
+    FontLibrary& operator = (FontLibrary&&) = delete;
 };
 
 }}

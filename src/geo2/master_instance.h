@@ -1,12 +1,13 @@
 #pragma once
 
 #include "geo2/game.h"
+#include "geo2/library_pointers.h"
 
 #include "kx/gfx/kwindow.h"
 
 namespace geo2 {
 
-void run(kx::gfx::Library *library);
+void run(const LibraryPointers &libraries);
 
 /** -Note that the game primarily uses normalized coordinates to draw
  */
@@ -15,10 +16,12 @@ class MasterInstance final: public kx::gfx::KItem
     enum class State {MainMenu, InGame};
     State state;
 
+    LibraryPointers libraries;
+
     std::unique_ptr<Game> game;
     std::unique_ptr<class gfx_impl> gfx;
 public:
-    MasterInstance(const kx::gfx::Rect &render_rect_);
+    MasterInstance(const LibraryPointers &libraries_, const kx::gfx::Rect &render_rect_);
 
     ///noncopyable and nonmovable for safety
     MasterInstance(const MasterInstance&) = delete;

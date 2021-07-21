@@ -4,6 +4,7 @@
 #include "geo2/ceng1_collision.h"
 #include "geo2/ceng1_data.h"
 #include "geo2/rng.h"
+#include "geo2/library_pointers.h"
 
 #include "kx/gfx/renderer.h"
 #include "kx/gfx/kwindow.h"
@@ -70,7 +71,8 @@ class Game final
                           kx::gfx::mouse_state_t mouse_state,
                           const uint8_t *keyboard_state);
 
-    std::shared_ptr<kx::gfx::Texture> render(kx::gfx::KWindowRunning *kwin_r,
+    std::shared_ptr<kx::gfx::Texture> render(kx::gfx::FontLibrary *font_library,
+                                             kx::gfx::KWindowRunning *kwin_r,
                                              int render_w, int render_h,
                                              int map_render_w,
                                              float tile_len);
@@ -84,7 +86,8 @@ public:
     Game(Game&&) = delete;
     Game &operator = (Game&&) = delete;
 
-    std::shared_ptr<kx::gfx::Texture> run(kx::gfx::KWindowRunning *kwin_r,
+    std::shared_ptr<kx::gfx::Texture> run(const LibraryPointers &libraries,
+                                          kx::gfx::KWindowRunning *kwin_r,
                                           int render_w, int render_h);
 };
 

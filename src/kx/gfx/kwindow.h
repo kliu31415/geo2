@@ -43,7 +43,7 @@ class KWindow: public AbstractWindow
 protected:
     std::deque<std::optional<SDL_Event>> input_deque;
 
-    KWindow(Library *library,
+    KWindow(GfxLibrary *library,
             const std::string &title,
             int x, int y, int w, int h,
             uint32_t window_flags,
@@ -57,7 +57,7 @@ public:
 
     enum class Status{Running, AlreadyFinishedRunning, JustFinishedRunning};
 
-    static std::shared_ptr<KWindow> make(Library *library,
+    static std::shared_ptr<KWindow> make(GfxLibrary *library,
                                          const std::string &title,
                                          int x, int y, int w, int h,
                                          uint32_t window_flags = SDL_WINDOW_SHOWN,
@@ -102,7 +102,6 @@ public:
     using AbstractWindow::close;
     using AbstractWindow::is_closed;
     using AbstractWindow::is_focused;
-    using AbstractWindow::get_library;
 
     using KWindow::input_deque;
 };

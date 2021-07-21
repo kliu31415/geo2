@@ -25,7 +25,6 @@ namespace kx { namespace gfx {
  *
  */
 
-
 class WindowPool
 {
     //window_flags to window
@@ -36,14 +35,16 @@ public:
                                           Uint32 window_flags)
     {
         //search the pool for a unused window with the right flags first
-        for(auto &window: windows[window_flags]) {
-            if(window.use_count() == 1) {
-                SDL_SetWindowTitle(window.get(), title.c_str());
-                SDL_SetWindowPosition(window.get(), x, y);
-                SDL_SetWindowSize(window.get(), w, h);
-                SDL_ShowWindow(window.get());
-                return window;
-            }
+        auto windows_find = windows.find(window_flags);
+        if(windows_find != windows.end() && windows_find->second.size() > 0) {
+            auto &windows_vec = windows_find->second;
+            auto window = windows_vec.back();
+            windows_vec.pop_back();
+            SDL_SetWindowTitle(window.get(), title.c_str());
+            SDL_SetWindowPosition(window.get(), x, y);
+            SDL_SetWindowSize(window.get(), w, h);
+            SDL_ShowWindow(window.get());
+            return window;
         }
 
         //if none exist, create one
@@ -52,8 +53,12 @@ public:
         windows[window_flags].push_back(window);
         return window;
     }
+    void close_window(const shared_ptr_sdl<SDL_Window> &window)
+    {
+        auto flags = SDL_GetWindowFlags(window.get());
+        windows[flags].push_back(window);
+    }
 };
-static std::unique_ptr<WindowPool> window_pool;
 
 bool AbstractWindow::InputQueue::poll(SDL_Event *input_arg)
 {
@@ -91,7 +96,7 @@ static constexpr Uint32 RENDERER_FLAGS = SDL_RENDERER_PRESENTVSYNC |
 #else
 static constexpr Uint32 RENDERER_FLAGS = 0;
 #endif
-AbstractWindow::AbstractWindow(Library *library_,
+AbstractWindow::AbstractWindow(GfxLibrary *library_,
                                const std::string &title,
                                int x, int y, int w, int h,
                                Uint32 window_flags):
@@ -103,7 +108,7 @@ AbstractWindow::AbstractWindow(Library *library_,
     window_flags |= SDL_WINDOW_VULKAN;
     #endif
 
-    sdl_window = window_pool->get_window(title, x, y, w, h, window_flags);
+    sdl_window = library->get_window_pool({})->get_window(title, x, y, w, h, window_flags);
     //the SDL_GetError() return here might be out of order because if renderer creation
     //also fails then SDL_GetError() might return the renderer error
     if(sdl_window == nullptr) {
@@ -115,6 +120,10 @@ AbstractWindow::AbstractWindow(Library *library_,
     }
 
     renderer_ = std::make_unique<Renderer>(sdl_window.get(), RENDERER_FLAGS);
+}
+AbstractWindow::~AbstractWindow()
+{
+
 }
 void AbstractWindow::close()
 {
@@ -128,6 +137,7 @@ void AbstractWindow::close()
     //Using SDL_HideWindow isn't very clean because it requires knowing about WindowPool's
     //internals. However, it's very simple. We can refactor it later if needed.
     SDL_HideWindow(sdl_window.get());
+    library->get_window_pool({})->close_window(sdl_window);
 
     sdl_window = nullptr;
     renderer_ = nullptr;
@@ -187,23 +197,19 @@ void AbstractWindow::RendererAtny::set_fps_color(AbstractWindow *window, SRGB_Co
     k_expects(window->rdr() != nullptr);
     window->rdr()->set_fps_color(color);
 }
-Library *AbstractWindow::get_library()
-{
-    return library;
-}
-AbstractWindow::InputQueue *AbstractWindow::get_input_queue(Passkey<Library>)
+AbstractWindow::InputQueue *AbstractWindow::get_input_queue(Passkey<GfxLibrary>)
 {
     return &input;
 }
 
-DWindow::DWindow(Library *library_,
+DWindow::DWindow(GfxLibrary *library_,
                  const std::string &title,
                  int x, int y, int w, int h,
                  Uint32 window_flags):
     AbstractWindow(library_, title, x, y, w, h, window_flags)
 {}
 
-std::shared_ptr<DWindow> DWindow::make(Library *library,
+std::shared_ptr<DWindow> DWindow::make(GfxLibrary *library,
                                        const std::string &title,
                                        int x, int y, int w, int h,
                                        Uint32 window_flags)
@@ -218,8 +224,8 @@ bool DWindow::poll_input(SDL_Event *input_arg)
     return input.poll(input_arg);
 }
 
-std::atomic<int> init_count(0);
-Library::Library()
+static std::atomic<int> init_count(0);
+GfxLibrary::GfxLibrary()
 {
     //we can't really have more than one gfx library
     k_expects(init_count.fetch_add(1) == 0);
@@ -251,16 +257,11 @@ Library::Library()
 
     SDL_StartTextInput(); //may or may not be necessary
 
-    Font::init({});
-
     window_pool = std::make_unique<WindowPool>();
 }
-Library::~Library()
+GfxLibrary::~GfxLibrary()
 {
     window_pool = nullptr;
-
-    Font::quit({});
-
     default_window_icon = nullptr;
 
     for(auto &window: ID_to_window) {
@@ -276,23 +277,23 @@ Library::~Library()
     SDL_Quit();
     IMG_Quit();
 }
-const Uint8 *Library::get_keyboard_state() const
+const Uint8 *GfxLibrary::get_keyboard_state() const
 {
     return keyboard_state;
 }
-kx::gfx::mouse_state_t Library::get_mouse_state() const
+kx::gfx::mouse_state_t GfxLibrary::get_mouse_state() const
 {
     return mouse_state;
 }
-int Library::get_mouse_x() const
+int GfxLibrary::get_mouse_x() const
 {
     return mouse_x;
 }
-int Library::get_mouse_y() const
+int GfxLibrary::get_mouse_y() const
 {
     return mouse_y;
 }
-void Library::update_input()
+void GfxLibrary::update_input()
 {
     //update input
     SDL_Event input;
@@ -337,7 +338,7 @@ void Library::update_input()
     keyboard_state = SDL_GetKeyboardState(nullptr);
     mouse_state = SDL_GetMouseState(&mouse_x, &mouse_y);
 }
-void Library::clean_memory()
+void GfxLibrary::clean_memory()
 {
     //clean up dead windows and text textures
     for(auto i = ID_to_window.begin(); i != ID_to_window.end(); ) {
@@ -350,15 +351,19 @@ void Library::clean_memory()
         }
     }
 }
-shared_ptr_sdl<SDL_Surface> Library::get_default_window_icon(Passkey<AbstractWindow>)
+shared_ptr_sdl<SDL_Surface> GfxLibrary::get_default_window_icon(Passkey<AbstractWindow>)
 {
     return default_window_icon;
 }
-void Library::add_window_to_db(std::shared_ptr<AbstractWindow> window)
+WindowPool *GfxLibrary::get_window_pool(Passkey<AbstractWindow>)
+{
+    return window_pool.get();
+}
+void GfxLibrary::add_window_to_db(std::shared_ptr<AbstractWindow> window)
 {
     ID_to_window[window->get_sdl_window_id()] = std::move(window);
 }
-std::vector<int> Library::get_active_window_IDs() const
+std::vector<int> GfxLibrary::get_active_window_IDs() const
 {
     std::vector<int> res;
     for(auto &window: ID_to_window)

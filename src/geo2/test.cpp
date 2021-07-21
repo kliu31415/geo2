@@ -8,7 +8,7 @@
 namespace geo2
 {
 
-void test1(kx::gfx::Library *library)
+void test1(kx::gfx::GfxLibrary *library)
 {
     using namespace kx;
     auto dwindow = gfx::DWindow::make(library,
