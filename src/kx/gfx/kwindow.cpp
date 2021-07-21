@@ -46,7 +46,7 @@ struct KWindow::KItemOwnerPtr
 KWindow::KWindow(GfxLibrary *library_,
                  const std::string &title,
                  int x, int y, int w, int h,
-                 Uint32 window_flags,
+                 window_flags_t window_flags,
                  SRGB_Color background_color_):
 
     AbstractWindow(library_, title, x, y, w, h, window_flags),
@@ -58,7 +58,7 @@ KWindow::KWindow(GfxLibrary *library_,
 std::shared_ptr<KWindow> KWindow::make(GfxLibrary *library,
                                        const std::string &title,
                                        int x, int y, int w, int h,
-                                       Uint32 window_flags,
+                                       window_flags_t window_flags,
                                        SRGB_Color background_color)
 {
     //use C-style cast to work around private inheritance

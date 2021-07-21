@@ -15,6 +15,13 @@
 
 namespace kx { namespace gfx {
 
+static_assert(std::is_same_v<mouse_state_t, decltype(SDL_GetMouseState(nullptr, nullptr))>);
+static_assert(std::is_same_v<window_flags_t, decltype(SDL_GetWindowFlags(nullptr))>);
+static_assert(std::is_same_v<keyboard_state_t, decltype(SDL_GetKeyboardState(nullptr))>);
+
+static_assert(DEFAULT_WINDOW_FLAGS == SDL_WINDOW_SHOWN);
+static_assert(WINDOW_POS_CENTERED == SDL_WINDOWPOS_CENTERED);
+
 /** This exists for two purposes:
  *  1) It makes creating windows faster
  *  2) There are bugs when using SDL2's OpenGL renderer that occur when a window is
@@ -28,11 +35,11 @@ namespace kx { namespace gfx {
 class WindowPool
 {
     //window_flags to window
-    std::map<Uint32, std::vector<shared_ptr_sdl<SDL_Window>>> windows;
+    std::map<window_flags_t, std::vector<shared_ptr_sdl<SDL_Window>>> windows;
 public:
     shared_ptr_sdl<SDL_Window> get_window(const std::string &title,
                                           int x, int y, int w, int h,
-                                          Uint32 window_flags)
+                                          window_flags_t window_flags)
     {
         //search the pool for a unused window with the right flags first
         auto windows_find = windows.find(window_flags);
@@ -60,17 +67,20 @@ public:
     }
 };
 
+static_assert(sizeof(SDL_Event_Placeholder) == sizeof(SDL_Event));
+
 bool AbstractWindow::InputQueue::poll(SDL_Event *input_arg)
 {
     if(input_queue.empty())
         return false;
-    *input_arg = std::move(input_queue.front());
+    auto first_element = input_queue.front();
+    *input_arg = *reinterpret_cast<SDL_Event*>(&first_element);
     input_queue.pop();
     return true;
 }
-void AbstractWindow::InputQueue::push(SDL_Event input_arg)
+void AbstractWindow::InputQueue::push(const SDL_Event &input_arg)
 {
-    input_queue.push(input_arg);
+    input_queue.push(*reinterpret_cast<const SDL_Event_Placeholder*>(&input_arg));
 
     //Check if unprocessed input is taking up a lot of memory
     //(in which case we might want to clean it up)
@@ -84,22 +94,22 @@ size_t AbstractWindow::InputQueue::size() const
 }
 void AbstractWindow::InputQueue::clear()
 {
-    input_queue = std::queue<SDL_Event>();
+    input_queue = decltype(input_queue)();
 }
 Renderer *AbstractWindow::rdr()
 {
     return renderer_.get();
 }
 #ifdef KX_RENDERER_SDL2
-static constexpr Uint32 RENDERER_FLAGS = SDL_RENDERER_PRESENTVSYNC |
-                                         SDL_RENDERER_ACCELERATED;
+static constexpr auto RENDERER_FLAGS = SDL_RENDERER_PRESENTVSYNC |
+                                       SDL_RENDERER_ACCELERATED;
 #else
-static constexpr Uint32 RENDERER_FLAGS = 0;
+static constexpr auto RENDERER_FLAGS = 0;
 #endif
 AbstractWindow::AbstractWindow(GfxLibrary *library_,
                                const std::string &title,
                                int x, int y, int w, int h,
-                               Uint32 window_flags):
+                               window_flags_t window_flags):
     library(library_)
 {
     #ifdef KX_RENDERER_GL
@@ -205,14 +215,14 @@ AbstractWindow::InputQueue *AbstractWindow::get_input_queue(Passkey<GfxLibrary>)
 DWindow::DWindow(GfxLibrary *library_,
                  const std::string &title,
                  int x, int y, int w, int h,
-                 Uint32 window_flags):
+                 window_flags_t window_flags):
     AbstractWindow(library_, title, x, y, w, h, window_flags)
 {}
 
 std::shared_ptr<DWindow> DWindow::make(GfxLibrary *library,
                                        const std::string &title,
                                        int x, int y, int w, int h,
-                                       Uint32 window_flags)
+                                       window_flags_t window_flags)
 {
     //can't use make_shared due to non-public constructor
     std::shared_ptr<DWindow> window(new DWindow(library, title, x, y, w, h, window_flags));
@@ -272,12 +282,12 @@ GfxLibrary::~GfxLibrary()
     }
     ID_to_window.clear();
 
-    global_events = std::queue<SDL_Event>();
+    global_events = decltype(global_events)();
 
     SDL_Quit();
     IMG_Quit();
 }
-const Uint8 *GfxLibrary::get_keyboard_state() const
+keyboard_state_t GfxLibrary::get_keyboard_state() const
 {
     return keyboard_state;
 }
@@ -324,7 +334,7 @@ void GfxLibrary::update_input()
                 k_expects(num_windows_open == 1); //afaik, only 1 window can be open if SDL_QUIT is received
             }
 
-            global_events.push(input);
+            global_events.push(*reinterpret_cast<SDL_Event_Placeholder*>(&input));
 
             if(global_events.size() == 1e5)
                 log_warning("global_events.size()==1e5. Maybe clear it.");
@@ -361,6 +371,7 @@ WindowPool *GfxLibrary::get_window_pool(Passkey<AbstractWindow>)
 }
 void GfxLibrary::add_window_to_db(std::shared_ptr<AbstractWindow> window)
 {
+    static_assert(std::is_same_v<window_id_t, decltype(SDL_GetWindowID(nullptr))>);
     ID_to_window[window->get_sdl_window_id()] = std::move(window);
 }
 std::vector<int> GfxLibrary::get_active_window_IDs() const

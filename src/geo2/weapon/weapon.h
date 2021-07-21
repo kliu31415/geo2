@@ -1,5 +1,6 @@
 #pragma once
 
+#include "kx/gfx/gfx.h"
 #include "geo2/geometry.h"
 #include "geo2/map_obj/map_object.h"
 #include "geo2/game_render_op_list.h"
@@ -30,7 +31,7 @@ class WeaponRunArgs final: public RNG_Args
     WeaponOwnerInfo owner_info;
     MapCoord cursor_pos;
     double angle;
-    Uint32 mouse_state;
+    kx::gfx::mouse_state_t mouse_state;
 public:
     double cur_level_time;
     double tick_len;
@@ -63,11 +64,11 @@ public:
     {
         return angle;
     }
-    inline void set_mouse_state(Uint32 state)
+    inline void set_mouse_state(kx::gfx::mouse_state_t state)
     {
         mouse_state = state;
     }
-    inline Uint32 get_mouse_state() const
+    inline kx::gfx::mouse_state_t get_mouse_state() const
     {
         return mouse_state;
     }

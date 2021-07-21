@@ -1,7 +1,10 @@
 #include "geo2/test.h"
+
 #include "kx/io.h"
 #include "kx/gfx/gfx.h"
 #include "kx/gfx/renderer.h"
+
+#include <SDL2/SDL_events.h>
 
 #include <cmath>
 
@@ -13,9 +16,8 @@ void test1(kx::gfx::GfxLibrary *library)
     using namespace kx;
     auto dwindow = gfx::DWindow::make(library,
                                       "geo2 test1",
-                                      SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                      800, 800,
-                                      SDL_WINDOW_SHOWN);
+                                      kx::gfx::WINDOW_POS_CENTERED, kx::gfx::WINDOW_POS_CENTERED,
+                                      800, 800);
     dwindow->rdr()->show_fps(true);
     dwindow->rdr()->set_fps_color(gfx::Color::CYAN);
     gfx::SRGB_Color c(0.0, 0.0, 0.0, 1.0);

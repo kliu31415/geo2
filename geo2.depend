@@ -227,7 +227,7 @@
 	<vector>
 	<cmath>
 
-1626834709 source:d:\code\cbprojects\geo2\src\kx\gfx\gfx.cpp
+1626835544 source:d:\code\cbprojects\geo2\src\kx\gfx\gfx.cpp
 	"kx/gfx/gfx.h"
 	"kx/gfx/renderer.h"
 	"kx/util.h"
@@ -242,7 +242,7 @@
 	<utility>
 	<atomic>
 
-1626832879 source:d:\code\cbprojects\geo2\src\kx\gfx\kwindow.cpp
+1626835552 source:d:\code\cbprojects\geo2\src\kx\gfx\kwindow.cpp
 	"kx/gfx/kwindow.h"
 	"kx/gfx/renderer.h"
 	"kx/util.h"
@@ -325,7 +325,7 @@
 	"kx/gfx/gl_renderer.h"
 	"kx/gfx/vk_renderer.h"
 
-1626834358 source:d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.cpp
+1626835016 source:d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.cpp
 	"kx/gfx/renderer.h"
 	"kx/io.h"
 	"glad/glad.h"
@@ -356,11 +356,10 @@
 
 1622411681 d:\code\cbprojects\geo2\src\geo2\test.h
 
-1626834704 d:\code\cbprojects\geo2\src\kx\gfx\gfx.h
+1626836280 d:\code\cbprojects\geo2\src\kx\gfx\gfx.h
 	"kx/util.h"
 	"kx/sdl_deleter.h"
 	"kx/gfx/renderer_types.h"
-	<SDL2/SDL_events.h>
 	<memory>
 	<string>
 	<queue>
@@ -372,11 +371,12 @@
 	<cstdint>
 	<string>
 
-1626832879 source:d:\code\cbprojects\geo2\src\geo2\test.cpp
+1626836363 source:d:\code\cbprojects\geo2\src\geo2\test.cpp
 	"geo2/test.h"
 	"kx/io.h"
 	"kx/gfx/gfx.h"
 	"kx/gfx/renderer.h"
+	<SDL2/SDL_events.h>
 	<cmath>
 
 1605849520 d:\code\cbprojects\geo2\src\kx\io.h
@@ -406,7 +406,7 @@
 
 1626679423 d:\code\cbprojects\geo2\src\kx\gfx\renderer_types.h
 
-1626834160 d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.h
+1626835482 d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.h
 	"kx/gfx/font.h"
 	"kx/gfx/renderer_types.h"
 	"kx/sdl_deleter.h"
@@ -427,7 +427,7 @@
 	<array>
 	<map>
 
-1626834698 d:\code\cbprojects\geo2\src\kx\gfx\kwindow.h
+1626836214 d:\code\cbprojects\geo2\src\kx\gfx\kwindow.h
 	"kx/gfx/gfx.h"
 	<cstdint>
 	<deque>
@@ -531,7 +531,7 @@
 	<vector>
 	<cstdint>
 
-1626834543 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
+1626836330 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
 	"geo2/map_obj/floor_type1/test_terrain1.h"
 	"geo2/game_render_op_list.h"
 	"geo2/game.h"
@@ -547,6 +547,7 @@
 	"kx/log.h"
 	"kx/io.h"
 	"kx/stats.h"
+	<SDL2/SDL_scancode.h>
 	<thread>
 	<cmath>
 
@@ -555,10 +556,11 @@
 	"geo2/library_pointers.h"
 	"kx/gfx/kwindow.h"
 
-1626834846 source:d:\code\cbprojects\geo2\src\geo2\master_instance.cpp
+1626836363 source:d:\code\cbprojects\geo2\src\geo2\master_instance.cpp
 	"geo2/master_instance.h"
 	"geo2/texture_utils.h"
 	"kx/gfx/renderer.h"
+	<SDL2/SDL_events.h>
 
 1623384772 d:\code\cbprojects\geo2\src\geo2\map_object.h
 	"geo2/collision_engine1.h"
@@ -878,7 +880,8 @@
 	"geo2/weapon/weapon.h"
 	<array>
 
-1626325775 d:\code\cbprojects\geo2\src\geo2\weapon\weapon.h
+1626835569 d:\code\cbprojects\geo2\src\geo2\weapon\weapon.h
+	"kx/gfx/gfx.h"
 	"geo2/geometry.h"
 	"geo2/map_obj/map_object.h"
 	"geo2/game_render_op_list.h"

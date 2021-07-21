@@ -1565,7 +1565,6 @@ void Renderer::show_fps(bool toggle)
 }
 int Renderer::set_fps_font(std::shared_ptr<const Font> font)
 {
-    k_expects(font != nullptr);
     fps_font = std::move(font);
     return 0;
 }

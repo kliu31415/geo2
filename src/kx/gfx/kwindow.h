@@ -46,7 +46,7 @@ protected:
     KWindow(GfxLibrary *library,
             const std::string &title,
             int x, int y, int w, int h,
-            uint32_t window_flags,
+            window_flags_t window_flags,
             SRGB_Color background_color);
 public:
     KWindow(const KWindow&) = delete;
@@ -60,7 +60,7 @@ public:
     static std::shared_ptr<KWindow> make(GfxLibrary *library,
                                          const std::string &title,
                                          int x, int y, int w, int h,
-                                         uint32_t window_flags = SDL_WINDOW_SHOWN,
+                                         window_flags_t window_flags = DEFAULT_WINDOW_FLAGS,
                                          SRGB_Color background_color_ = Color::WHITE);
 
     static bool default_input_handler(KWindowRunning *kwindow, const SDL_Event &input);

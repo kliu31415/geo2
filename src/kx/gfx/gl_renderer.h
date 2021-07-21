@@ -271,6 +271,7 @@ struct ASCII_Atlas
 
 constexpr int NUM_SAMPLES_DEFAULT = 4;
 
+using renderer_flags_t = uint32_t;
 /** -The origin (0, 0) is at the top left.
  *  -Functions suffixed with _nc take input coordinates in normalized form.
  *  The normalized equivalent of (x, y) is (x / screen_w, y / screen_h)

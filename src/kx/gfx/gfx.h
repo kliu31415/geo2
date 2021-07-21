@@ -4,12 +4,13 @@
 #include "kx/sdl_deleter.h"
 #include "kx/gfx/renderer_types.h"
 
-#include <SDL2/SDL_events.h>
 #include <memory>
 #include <string>
 #include <queue>
 #include <vector>
 #include <map>
+
+union SDL_Event;
 
 namespace kx { namespace gfx {
 
@@ -21,25 +22,34 @@ namespace kx { namespace gfx {
 class Renderer;
 class Font;
 
-using mouse_state_t = decltype(SDL_GetMouseState(nullptr, nullptr));
+using mouse_state_t = uint32_t;
+using window_flags_t = uint32_t;
+using keyboard_state_t = const uint8_t*;
+
+//this is static asserted for correctness in the .cpp file
+struct SDL_Event_Placeholder
+{
+    uint8_t reserve_space[56];
+};
 
 class GfxLibrary final
 {
-    const Uint8 *keyboard_state;
-    Uint32 mouse_state;
+    keyboard_state_t keyboard_state;
+    mouse_state_t mouse_state;
     int mouse_x;
     int mouse_y;
     ///events not associated with any SDL_Window (currently unused)
-    std::queue<SDL_Event> global_events;
+    std::queue<SDL_Event_Placeholder> global_events;
 
-    std::map<Uint32, std::weak_ptr<class AbstractWindow> > ID_to_window;
+    using window_id_t = uint32_t;
+    std::map<window_id_t, std::weak_ptr<class AbstractWindow> > ID_to_window;
     shared_ptr_sdl<SDL_Surface> default_window_icon;
     std::unique_ptr<class WindowPool> window_pool;
 public:
     GfxLibrary();
     ~GfxLibrary();
 
-    const Uint8 *get_keyboard_state() const;
+    keyboard_state_t get_keyboard_state() const;
     mouse_state_t get_mouse_state() const;
     int get_mouse_x() const;
     int get_mouse_y() const;
@@ -53,6 +63,9 @@ public:
     std::vector<int> get_active_window_IDs() const;
 };
 
+static constexpr window_flags_t DEFAULT_WINDOW_FLAGS = 0x00000004;
+static constexpr window_flags_t WINDOW_POS_CENTERED = 0x2FFF0000u;
+
 /** All windows created should shared_ptrs (otherwise stuff will bug out)
  *  non-copyable and non-movable
  */
@@ -62,10 +75,10 @@ class AbstractWindow: public std::enable_shared_from_this<AbstractWindow>
 
     class InputQueue
     {
-        std::queue<SDL_Event> input_queue;
+        std::queue<SDL_Event_Placeholder> input_queue;
     public:
         bool poll(SDL_Event *input_arg); ///returns true and fills input_arg iff there is more input
-        void push(SDL_Event input_arg);
+        void push(const SDL_Event &input_arg);
         size_t size() const;
         void clear();
     };
@@ -78,7 +91,10 @@ protected:
 
     Renderer *rdr();
 
-    AbstractWindow(GfxLibrary *library, const std::string &title, int x, int y, int w, int h, Uint32 window_flags);
+    AbstractWindow(GfxLibrary *library,
+                   const std::string &title,
+                   int x, int y, int w, int h,
+                   window_flags_t window_flags);
 public:
     ///weak_ptrs to dead windows will be automatically removed in gfx::clean_memory, so =default is fine
     virtual ~AbstractWindow();
@@ -114,12 +130,15 @@ public:
  */
 class DWindow final: public AbstractWindow
 {
-    DWindow(GfxLibrary *library, const std::string &title, int x, int y, int w, int h, Uint32 window_flags);
+    DWindow(GfxLibrary *library,
+            const std::string &title,
+            int x, int y, int w, int h,
+            window_flags_t window_flags);
 public:
     static std::shared_ptr<DWindow> make(GfxLibrary *library,
                                          const std::string &title,
                                          int x, int y, int w, int h,
-                                         Uint32 window_flags = SDL_WINDOW_SHOWN);
+                                         window_flags_t window_flags = DEFAULT_WINDOW_FLAGS);
 
     virtual ~DWindow() = default;
 

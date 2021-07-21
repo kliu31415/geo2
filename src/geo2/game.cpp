@@ -17,6 +17,8 @@
 #include "kx/io.h"
 #include "kx/stats.h"
 
+#include <SDL2/SDL_scancode.h>
+
 #include <thread>
 #include <cmath>
 

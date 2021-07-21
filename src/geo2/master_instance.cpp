@@ -3,6 +3,8 @@
 
 #include "kx/gfx/renderer.h"
 
+#include <SDL2/SDL_events.h>
+
 namespace geo2 {
 
 constexpr int SCREEN_W = 1920;
