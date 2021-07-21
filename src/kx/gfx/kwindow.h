@@ -43,7 +43,8 @@ class KWindow: public AbstractWindow
 protected:
     std::deque<std::optional<SDL_Event>> input_deque;
 
-    KWindow(const std::string &title,
+    KWindow(Library *library,
+            const std::string &title,
             int x, int y, int w, int h,
             uint32_t window_flags,
             SRGB_Color background_color);
@@ -56,9 +57,11 @@ public:
 
     enum class Status{Running, AlreadyFinishedRunning, JustFinishedRunning};
 
-    static std::shared_ptr<KWindow> create(const std::string &title, int x, int y, int w, int h,
-                                           uint32_t window_flags = SDL_WINDOW_SHOWN,
-                                           SRGB_Color background_color_ = Color::WHITE);
+    static std::shared_ptr<KWindow> make(Library *library,
+                                         const std::string &title,
+                                         int x, int y, int w, int h,
+                                         uint32_t window_flags = SDL_WINDOW_SHOWN,
+                                         SRGB_Color background_color_ = Color::WHITE);
 
     static bool default_input_handler(KWindowRunning *kwindow, const SDL_Event &input);
     void set_input_handler(const std::function<bool(KWindowRunning*, const SDL_Event&)> &new_input_handler);
@@ -99,6 +102,7 @@ public:
     using AbstractWindow::close;
     using AbstractWindow::is_closed;
     using AbstractWindow::is_focused;
+    using AbstractWindow::get_library;
 
     using KWindow::input_deque;
 };

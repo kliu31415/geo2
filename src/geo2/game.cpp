@@ -438,7 +438,7 @@ void Game::run3(double tick_len)
 }
 void Game::advance_one_tick(double tick_len,
                             MapCoord cursor_pos,
-                            decltype(kx::gfx::get_mouse_state()) mouse_state,
+                            kx::gfx::mouse_state_t mouse_state,
                             const uint8_t *keyboard_state)
 {
     //move forward a tick
@@ -639,9 +639,11 @@ std::shared_ptr<kx::gfx::Texture> Game::run(kx::gfx::KWindowRunning *kwin_r,
 {
     constexpr int TICKS_PER_FRAME = 10;
 
+    auto library = kwin_r->get_library();
+
     //using lerped mouse positions allows for smoother laser beams when rapidly moving the mouse
-    int mouse_x = kx::gfx::get_mouse_x();
-    int mouse_y = kx::gfx::get_mouse_y();
+    int mouse_x = library->get_mouse_x();
+    int mouse_y = library->get_mouse_y();
     if(prev_mouse_x == PREV_MOUSE_X_NOT_SET) {
         prev_mouse_x = mouse_x;
         prev_mouse_y = mouse_y;
@@ -660,8 +662,8 @@ std::shared_ptr<kx::gfx::Texture> Game::run(kx::gfx::KWindowRunning *kwin_r,
 
         advance_one_tick(1.0 / 1440.0,
                          player->get_position() + offset,
-                         kx::gfx::get_mouse_state(),
-                         kx::gfx::get_keyboard_state());
+                         library->get_mouse_state(),
+                         library->get_keyboard_state());
     }
 
     prev_mouse_x = mouse_x;

@@ -6,7 +6,7 @@
 
 namespace geo2 {
 
-void run();
+void run(kx::gfx::Library *library);
 
 /** -Note that the game primarily uses normalized coordinates to draw
  */

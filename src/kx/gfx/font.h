@@ -1,6 +1,7 @@
 #pragma once
 
 #include "kx/sdl_deleter.h"
+#include "kx/util.h"
 
 #include <memory>
 #include <string>
@@ -10,8 +11,6 @@ struct FT_FaceRec_;
 
 namespace kx {namespace gfx {
 
-class InitPkey;
-class QuitPkey;
 class Renderer;
 
 class Font final
@@ -38,8 +37,8 @@ public:
     static std::shared_ptr<Font> get_font(const std::string &font_name);
     static std::shared_ptr<Font> load(const std::string &font_name, const std::string &file);
     static int close(const std::string &font_name);
-    static void init(const InitPkey&);
-    static void quit(const QuitPkey&);
+    static void init(Passkey<class Library>);
+    static void quit(Passkey<class Library>);
 
     int get_height(int size) const;
     int get_recommended_line_skip(int size) const;

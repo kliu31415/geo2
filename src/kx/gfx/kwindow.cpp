@@ -43,22 +43,28 @@ struct KWindow::KItemOwnerPtr
 };
 
 
-KWindow::KWindow(const std::string &title, int x, int y, int w, int h,
-                 Uint32 window_flags, SRGB_Color background_color_):
+KWindow::KWindow(Library *library_,
+                 const std::string &title,
+                 int x, int y, int w, int h,
+                 Uint32 window_flags,
+                 SRGB_Color background_color_):
 
-    AbstractWindow(title, x, y, w, h, window_flags),
+    AbstractWindow(library_, title, x, y, w, h, window_flags),
     input_handler(default_input_handler),
     freeze_toggle(false),
     background_color(background_color_)
 {}
 
-std::shared_ptr<KWindow> KWindow::create(const std::string &title, int x, int y, int w, int h,
-                                         Uint32 window_flags, SRGB_Color background_color)
+std::shared_ptr<KWindow> KWindow::make(Library *library,
+                                       const std::string &title,
+                                       int x, int y, int w, int h,
+                                       Uint32 window_flags,
+                                       SRGB_Color background_color)
 {
     //use C-style cast to work around private inheritance
-    auto new_kwin = (KWindow*)new KWindowRunning(title, x, y, w, h, window_flags, background_color);
-    std::shared_ptr<KWindow> window(new_kwin); //can't use make_shared because KWindow has a non-public constructor
-    add_window_to_db(window);
+    auto new_kwin = (KWindow*)new KWindowRunning(library, title, x, y, w, h, window_flags, background_color);
+    std::shared_ptr<KWindow> window(new_kwin);
+    library->add_window_to_db(window);
     return window;
 }
 bool KWindow::default_input_handler(KWindowRunning *kwindow, const SDL_Event &input)

@@ -7,18 +7,20 @@
 
 namespace geo2
 {
-void test1()
+
+void test1(kx::gfx::Library *library)
 {
     using namespace kx;
-    auto dwindow = gfx::DWindow::create("geo2 test1",
-                                        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                        800, 800,
-                                        SDL_WINDOW_SHOWN);
+    auto dwindow = gfx::DWindow::make(library,
+                                      "geo2 test1",
+                                      SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                      800, 800,
+                                      SDL_WINDOW_SHOWN);
     dwindow->rdr()->show_fps(true);
     dwindow->rdr()->set_fps_color(gfx::Color::CYAN);
     gfx::SRGB_Color c(0.0, 0.0, 0.0, 1.0);
     while(true) {
-        gfx::update_input();
+        library->update_input();
 
         SDL_Event input;
         while(dwindow->poll_input(&input)) {
@@ -43,7 +45,7 @@ void test1()
 
         //io::print("                             \r" + to_str(renderer->get_fps()));
 
-        gfx::clean_memory();
+        library->clean_memory();
     }
     end_loop: (void)0;
 }

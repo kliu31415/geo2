@@ -11,6 +11,7 @@
 #include <vector>
 #include <cmath>
 #include <utility>
+#include <atomic>
 
 namespace kx { namespace gfx {
 
@@ -80,14 +81,6 @@ void AbstractWindow::InputQueue::clear()
 {
     input_queue = std::queue<SDL_Event>();
 }
-
-static std::map<Uint32, std::weak_ptr<AbstractWindow> > ID_to_window;
-static unique_ptr_sdl<SDL_Surface> default_window_icon;
-
-void AbstractWindow::add_window_to_db(std::shared_ptr<AbstractWindow> window)
-{
-    ID_to_window[window->get_sdl_window_id()] = std::move(window);
-}
 Renderer *AbstractWindow::rdr()
 {
     return renderer_.get();
@@ -98,8 +91,11 @@ static constexpr Uint32 RENDERER_FLAGS = SDL_RENDERER_PRESENTVSYNC |
 #else
 static constexpr Uint32 RENDERER_FLAGS = 0;
 #endif
-AbstractWindow::AbstractWindow(const std::string &title, int x, int y, int w, int h,
-                               Uint32 window_flags)
+AbstractWindow::AbstractWindow(Library *library_,
+                               const std::string &title,
+                               int x, int y, int w, int h,
+                               Uint32 window_flags):
+    library(library_)
 {
     #ifdef KX_RENDERER_GL
     window_flags |= SDL_WINDOW_OPENGL;
@@ -112,8 +108,11 @@ AbstractWindow::AbstractWindow(const std::string &title, int x, int y, int w, in
     //also fails then SDL_GetError() might return the renderer error
     if(sdl_window == nullptr) {
         log_error((std::string)"window creation failed: " + SDL_GetError());
-    } else if(default_window_icon != nullptr)
-        SDL_SetWindowIcon(sdl_window.get(), default_window_icon.get());
+    } else {
+        auto icon = library->get_default_window_icon({});
+        if(icon != nullptr)
+            SDL_SetWindowIcon(sdl_window.get(), icon.get());
+    }
 
     renderer_ = std::make_unique<Renderer>(sdl_window.get(), RENDERER_FLAGS);
 }
@@ -188,18 +187,30 @@ void AbstractWindow::RendererAtny::set_fps_color(AbstractWindow *window, SRGB_Co
     k_expects(window->rdr() != nullptr);
     window->rdr()->set_fps_color(color);
 }
+Library *AbstractWindow::get_library()
+{
+    return library;
+}
+AbstractWindow::InputQueue *AbstractWindow::get_input_queue(Passkey<Library>)
+{
+    return &input;
+}
 
-DWindow::DWindow(const std::string &title, int x, int y, int w, int h,
+DWindow::DWindow(Library *library_,
+                 const std::string &title,
+                 int x, int y, int w, int h,
                  Uint32 window_flags):
-    AbstractWindow(title, x, y, w, h, window_flags)
+    AbstractWindow(library_, title, x, y, w, h, window_flags)
 {}
 
-std::shared_ptr<DWindow> DWindow::create(const std::string &title, int x, int y, int w, int h,
-                                         Uint32 window_flags)
+std::shared_ptr<DWindow> DWindow::make(Library *library,
+                                       const std::string &title,
+                                       int x, int y, int w, int h,
+                                       Uint32 window_flags)
 {
     //can't use make_shared due to non-public constructor
-    std::shared_ptr<DWindow> window(new DWindow(title, x, y, w, h, window_flags));
-    add_window_to_db(window);
+    std::shared_ptr<DWindow> window(new DWindow(library, title, x, y, w, h, window_flags));
+    library->add_window_to_db(window);
     return window;
 }
 bool DWindow::poll_input(SDL_Event *input_arg)
@@ -207,115 +218,17 @@ bool DWindow::poll_input(SDL_Event *input_arg)
     return input.poll(input_arg);
 }
 
-static const Uint8 *keyboard_state;
-const Uint8 *get_keyboard_state()
+std::atomic<int> init_count(0);
+Library::Library()
 {
-    return keyboard_state;
-}
+    //we can't really have more than one gfx library
+    k_expects(init_count.fetch_add(1) == 0);
 
-static Uint32 mouse_state;
-static int mouse_x;
-static int mouse_y;
-Uint32 get_mouse_state()
-{
-    return mouse_state;
-}
-int get_mouse_x()
-{
-    return mouse_x;
-}
-int get_mouse_y()
-{
-    return mouse_y;
-}
-
-static std::queue<SDL_Event> global_events; //events not associated with any SDL_Window (currently unused)
-void update_input()
-{
-    //update input
-    SDL_Event input;
-    while(SDL_PollEvent(&input)) {
-        auto window = ID_to_window.find(input.window.windowID);
-        //note: depending on the SDL2 version, it seems like if one window is open when SDL_QUIT is
-        //received, SDL_WINDOWEVENT_CLOSE may or may not be received. We comment out a block of code
-        //because in the current version of SDL (2.0.12+), it appears that SDL_WINDOWEVENT_CLOSE is
-        //pushed to the window already, so we don't want to push it again (it could cause bugs if the
-        //the window close is processed multiple times).
-        if(window == ID_to_window.end()) { //this event isn't associated with a window
-            //for simplicity, if SDL_QUIT is received, push SDL_WINDOWEVENT_CLOSE to the corresponding window
-            if(input.type == SDL_QUIT) {
-                int num_windows_open = 0;
-                for(const auto &w: ID_to_window) {
-                    auto win = w.second.lock();
-                    if(win != nullptr) {
-                        num_windows_open++;
-                        SDL_Event close_window;
-                        SDL_zero(close_window);
-                        close_window.type = SDL_WINDOWEVENT;
-                        close_window.window.timestamp = input.quit.timestamp;
-                        close_window.window.windowID = w.first;
-                        close_window.window.event = SDL_WINDOWEVENT_CLOSE;
-                        win->input.push(close_window);
-                    }
-                }
-                k_expects(num_windows_open == 1); //afaik, only 1 window can be open if SDL_QUIT is received
-            }
-
-            global_events.push(input);
-
-            if(global_events.size() == 1e5)
-                log_warning("global_events.size()==1e5. Maybe clear it.");
-        } else {
-            auto window_shared_ptr = window->second.lock(); //this should always return non nullptr
-                                                            //unless the window has just been closed
-            if(window_shared_ptr != nullptr)
-                window_shared_ptr->input.push(input);
-        }
-    }
-    keyboard_state = SDL_GetKeyboardState(nullptr);
-    mouse_state = SDL_GetMouseState(&mouse_x, &mouse_y);
-}
-void clean_memory()
-{
-    //clean up dead windows and text textures
-    for(auto i = ID_to_window.begin(); i != ID_to_window.end(); ) {
-        auto window = i->second.lock();
-        if(window == nullptr) { //this window doesn't exist anymore, so delete it
-            i = ID_to_window.erase(i);
-        } else {
-            window->clean_memory();
-            i++;
-        }
-    }
-}
-std::vector<int> get_active_window_IDs()
-{
-    std::vector<int> res;
-    for(auto &window: ID_to_window)
-        res.push_back(window.first);
-    return res;
-}
-
-class InitPkey
-{
-    friend int init();
-    InitPkey() {};
-};
-class QuitPkey
-{
-    friend void quit();
-    QuitPkey() {};
-};
-
-int init()
-{
     if(SDL_Init(SDL_INIT_VIDEO) < 0) {
         log_error((std::string)"SDL_Init error: " + SDL_GetError());
-        return -1;
     }
     if(IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG) < 0) {
         log_error((std::string)"IMG_Init error: " + IMG_GetError());
-        return -3;
     }
 
     #ifdef KX_RENDERER_GL
@@ -341,10 +254,8 @@ int init()
     Font::init({});
 
     window_pool = std::make_unique<WindowPool>();
-
-    return 0;
 }
-void quit()
+Library::~Library()
 {
     window_pool = nullptr;
 
@@ -364,6 +275,95 @@ void quit()
 
     SDL_Quit();
     IMG_Quit();
+}
+const Uint8 *Library::get_keyboard_state() const
+{
+    return keyboard_state;
+}
+kx::gfx::mouse_state_t Library::get_mouse_state() const
+{
+    return mouse_state;
+}
+int Library::get_mouse_x() const
+{
+    return mouse_x;
+}
+int Library::get_mouse_y() const
+{
+    return mouse_y;
+}
+void Library::update_input()
+{
+    //update input
+    SDL_Event input;
+    while(SDL_PollEvent(&input)) {
+        auto window = ID_to_window.find(input.window.windowID);
+        //note: depending on the SDL2 version, it seems like if one window is open when SDL_QUIT is
+        //received, SDL_WINDOWEVENT_CLOSE may or may not be received. We comment out a block of code
+        //because in the current version of SDL (2.0.12+), it appears that SDL_WINDOWEVENT_CLOSE is
+        //pushed to the window already, so we don't want to push it again (it could cause bugs if the
+        //the window close is processed multiple times).
+        if(window == ID_to_window.end()) { //this event isn't associated with a window
+            //for simplicity, if SDL_QUIT is received, push SDL_WINDOWEVENT_CLOSE to the corresponding window
+            if(input.type == SDL_QUIT) {
+                int num_windows_open = 0;
+                for(const auto &w: ID_to_window) {
+                    auto win = w.second.lock();
+                    if(win != nullptr) {
+                        num_windows_open++;
+                        SDL_Event close_window;
+                        SDL_zero(close_window);
+                        close_window.type = SDL_WINDOWEVENT;
+                        close_window.window.timestamp = input.quit.timestamp;
+                        close_window.window.windowID = w.first;
+                        close_window.window.event = SDL_WINDOWEVENT_CLOSE;
+                        win->get_input_queue({})->push(close_window);
+                    }
+                }
+                k_expects(num_windows_open == 1); //afaik, only 1 window can be open if SDL_QUIT is received
+            }
+
+            global_events.push(input);
+
+            if(global_events.size() == 1e5)
+                log_warning("global_events.size()==1e5. Maybe clear it.");
+        } else {
+            auto window_shared_ptr = window->second.lock(); //this should always return non nullptr
+                                                            //unless the window has just been closed
+            if(window_shared_ptr != nullptr)
+                window_shared_ptr->get_input_queue({})->push(input);
+        }
+    }
+    keyboard_state = SDL_GetKeyboardState(nullptr);
+    mouse_state = SDL_GetMouseState(&mouse_x, &mouse_y);
+}
+void Library::clean_memory()
+{
+    //clean up dead windows and text textures
+    for(auto i = ID_to_window.begin(); i != ID_to_window.end(); ) {
+        auto window = i->second.lock();
+        if(window == nullptr) { //this window doesn't exist anymore, so delete it
+            i = ID_to_window.erase(i);
+        } else {
+            window->clean_memory();
+            i++;
+        }
+    }
+}
+shared_ptr_sdl<SDL_Surface> Library::get_default_window_icon(Passkey<AbstractWindow>)
+{
+    return default_window_icon;
+}
+void Library::add_window_to_db(std::shared_ptr<AbstractWindow> window)
+{
+    ID_to_window[window->get_sdl_window_id()] = std::move(window);
+}
+std::vector<int> Library::get_active_window_IDs() const
+{
+    std::vector<int> res;
+    for(auto &window: ID_to_window)
+        res.push_back(window.first);
+    return res;
 }
 
 }}

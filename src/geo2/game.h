@@ -67,7 +67,7 @@ class Game final
     void run_collision_engine();
     void advance_one_tick(double tick_len,
                           MapCoord cursor_pos,
-                          decltype(kx::gfx::get_mouse_state()) mouse_state,
+                          kx::gfx::mouse_state_t mouse_state,
                           const uint8_t *keyboard_state);
 
     std::shared_ptr<kx::gfx::Texture> render(kx::gfx::KWindowRunning *kwin_r,

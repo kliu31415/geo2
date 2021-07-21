@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1626743488 source:d:\code\cbprojects\geo2\src\main.cpp
+1626831433 source:d:\code\cbprojects\geo2\src\main.cpp
 	"geo2/test.h"
 	"geo2/master_instance.h"
 	"kx/gfx/gfx.h"
@@ -227,7 +227,7 @@
 	<vector>
 	<cmath>
 
-1626665714 source:d:\code\cbprojects\geo2\src\kx\gfx\gfx.cpp
+1626831338 source:d:\code\cbprojects\geo2\src\kx\gfx\gfx.cpp
 	"kx/gfx/gfx.h"
 	"kx/gfx/renderer.h"
 	"kx/util.h"
@@ -240,8 +240,9 @@
 	<vector>
 	<cmath>
 	<utility>
+	<atomic>
 
-1625518558 source:d:\code\cbprojects\geo2\src\kx\gfx\kwindow.cpp
+1626831192 source:d:\code\cbprojects\geo2\src\kx\gfx\kwindow.cpp
 	"kx/gfx/kwindow.h"
 	"kx/gfx/renderer.h"
 	"kx/util.h"
@@ -307,7 +308,7 @@
 	<cstring>
 	<climits>
 
-1626676804 source:d:\code\cbprojects\geo2\src\kx\gfx\font.cpp
+1626830896 source:d:\code\cbprojects\geo2\src\kx\gfx\font.cpp
 	"kx/gfx/font.h"
 	"kx/debug.h"
 	"ft2build.h"
@@ -355,7 +356,7 @@
 
 1622411681 d:\code\cbprojects\geo2\src\geo2\test.h
 
-1623388636 d:\code\cbprojects\geo2\src\kx\gfx\gfx.h
+1626831334 d:\code\cbprojects\geo2\src\kx\gfx\gfx.h
 	"kx/util.h"
 	"kx/sdl_deleter.h"
 	"kx/gfx/renderer_types.h"
@@ -364,13 +365,14 @@
 	<string>
 	<queue>
 	<vector>
+	<map>
 
 1613419223 d:\code\cbprojects\geo2\src\kx\time.h
 	<ctime>
 	<cstdint>
 	<string>
 
-1622708162 source:d:\code\cbprojects\geo2\src\geo2\test.cpp
+1626830413 source:d:\code\cbprojects\geo2\src\geo2\test.cpp
 	"geo2/test.h"
 	"kx/io.h"
 	"kx/gfx/gfx.h"
@@ -417,13 +419,14 @@
 	<set>
 	<queue>
 
-1626667411 d:\code\cbprojects\geo2\src\kx\gfx\font.h
+1626830945 d:\code\cbprojects\geo2\src\kx\gfx\font.h
 	"kx/sdl_deleter.h"
+	"kx/util.h"
 	<memory>
 	<string>
 	<array>
 
-1622451836 d:\code\cbprojects\geo2\src\kx\gfx\kwindow.h
+1626831384 d:\code\cbprojects\geo2\src\kx\gfx\kwindow.h
 	"kx/gfx/gfx.h"
 	<cstdint>
 	<deque>
@@ -515,7 +518,7 @@
 	<mutex>
 	<map>
 
-1626829201 d:\code\cbprojects\geo2\src\geo2\game.h
+1626831351 d:\code\cbprojects\geo2\src\geo2\game.h
 	"geo2/map_obj/unit_type1/player_type1.h"
 	"geo2/ceng1_collision.h"
 	"geo2/ceng1_data.h"
@@ -526,7 +529,7 @@
 	<vector>
 	<cstdint>
 
-1626828528 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
+1626831407 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
 	"geo2/map_obj/floor_type1/test_terrain1.h"
 	"geo2/game_render_op_list.h"
 	"geo2/game.h"
@@ -545,11 +548,11 @@
 	<thread>
 	<cmath>
 
-1626507153 d:\code\cbprojects\geo2\src\geo2\master_instance.h
+1626831428 d:\code\cbprojects\geo2\src\geo2\master_instance.h
 	"geo2/game.h"
 	"kx/gfx/kwindow.h"
 
-1626508799 source:d:\code\cbprojects\geo2\src\geo2\master_instance.cpp
+1626830558 source:d:\code\cbprojects\geo2\src\geo2\master_instance.cpp
 	"geo2/master_instance.h"
 	"geo2/texture_utils.h"
 	"kx/gfx/renderer.h"

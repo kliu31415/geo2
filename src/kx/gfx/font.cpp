@@ -86,7 +86,7 @@ int Font::close(const std::string &font_name)
               "\", as no fonts with that name exist");
     return -1;
 }
-void Font::init(const InitPkey&)
+void Font::init(Passkey<Library>)
 {
     if(FT_Init_FreeType(&ft_library)) {
         log_error("FT_Init_FreeType failed");
@@ -104,7 +104,7 @@ void Font::init(const InitPkey&)
     BLACK_CHANCERY = load("kx.black_chancery", "kx_data/fonts/black_chancery.ttf");
 }
 
-void Font::quit(const QuitPkey&)
+void Font::quit(Passkey<Library>)
 {
     //make sure there are no more references to these
     DEFAULT = nullptr;

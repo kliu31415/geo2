@@ -79,26 +79,27 @@ public:
     }
 };
 
-void run()
+void run(kx::gfx::Library *library)
 {
 
     using namespace kx;
 
     auto instance = std::make_shared<MasterInstance>(gfx::Rect(0, 0, SCREEN_W, SCREEN_H));
 
-    auto window = gfx::KWindow::create("geo2",
-                                       SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                       SCREEN_W, SCREEN_H,
-                                       SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_FULLSCREEN);
+    auto window = gfx::KWindow::make(library,
+                                     "geo2",
+                                     SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                     SCREEN_W, SCREEN_H,
+                                     SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_FULLSCREEN);
     gfx::AbstractWindow::RendererAtny::show_fps(window.get(), true);
     gfx::AbstractWindow::RendererAtny::set_fps_color(window.get(), gfx::Color::CYAN);
     window->add_item_front(instance);
 
     while(true) {
-        gfx::update_input();
+        library->update_input();
         if(window->run() != gfx::KWindow::Status::Running)
             break;
-        gfx::clean_memory();
+        library->clean_memory();
     }
 }
 
