@@ -36,10 +36,10 @@
 			<Add option="-DKX_RENDERER_GL" />
 			<Add directory="src" />
 		</Compiler>
-		<Unit filename="src/geo2/ceng1_data.h">
+		<Unit filename="src/geo2/ceng1_collision.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="src/geo2/ceng1_obj.h">
+		<Unit filename="src/geo2/ceng1_data.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/geo2/collision_engine1.cpp" />

@@ -3,7 +3,7 @@
 #include "geo2/map_obj/map_object.h"
 #include "geo2/render_args.h"
 #include "geo2/ceng1_data.h"
-#include "geo2/ceng1_obj.h"
+#include "geo2/ceng1_collision.h"
 #include "geo2/rng_args.h"
 
 #include "kx/fixed_size_array.h"

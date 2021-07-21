@@ -1,6 +1,6 @@
 #pragma once
 
-#include "geo2/ceng1_obj.h"
+#include "geo2/ceng1_collision.h"
 #include "geo2/ceng1_data.h"
 #include "geo2/map_obj/map_object.h"
 #include "geo2/geometry.h"
@@ -15,6 +15,24 @@
 #include <vector>
 
 namespace geo2 {
+
+struct CEng1Obj final
+{
+    const Polygon *polygon;
+    int idx; //index of owner
+    uint16_t shape_id;
+
+    CEng1Obj(const Polygon *polygon_, int idx_, uint16_t shape_id_):
+        polygon(polygon_),
+        idx(idx_),
+        shape_id(shape_id_)
+    {}
+
+    static bool cmp_idx(const CEng1Obj &a, const CEng1Obj &b)
+    {
+        return a.idx < b.idx;
+    }
+};
 
 /** The collision engine is, unsurprisingly, the bottleneck. An issue that arose was
  *  how to deal with Polygon ownership. The simplest solution is to use shared_ptr,
@@ -31,16 +49,12 @@ class CollisionEngine1
     //fastish spatial partition grid
     template<class T> class Grid
     {
-        std::unique_ptr<std::vector<T>[]> vals;
+        std::array<std::vector<T>, GRID_LEN * GRID_LEN> vals;
     public:
-        Grid():
-            vals(std::make_unique<std::vector<T>[]>(GRID_LEN*GRID_LEN))
-        {}
         void reset()
         {
-            for(int i=0; i<GRID_LEN; i++)
-                for(int j=0; j<GRID_LEN; j++)
-                    get_ref(i, j).clear();
+            for(auto &cell: vals)
+                cell.clear();
         }
         inline std::vector<T>& get_ref(int a, int b)
         {
