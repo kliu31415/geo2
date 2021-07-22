@@ -49,6 +49,12 @@ public:
     GfxLibrary();
     ~GfxLibrary();
 
+    GfxLibrary(const GfxLibrary&) = delete;
+    GfxLibrary& operator = (const GfxLibrary&) = delete;
+
+    GfxLibrary(GfxLibrary&&) = delete;
+    GfxLibrary& operator = (GfxLibrary&&) = delete;
+
     keyboard_state_t get_keyboard_state() const;
     mouse_state_t get_mouse_state() const;
     int get_mouse_x() const;

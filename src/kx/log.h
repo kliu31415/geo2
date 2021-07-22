@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <sstream>
 
 namespace kx {
 
@@ -21,10 +22,30 @@ struct LogMessage final
 
 void toggle_log_timestamps(bool toggle);
 void log(std::string_view message, LogMessage::Type type);
-void log_info(std::string_view message);
-void log_warning(std::string_view message);
-void log_error(std::string_view message);
-void log_fatal(std::string_view message);
-void clear_log();
+
+namespace impl {
+    template<class T> void string_from_args(std::stringstream *ss, T&& arg1)
+    {
+        *ss << std::forward<T>(arg1);
+    }
+    template<class T, class... Args> void string_from_args(std::stringstream *ss, T&& arg1, Args&& ...others)
+    {
+        *ss << std::forward<T>(arg1);
+        string_from_args(ss, std::forward<Args>(others)...);
+    }
+}
+
+#define KX_DECLARE_LOG_FUNC(func_name, type) \
+    template<class ...Args> void func_name(Args&& ...args) \
+    { \
+        std::stringstream ss; \
+        impl::string_from_args(&ss, std::forward<Args>(args)...); \
+        log(ss.str(), type); \
+    }
+
+KX_DECLARE_LOG_FUNC(log_info, LogMessage::Type::Info)
+KX_DECLARE_LOG_FUNC(log_warning, LogMessage::Type::Warning)
+KX_DECLARE_LOG_FUNC(log_error, LogMessage::Type::Error)
+KX_DECLARE_LOG_FUNC(log_fatal, LogMessage::Type::Fatal)
 
 }

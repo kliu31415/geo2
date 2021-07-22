@@ -193,6 +193,10 @@
 		</Unit>
 		<Unit filename="src/kx/sdl_deleter.cpp" />
 		<Unit filename="src/kx/sdl_deleter.h" />
+		<Unit filename="src/kx/sfx/sfx.cpp" />
+		<Unit filename="src/kx/sfx/sfx.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="src/kx/sort.h" />
 		<Unit filename="src/kx/stats.cpp" />
 		<Unit filename="src/kx/stats.h" />

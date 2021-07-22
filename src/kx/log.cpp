@@ -81,10 +81,5 @@ void log_fatal(std::string_view message)
 {
     log(message, LogMessage::Type::Fatal);
 }
-void clear_log()
-{
-    std::lock_guard<std::mutex> lg(log_mutex);
-    log_records.clear();
-}
 
 }

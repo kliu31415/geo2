@@ -61,6 +61,9 @@ DECLSPEC SDLCALL void SDL_DestroyRenderer(SDL_Renderer*);
 DECLSPEC SDLCALL void SDL_DestroyTexture(SDL_Texture*);
 DECLSPEC SDLCALL void SDL_FreeSurface(SDL_Surface*);
 
+struct Mix_Chunk;
+DECLSPEC SDLCALL void Mix_FreeChunk(Mix_Chunk*);
+
 struct _TTF_Font;
 DECLSPEC SDLCALL void TTF_CloseFont(_TTF_Font*);
 
@@ -91,6 +94,8 @@ struct SDL_Deleter final
     void operator()(SDL_Surface *t) const {SDL_FreeSurface(t);}
 
     void operator()(_TTF_Font *t) const {TTF_CloseFont(t);}
+
+    void operator()(Mix_Chunk *t) const {Mix_FreeChunk(t);}
 
     void operator()(_SDLNet_SocketSet *socket_set) const {SDLNet_FreeSocketSet(socket_set);}
     void operator()(_TCPsocket *tcp_socket) const {SDLNet_TCP_Close(tcp_socket);}

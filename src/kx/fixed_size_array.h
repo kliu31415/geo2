@@ -66,14 +66,24 @@ public:
     {
         return len;
     }
+    inline T &operator[](int idx)
+    {
+        k_expects(idx>=0 && idx<(int)len);
+        return vals[idx];
+    }
+    inline const T &operator[](int idx) const
+    {
+        k_expects(idx>=0 && idx<(int)len);
+        return vals[idx];
+    }
     inline T &operator[](size_t idx)
     {
-        k_expects(idx <= len);
+        k_expects(idx < len);
         return vals[idx];
     }
     inline const T &operator[](size_t idx) const
     {
-        k_expects(idx <= len);
+        k_expects(idx < len);
         return vals[idx];
     }
 };

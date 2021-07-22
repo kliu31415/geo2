@@ -379,6 +379,9 @@ bool Polygon::has_collision(const Polygon &other) const
     //https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
     //Note that this DOESN'T handle parallel lines properly, but that's usually OK.
 
+    if(!this->get_AABB().overlaps(other.get_AABB()))
+        return false;
+
     auto this_n = this->get_num_vertices();
     auto other_n = other.get_num_vertices();
     auto this_d_len = get_d_len(this_n);
@@ -398,9 +401,6 @@ bool Polygon::has_collision(const Polygon &other) const
         this_verts = get_verts();
         other_verts = other.get_verts();
     }
-
-    if(!this->get_AABB().overlaps(other.get_AABB()))
-        return false;
 
     const auto mm0 = _mm256_set1_ps(0);
     const auto mm1 = _mm256_set1_ps(1);

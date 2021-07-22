@@ -65,14 +65,15 @@ public:
     FontLibrary();
     ~FontLibrary();
 
+    FontLibrary(const FontLibrary&) = delete;
+    FontLibrary& operator = (const FontLibrary&) = delete;
+
+    FontLibrary(FontLibrary&&) = delete;
+    FontLibrary& operator = (FontLibrary&&) = delete;
+
     std::shared_ptr<Font> get_font(std::string_view font_name);
     std::shared_ptr<Font> load(std::string_view font_name, std::string_view file);
     void close(std::string_view font_name);
-
-    FontLibrary(const FontLibrary&) = delete;
-    FontLibrary& operator = (const FontLibrary&) = delete;
-    FontLibrary(FontLibrary&&) = delete;
-    FontLibrary& operator = (FontLibrary&&) = delete;
 };
 
 }}
