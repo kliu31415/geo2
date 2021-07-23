@@ -128,7 +128,7 @@ kx::kx_span<uint8_t> RenderOpShader::map_instance_uniform(size_t uniform_id)
     return to_span<uint8_t>(instance_uniform_data[uniform_id]);
 }
 
-Font::Font(kx::gfx::Renderer *rdr, kx::gfx::Font *font):
+FontAtlas::FontAtlas(kx::gfx::Renderer *rdr, kx::gfx::Font *font):
     atlas(rdr->make_ascii_atlas(font, kx::gfx::Font::MAX_FONT_SIZE))
 {}
 
@@ -146,7 +146,7 @@ void RenderOpText::set_text(std::string_view text_)
 {
     text = text_;
 }
-void RenderOpText::set_font(const Font *font_)
+void RenderOpText::set_font(const FontAtlas *font_)
 {
     font = font_;
 }
@@ -287,7 +287,9 @@ constexpr size_t TEXT_IU_FLOATS_PER_INSTANCE = 3*4;
 constexpr size_t TEXT_MAX_INSTANCES = 341;
 constexpr auto TEXT_MAX_FLOATS_PER_BATCH = TEXT_IU_FLOATS_PER_INSTANCE * TEXT_MAX_INSTANCES;
 
-void RenderOpList::render_text(kx::gfx::Renderer *rdr, const Font *font, const std::vector<float> &text_iu_data)
+void RenderOpList::render_text(kx::gfx::Renderer *rdr,
+                               const FontAtlas *font,
+                               const std::vector<float> &text_iu_data)
 {
     k_expects(font != nullptr);
 
@@ -345,7 +347,7 @@ void RenderOpList::render_internal(kx::gfx::KWindowRunning *kwin_r,
     const IShader *cur_shader = nullptr;
     std::vector<const ByteFSA2D*> shader_iu_data;
 
-    const Font *cur_font = nullptr;
+    const FontAtlas *cur_font = nullptr;
     std::vector<float> text_iu_data;
 
     for(size_t i=0; i<op_groups.size(); i++) {

@@ -24,7 +24,7 @@ void TestTerrain1::add_render_ops(const MapObjRenderArgs &args)
     args.rdr->fill_rect_nc(dst);*/
 
     if(op == nullptr) {
-        op = std::make_shared<RenderOpShader>(*args.shaders->test_terrain_1);
+        op = std::make_shared<RenderOpShader>(*args.shaders->get("test_terrain_1"));
         op_group = std::make_shared<RenderOpGroup>(args.get_floor_render_priority());
         op_group->add_op(op);
         auto iu_map = op->map_instance_uniform(0);

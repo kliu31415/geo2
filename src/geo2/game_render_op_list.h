@@ -10,27 +10,21 @@ class GameRenderOpList final: public RenderOpList
 {
     kx::gfx::Renderer *cur_renderer;
 public:
-    struct Shaders
+    class Shaders
     {
-        std::unique_ptr<IShader> test_terrain_1;
-        std::unique_ptr<IShader> outlined_tri;
-        std::unique_ptr<IShader> monoc_wall_1;
-        std::unique_ptr<IShader> monoc_floor_1;
-        std::unique_ptr<IShader> pig_1;
-        std::unique_ptr<IShader> laser_proj_1;
-        std::unique_ptr<IShader> laser_1;
-        std::unique_ptr<IShader> cow_1;
-        std::unique_ptr<IShader> hexfly_1;
-
+        std::map<std::string, std::unique_ptr<IShader>, std::less<>> shaders_map;
+    public:
         void init(kx::gfx::Renderer *rdr, kx::Passkey<GameRenderOpList>);
+        const IShader *get(std::string_view name) const;
     };
     Shaders shaders;
 
-    struct Fonts
+    class Fonts
     {
-        std::unique_ptr<Font> default_;
-
+        std::map<std::string, std::unique_ptr<FontAtlas>, std::less<>> fonts_map;
+    public:
         void init(kx::gfx::FontLibrary *font_library, kx::gfx::Renderer *rdr, kx::Passkey<GameRenderOpList>);
+        const FontAtlas *get(std::string_view name) const;
     };
     Fonts fonts;
 

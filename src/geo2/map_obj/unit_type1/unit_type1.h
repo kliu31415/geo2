@@ -48,6 +48,7 @@ protected:
     MapCoord current_position;
     Team team;
     AliveStatus alive_status;
+    double max_health;
     double health;
     double death_time;
 
@@ -84,6 +85,8 @@ public:
     bool is_completely_faded_out(double cur_level_time) const;
 
     Team get_team() const override;
+    double get_health() const;
+    double get_max_health() const;
 };
 
 }}

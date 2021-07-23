@@ -39,21 +39,52 @@ std::unique_ptr<AudioTrack> SfxLibrary::load_audio_from_file(std::string_view fi
         return nullptr;
     return std::unique_ptr<AudioTrack>(new AudioTrack(this, std::move(chunk), {}));
 }
+constexpr float PANNING_MULT = 254;
 void SfxLibrary::play(AudioTrack *track, uint32_t num_times, Passkey<AudioTrack>)
 {
-    if(num_times != 0)
-        Mix_PlayChannel(-1, track->mix_chunk.get(), num_times - 1);
+    if(num_times != 0) {
+        auto channel = Mix_PlayChannel(-1, track->mix_chunk.get(), num_times - 1);
+        if(channel == -1) {
+            log_error("Mix_PlayChannel failed: ", Mix_GetError());
+        } else {
+            auto lpan = track->left_panning * PANNING_MULT;
+            auto rpan = track->right_panning * PANNING_MULT;
+            if(Mix_SetPanning(channel, lpan, rpan) == 0) {
+                log_error("Mix_SetPanning failed: ", Mix_GetError());
+            }
+        }
+        track->playing_on_channel = channel;
+    }
 }
 
 AudioTrack::AudioTrack(SfxLibrary *library_, unique_ptr_sdl<Mix_Chunk> mix_chunk_, Passkey<SfxLibrary>):
     library(library_),
-    mix_chunk(std::move(mix_chunk_))
+    mix_chunk(std::move(mix_chunk_)),
+    playing_on_channel(-1),
+    left_panning(1.0),
+    right_panning(1.0)
 {
     Mix_VolumeChunk(mix_chunk.get(), MIX_MAX_VOLUME);
 }
 void AudioTrack::set_volume(float volume)
 {
     Mix_VolumeChunk(mix_chunk.get(), volume * MIX_MAX_VOLUME);
+}
+void AudioTrack::set_panning(float left_panning_, float right_panning_)
+{
+    left_panning = left_panning_;
+    right_panning = right_panning_;
+
+    k_expects(left_panning>=0 && left_panning<=1);
+    k_expects(right_panning>=0 && right_panning<=1);
+
+    if(playing_on_channel != -1) {
+        auto lpan = left_panning * PANNING_MULT;
+        auto rpan = right_panning * PANNING_MULT;
+        if(Mix_SetPanning(playing_on_channel, lpan, rpan) == 0) {
+            log_error("Mix_SetPanning failed: ", Mix_GetError());
+        }
+    }
 }
 void AudioTrack::play(uint32_t num_times)
 {

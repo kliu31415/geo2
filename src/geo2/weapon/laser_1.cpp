@@ -47,7 +47,7 @@ void TestLaser1::render(const WeaponRenderArgs &args)
 {
     if(ops[0] == nullptr) {
         for(int i=0; i<2; i++) {
-            ops[i] = std::make_shared<RenderOpShader>(*args.shaders->laser_1);
+            ops[i] = std::make_shared<RenderOpShader>(*args.shaders->get("laser_1"));
             auto iu_map = ops[i]->map_instance_uniform(0);
             op_ius[i] = {(float*)iu_map.begin(), (float*)iu_map.end()};
         }

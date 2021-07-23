@@ -13,7 +13,7 @@ MonochromaticFloor_1::MonochromaticFloor_1(const MapRect &position_,
 void MonochromaticFloor_1::add_render_ops(const MapObjRenderArgs &args)
 {
     if(op == nullptr) {
-        op = std::make_shared<RenderOpShader>(*args.shaders->monoc_floor_1);
+        op = std::make_shared<RenderOpShader>(*args.shaders->get("monoc_floor_1"));
         op_group = std::make_shared<RenderOpGroup>(args.get_floor_render_priority());
         op_group->add_op(op);
         auto iu_map = op->map_instance_uniform(0);

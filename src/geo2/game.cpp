@@ -44,6 +44,14 @@ struct _gfx
     std::shared_ptr<kx::gfx::VBO> full_target_vbo;
     std::array<float, 16> full_target;
 
+    struct _hud_data
+    {
+        std::shared_ptr<RenderOpGroup> hp_op_group;
+        std::shared_ptr<RenderOpText> hp_text_op;
+        kx::kx_span<float> hp_bar_iu;
+    };
+    _hud_data hud_data;
+
     _gfx(kx::gfx::FontLibrary *font_library, kx::gfx::Renderer *rdr):
         cur_renderer(rdr)
     {
@@ -187,11 +195,10 @@ struct _gfx
     }
 };
 
-//3060 corresponds to 16x16 tiles on a 1280x720 screen
+//3600 corresponds to 16x16 tiles on a 1280x720 screen
 //it's somewhat important to make tiles have roughly integer pixel dimensions to
 //minimize artifacting around the edges
-constexpr float TILES_PER_SCREEN = 3060;
-constexpr double MENU_OFFSET = 0.85;
+constexpr float TILES_PER_SCREEN = 3600;
 constexpr int PREV_MOUSE_X_NOT_SET = -123456;
 
 void Game::generate_and_start_level(LevelName level_name)
@@ -234,7 +241,7 @@ void Game::generate_and_start_level(LevelName level_name)
     cur_level_time_left = level.time_to_complete;
     cur_level_time = 0;
     cur_level_tick = 0;
-    cur_level = level_name;
+    cur_level_name = level_name;
     player->set_position({level.player_start_x, level.player_start_y}, {});
 }
 
@@ -533,22 +540,13 @@ void Game::advance_one_tick(double tick_len,
 
     process_added_map_objs();
 }
-std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::FontLibrary *font_library,
-                                               kx::gfx::KWindowRunning *kwin_r,
-                                               int render_w, int render_h,
-                                               int map_render_w,
-                                               float tile_len)
+
+std::shared_ptr<kx::gfx::Texture> Game::render_map(kx::gfx::KWindowRunning *kwin_r,
+                                                   int map_render_w, int map_render_h,
+                                                   float tile_len)
 {
     using namespace kx::gfx;
-
-    //create the texture where the map will be rendered; note that this isn't the whole screen.
     auto rdr = kwin_r->rdr();
-    if(gfx==nullptr || rdr!=gfx->cur_renderer) {
-        gfx = std::make_unique<_gfx>(font_library, rdr);
-    }
-    float w = render_w;
-    float h = render_h;
-    int map_render_h = h;
 
     auto map_texture = gfx->render_func_map_texture.get(rdr,
                                                         map_render_w,
@@ -557,14 +555,13 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::FontLibrary *font_librar
                                                         false,
                                                         1);
 
-
     rdr->set_target(map_texture.get());
     rdr->set_color(Color::BLACK);
     rdr->clear();
 
     //render the map and things on it
     map_obj::MapObjRenderArgs render_args;
-    render_args.set_renderer(kwin_r->rdr());
+    render_args.set_renderer(rdr);
     render_args.shaders = &gfx->render_op_list->shaders;
     render_args.fonts = &gfx->render_op_list->fonts;
 
@@ -590,17 +587,89 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::FontLibrary *font_librar
     gfx->render_op_list->steal_op_groups_into(&gfx->op_groups);
     gfx->op_groups.clear();
 
-
-
     //if we have a multisample texture, resolve it into a 1-sample texture
     if(map_texture->is_multisample()) {
         map_texture = gfx->resolve_multisamples(map_texture.get());
     }
+    return map_texture;
+}
+void Game::render_HUD([[maybe_unused]] kx::gfx::Texture *texture,
+                      kx::gfx::KWindowRunning *kwin_r,
+                      int render_w, int render_h)
+{
+    using kx::gfx::LinearColor;
 
-    gfx->apply_bloom(map_texture.get(), 0.1*tile_len);
+    constexpr float HUD_RENDER_PRIORITY = 10000;
+    auto rdr = kwin_r->rdr();
+    [[maybe_unused]] const auto BASE_FONT_SIZE = 0.01 * std::sqrt(render_w * render_h);
 
-    //add the menu bar and other stuff here
-    //(code goes here)
+    if(gfx->hud_data.hp_op_group == nullptr) {
+        float v0x = 0.05 * render_w;
+        float v0y = 0.05 * render_h;
+        float v3x = 0.30 * render_w;
+        float v3y = 0.08 * render_h;
+        constexpr float BORDER_Y = 0.12;
+
+        auto hp_bar_op = std::make_unique<RenderOpShader>(*gfx->render_op_list->shaders.get("resource_bar"));
+        auto iu_map = hp_bar_op->map_instance_uniform(0);
+        gfx->hud_data.hp_bar_iu = {(float*)iu_map.begin(), (float*)iu_map.end()};
+        gfx->hud_data.hp_op_group = std::make_shared<RenderOpGroup>(HUD_RENDER_PRIORITY);
+        gfx->hud_data.hp_op_group->add_op(std::move(hp_bar_op));
+
+        gfx->hud_data.hp_text_op = std::make_shared<RenderOpText>();
+        gfx->hud_data.hp_text_op->set_font(gfx->render_op_list->fonts.get("black_chancery"));
+        gfx->hud_data.hp_text_op->set_color(LinearColor(0, 1, 1, 0.7));
+        gfx->hud_data.hp_text_op->set_x(v0x + 2.0 * BORDER_Y * (v3y - v0y));
+        gfx->hud_data.hp_text_op->set_y(v0y + 1.4 * BORDER_Y * (v3y - v0y));
+        gfx->hud_data.hp_text_op->set_font_size(1.05 * (1 - 2.4*BORDER_Y) * (v3y - v0y));
+        gfx->hud_data.hp_op_group->add_op(gfx->hud_data.hp_text_op);
+
+        gfx->hud_data.hp_bar_iu[0] = rdr->x_to_ndc(v0x);
+        gfx->hud_data.hp_bar_iu[1] = rdr->y_to_ndc(v0y);
+        gfx->hud_data.hp_bar_iu[2] = rdr->x_to_ndc(v3x);
+        gfx->hud_data.hp_bar_iu[3] = rdr->y_to_ndc(v3y);
+
+        gfx->hud_data.hp_bar_iu[6] = 1 - BORDER_Y;
+        gfx->hud_data.hp_bar_iu[5] = 1 - BORDER_Y * (v3y - v0y) / (v3x - v0x);
+
+        *reinterpret_cast<LinearColor*>(&gfx->hud_data.hp_bar_iu[8]) =  LinearColor(1, 0, 0, 0.6);
+        *reinterpret_cast<LinearColor*>(&gfx->hud_data.hp_bar_iu[12]) = LinearColor(0.1, 0, 0, 0.6);
+        *reinterpret_cast<LinearColor*>(&gfx->hud_data.hp_bar_iu[16]) = LinearColor(0.05, 0.05, 0.05, 0.6);
+    }
+
+    gfx->hud_data.hp_bar_iu[4] = player->get_health() / player->get_max_health();
+
+    std::string hp_text;
+    hp_text += kx::to_str((int)std::ceil(player->get_health()));
+    hp_text += " / ";
+    hp_text += kx::to_str((int)player->get_max_health());
+    gfx->hud_data.hp_text_op->set_text(hp_text);
+
+    gfx->op_groups.push_back(gfx->hud_data.hp_op_group);
+
+    gfx->render_op_list->set_op_groups(std::move(gfx->op_groups));
+    gfx->render_op_list->render(*this, kwin_r, render_w, render_h);
+    gfx->render_op_list->steal_op_groups_into(&gfx->op_groups);
+    gfx->op_groups.clear();
+}
+std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::FontLibrary *font_library,
+                                               kx::gfx::KWindowRunning *kwin_r,
+                                               int render_w, int render_h,
+                                               float tile_len)
+{
+    using namespace kx::gfx;
+
+    //create the texture where the map will be rendered; note that this isn't the whole screen.
+    auto rdr = kwin_r->rdr();
+    if(gfx==nullptr || rdr!=gfx->cur_renderer) {
+        gfx = std::make_unique<_gfx>(font_library, rdr);
+    }
+
+    float w = render_w;
+    float h = render_h;
+    int map_render_w = w;
+    int map_render_h = h;
+    auto map_texture = render_map(kwin_r, map_render_w, map_render_h, tile_len);
 
     //combine the two textures
     auto return_texture = gfx->render_func_return_texture.get(rdr,
@@ -612,8 +681,11 @@ std::shared_ptr<kx::gfx::Texture> Game::render(kx::gfx::FontLibrary *font_librar
     map_texture->set_min_filter(Texture::FilterAlgo::Nearest);
     map_texture->set_mag_filter(Texture::FilterAlgo::Nearest);
     rdr->set_target(return_texture.get());
-
     rdr->draw_texture(*map_texture, Rect(0, 0, map_render_w, map_render_h));
+
+    render_HUD(return_texture.get(), kwin_r, render_w, render_h);
+
+    gfx->apply_bloom(return_texture.get(), 0.1*tile_len);
 
     return return_texture;
 }
@@ -635,7 +707,7 @@ Game::Game():
      *  is empty by the time it wakes up.
      */
 
-    generate_and_start_level(LevelName::Test2);
+    generate_and_start_level(LevelName::Test3);
 }
 Game::~Game()
 {}
@@ -660,14 +732,14 @@ std::shared_ptr<kx::gfx::Texture> Game::run(const LibraryPointers &libraries,
         prev_mouse_y = mouse_y;
     }
 
-    float tile_len = std::sqrt(render_w * MENU_OFFSET * render_h / TILES_PER_SCREEN);
+    float tile_len = std::sqrt(render_w * render_h / TILES_PER_SCREEN);
 
     for(int i=0; i<TICKS_PER_FRAME; i++) {
         //~1300us on Test2(40, 40)
         float simulated_mouse_x = lerp(prev_mouse_x, mouse_x, (i+1)/((double)TICKS_PER_FRAME));
         float simulated_mouse_y = lerp(prev_mouse_y, mouse_y, (i+1)/((double)TICKS_PER_FRAME));
 
-        auto offset = MapVec(simulated_mouse_x - 0.5f*MENU_OFFSET*render_w,
+        auto offset = MapVec(simulated_mouse_x - 0.5f*render_w,
                              simulated_mouse_y - 0.5f*render_h)
                              / tile_len;
 
@@ -681,7 +753,7 @@ std::shared_ptr<kx::gfx::Texture> Game::run(const LibraryPointers &libraries,
     prev_mouse_y = mouse_y;
 
     //a few hundred ms (integrated GPU, 1920x1080, Test3)
-    auto ret = render(libraries.font_library, kwin_r, render_w, render_h, render_w*MENU_OFFSET, tile_len);
+    auto ret = render(libraries.font_library, kwin_r, render_w, render_h, tile_len);
     return ret;
 }
 }

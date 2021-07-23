@@ -11,7 +11,7 @@ MonochromaticWall_1::MonochromaticWall_1(const MapRect &position_,
 void MonochromaticWall_1::add_render_ops(const MapObjRenderArgs &args)
 {
     if(op == nullptr) {
-        op = std::make_shared<RenderOpShader>(*args.shaders->monoc_wall_1);
+        op = std::make_shared<RenderOpShader>(*args.shaders->get("monoc_wall_1"));
         op_group = std::make_shared<RenderOpGroup>(args.get_wall_render_priority());
         op_group->add_op(op);
         auto iu_map = op->map_instance_uniform(0);

@@ -35,6 +35,7 @@ Unit_Type1::Unit_Type1(Team team_, MapCoord position_, double health_):
     last_damaged_at_time(-1e9),
     current_position(position_),
     team(team_),
+    max_health(health_),
     health(health_)
 {}
 
@@ -158,6 +159,14 @@ bool Unit_Type1::is_completely_faded_out(double cur_level_time) const
 Team Unit_Type1::get_team() const
 {
     return team;
+}
+double Unit_Type1::get_health() const
+{
+    return health;
+}
+double Unit_Type1::get_max_health() const
+{
+    return max_health;
 }
 
 }}

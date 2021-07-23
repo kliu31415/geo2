@@ -18,12 +18,12 @@ namespace geo2 {
 
 class Game final
 {
-    std::unique_ptr<struct _gfx> gfx; ///PImpl
+    std::unique_ptr<struct _gfx> gfx;
 
     std::shared_ptr<map_obj::Player_Type1> player;
     std::vector<std::shared_ptr<map_obj::MapObject>> map_objs;
 
-    LevelName cur_level;
+    LevelName cur_level_name;
     int64_t cur_level_tick;
     double cur_level_time;
     double cur_level_time_left;
@@ -60,10 +60,15 @@ class Game final
                           kx::gfx::mouse_state_t mouse_state,
                           kx::gfx::keyboard_state_t keyboard_state);
 
+    std::shared_ptr<kx::gfx::Texture> render_map(kx::gfx::KWindowRunning *kwin_r,
+                                                 int map_render_w, int map_render_h,
+                                                 float tile_len);
+    void render_HUD(kx::gfx::Texture *texture,
+                    kx::gfx::KWindowRunning *kwin_r,
+                    int render_w, int render_h);
     std::shared_ptr<kx::gfx::Texture> render(kx::gfx::FontLibrary *font_library,
                                              kx::gfx::KWindowRunning *kwin_r,
                                              int render_w, int render_h,
-                                             int map_render_w,
                                              float tile_len);
 public:
     Game();

@@ -88,11 +88,11 @@ public:
     kx::kx_span<uint8_t> map_instance_uniform(size_t uniform_id);
 };
 
-struct Font
+struct FontAtlas
 {
     std::unique_ptr<kx::gfx::ASCII_Atlas> atlas;
 
-    Font(kx::gfx::Renderer *rdr, kx::gfx::Font *font_);
+    FontAtlas(kx::gfx::Renderer *rdr, kx::gfx::Font *font_);
 };
 
 class RenderOpText final: public RenderOp
@@ -107,7 +107,7 @@ public:
     };
 private:
     std::string text;
-    const Font *font;
+    const FontAtlas *font;
     kx::gfx::LinearColor color;
     float font_size;
     float x;
@@ -118,7 +118,7 @@ private:
 public:
     RenderOpText();
     void set_text(std::string_view text);
-    void set_font(const Font *font_);
+    void set_font(const FontAtlas *font_);
     void set_color(const kx::gfx::LinearColor &color_);
     void set_font_size(float size_);
     void set_x(float x_);
@@ -155,7 +155,7 @@ class RenderOpList
     std::vector<std::shared_ptr<RenderOpGroup>> op_groups;
     std::unique_ptr<UBO_Allocator> ubo_allocator;
 
-    void render_text(kx::gfx::Renderer *rdr, const Font *font, const std::vector<float> &text_iu_data);
+    void render_text(kx::gfx::Renderer *rdr, const FontAtlas *font, const std::vector<float> &text_iu_data);
 protected:
     void render_internal(kx::gfx::KWindowRunning *kwin_r, int render_w, int render_h);
 public:

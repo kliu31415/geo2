@@ -48,7 +48,6 @@ public:
     void add_render_ops(const MapObjRenderArgs &args) override;
     void set_position(MapCoord pos, kx::Passkey<Game>); ///called at level start
     double get_collision_damage() const override;
-
 };
 
 }}
