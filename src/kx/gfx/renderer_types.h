@@ -16,27 +16,28 @@ namespace kx { namespace gfx {
  *  prevent them from being parent classes.
  */
 
-struct SRGB_Color;
-
-struct LinearColor final
+struct Color4f
 {
     float r;
     float g;
     float b;
     float a;
 
+    Color4f() = default;
+    Color4f(float r_, float g_, float b_, float a_=1.0f);
+};
+
+struct SRGB_Color;
+
+struct LinearColor final: public Color4f
+{
     LinearColor() = default;
     LinearColor(float r_, float g_, float b_, float a_=1.0f);
     LinearColor(const SRGB_Color &color);
 };
 
-struct SRGB_Color final
+struct SRGB_Color final: public Color4f
 {
-    float r;
-    float g;
-    float b;
-    float a;
-
     SRGB_Color() = default;
     SRGB_Color(float r_, float g_, float b_, float a_=1.0f);
     SRGB_Color(const LinearColor &color);

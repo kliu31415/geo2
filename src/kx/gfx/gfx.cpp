@@ -194,21 +194,6 @@ void AbstractWindow::clean_memory()
     else
         log_warning("renderer is nullptr in AbstractWindow.clean_memory()");
 }
-void AbstractWindow::RendererAtny::show_fps(AbstractWindow *window, bool toggle)
-{
-    k_expects(window->rdr() != nullptr);
-    window->rdr()->show_fps(toggle);
-}
-int AbstractWindow::RendererAtny::set_fps_font(AbstractWindow *window, std::shared_ptr<const Font> font)
-{
-    k_expects(window->rdr() != nullptr);
-    return window->rdr()->set_fps_font(std::move(font));
-}
-void AbstractWindow::RendererAtny::set_fps_color(AbstractWindow *window, SRGB_Color color)
-{
-    k_expects(window->rdr() != nullptr);
-    window->rdr()->set_fps_color(color);
-}
 AbstractWindow::InputQueue *AbstractWindow::get_input_queue(Passkey<GfxLibrary>)
 {
     return &input;

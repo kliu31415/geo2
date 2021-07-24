@@ -396,6 +396,7 @@ inline float lerp(double a, double b, double t)
 }
 std::shared_ptr<kx::gfx::Texture> Game::run(const LibraryPointers &libraries,
                                             kx::gfx::KWindowRunning *kwin_r,
+                                            GameRenderOpList *render_op_list,
                                             int render_w, int render_h)
 {
     constexpr int TICKS_PER_FRAME = 10;
@@ -431,8 +432,8 @@ std::shared_ptr<kx::gfx::Texture> Game::run(const LibraryPointers &libraries,
     prev_mouse_y = mouse_y;
 
     //a few hundred ms (integrated GPU, 1920x1080, Test3)
-    auto ret = gfx->render(libraries.font_library,
-                           kwin_r,
+    auto ret = gfx->render(kwin_r,
+                           render_op_list,
                            render_w,
                            render_h,
                            tile_len,

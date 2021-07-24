@@ -81,7 +81,6 @@ void IShader::render(UBO_Allocator *ubo_allocator,
                      kx::gfx::Renderer *rdr,
                      kx::Passkey<class RenderOpList>) const
 {
-    rdr->prepare_for_custom_shader();
     rdr->use_shader_program(*program);
 
     size_t num_instances = instance_uniform_data.size();
@@ -277,10 +276,6 @@ RenderOpList::RenderOpList():
 {}
 RenderOpList::~RenderOpList()
 {}
-void RenderOpList::set_op_groups(std::vector<std::shared_ptr<RenderOpGroup>> &&op_groups_)
-{
-    op_groups = std::move(op_groups_);
-}
 
 //these values should correspond to uniform block's properties in the text shader
 constexpr size_t TEXT_IU_FLOATS_PER_INSTANCE = 3*4;
@@ -293,7 +288,6 @@ void RenderOpList::render_text(kx::gfx::Renderer *rdr,
 {
     k_expects(font != nullptr);
 
-    rdr->prepare_for_custom_shader();
     rdr->use_shader_program(*text_ascii);
     rdr->set_active_texture(0);
     rdr->bind_texture(*font->atlas->texture);
@@ -312,10 +306,15 @@ void RenderOpList::render_text(kx::gfx::Renderer *rdr,
         rdr->draw_arrays_instanced(kx::gfx::DrawMode::TriangleStrip, 0, 4, num_instances);
     }
 }
-void RenderOpList::render_internal(kx::gfx::KWindowRunning *kwin_r,
-                                   [[maybe_unused]] int render_w,
-                                   [[maybe_unused]] int render_h)
+
+void RenderOpList::render_and_clear_vec(std::vector<std::shared_ptr<RenderOpGroup>> *op_groups_vec,
+                                        kx::gfx::KWindowRunning *kwin_r,
+                                        [[maybe_unused]] int render_w,
+                                        [[maybe_unused]] int render_h)
 {
+    //mutable reference!
+    auto &op_groups = *op_groups_vec;
+
     auto rdr = kwin_r->rdr();
 
     if(cur_renderer != rdr) {
@@ -394,10 +393,7 @@ void RenderOpList::render_internal(kx::gfx::KWindowRunning *kwin_r,
     } else if(!text_iu_data.empty()) {
         render_text(rdr, cur_font, text_iu_data);
     }
-}
-void RenderOpList::steal_op_groups_into(std::vector<std::shared_ptr<RenderOpGroup>> *op_groups_)
-{
-    *op_groups_ = std::move(op_groups);
+    op_groups.clear();
 }
 
 }

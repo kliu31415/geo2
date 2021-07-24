@@ -1,6 +1,5 @@
 #pragma once
 
-#include "kx/sdl_deleter.h"
 #include "kx/util.h"
 
 #include <memory>
@@ -28,12 +27,10 @@ private:
     friend Renderer;
 
     const ID_t id;
-    std::array<unique_ptr_sdl<_TTF_Font>, MAX_FONT_SIZE+1> font_of_size;
     FT_FaceRec_ *ft_face;
 
     Font();
 public:
-    int get_height(int size) const;
     int get_recommended_line_skip(int size) const;
 
     ///Fonts aren't copyable because they have unique ownership of a _TTF_Font

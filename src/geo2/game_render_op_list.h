@@ -28,8 +28,8 @@ public:
     };
     Fonts fonts;
 
-    GameRenderOpList(kx::gfx::FontLibrary *font_library, kx::gfx::Renderer *renderer);
-    void render(kx::gfx::KWindowRunning *kwin_r, int render_w, int render_h);
+    GameRenderOpList(kx::gfx::FontLibrary *font_library,
+                     kx::gfx::Renderer *renderer);
 };
 
 }

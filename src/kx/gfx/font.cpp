@@ -4,7 +4,6 @@
 #include "ft2build.h"
 #include FT_FREETYPE_H
 
-#include <SDL2/SDL_ttf.h>
 #include <limits>
 #include <type_traits>
 #include <map>
@@ -24,15 +23,12 @@ Font::Font():
     k_expects(id != std::numeric_limits<ID_t>::max());
 }
 
-int Font::get_height(int size) const
-{
-    k_expects(size>=1 && size<=MAX_FONT_SIZE);
-    return TTF_FontHeight(font_of_size[size].get());
-}
 int Font::get_recommended_line_skip(int size) const
 {
     k_expects(size>=1 && size<=MAX_FONT_SIZE);
-    return TTF_FontLineSkip(font_of_size[size].get());
+    FT_Set_Pixel_Sizes(ft_face, 0, size);
+    int scaled_line_spacing = ft_face->size->metrics.height;
+    return scaled_line_spacing / 64;
 }
 
 static std::atomic<int> init_count(0);
@@ -43,10 +39,6 @@ FontLibrary::FontLibrary()
 
     if(FT_Init_FreeType(&ft_library)) {
         log_error("FT_Init_FreeType failed");
-    }
-    if(TTF_Init() < 0) {
-        log_error((std::string)"TTF_Init error: " + TTF_GetError());
-        return;
     }
 
     //make sure to set all of these to nullptr when closing
@@ -74,7 +66,6 @@ FontLibrary::~FontLibrary()
     fonts.clear();
 
     FT_Done_FreeType(ft_library);
-    TTF_Quit();
 }
 
 std::shared_ptr<Font> FontLibrary::get_font(std::string_view font_name)
@@ -102,13 +93,6 @@ std::shared_ptr<Font> FontLibrary::load(std::string_view font_name, std::string_
         log_error("FT_Face is not scalable");
     }
 
-    for(int i=0; i<=Font::MAX_FONT_SIZE; i++)
-        font->font_of_size[i] = unique_ptr_sdl<TTF_Font>(TTF_OpenFont(file.data(), i));
-
-    if(font->font_of_size[0] == nullptr) {
-        log_error((std::string)"TTF_GetError(): " + TTF_GetError());
-        return nullptr;
-    }
 
     fonts.emplace(font_name, font);
 

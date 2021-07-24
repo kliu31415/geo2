@@ -25,8 +25,8 @@ class GameGfx
 public:
     GameGfx(kx::Passkey<class Game>);
     ~GameGfx();
-    std::shared_ptr<kx::gfx::Texture> render(kx::gfx::FontLibrary *font_library,
-                                             kx::gfx::KWindowRunning *kwin_r,
+    std::shared_ptr<kx::gfx::Texture> render(kx::gfx::KWindowRunning *kwin_r,
+                                             class GameRenderOpList *render_op_list,
                                              int render_w, int render_h,
                                              float tile_len,
                                              std::vector<std::shared_ptr<map_obj::MapObject>> *map_objs,

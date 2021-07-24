@@ -26,6 +26,8 @@ namespace kx { namespace gfx {
 
 static_assert(std::is_same_v<GLenum, uint32_t>);
 
+static_assert(sizeof(Color4f) == 16);
+
 static_assert(sizeof(SRGB_Color) == 16);
 static_assert(offsetof(SRGB_Color, r) == 0);
 static_assert(offsetof(SRGB_Color, g) == 4);
@@ -78,7 +80,7 @@ void _GLDeleteFramebuffers::operator()(GLuint id) const
 }
 
 LinearColor::LinearColor(float r_, float g_, float b_, float a_):
-    r(r_), g(g_), b(b_), a(a_)
+    Color4f(r_, g_, b_, a_)
 {}
 
 static float srgb_to_linear(float in)
@@ -88,15 +90,18 @@ static float srgb_to_linear(float in)
     else
         return std::pow((in+0.055)/1.055, 2.4);
 }
+Color4f::Color4f(float r_, float g_, float b_, float a_):
+    r(r_),
+    g(g_),
+    b(b_),
+    a(a_)
+{}
 LinearColor::LinearColor(const SRGB_Color &color):
-    r(srgb_to_linear(color.r)),
-    g(srgb_to_linear(color.g)),
-    b(srgb_to_linear(color.b)),
-    a(color.a)
+    Color4f(srgb_to_linear(color.r), srgb_to_linear(color.g), srgb_to_linear(color.b), color.a)
 {}
 
 SRGB_Color::SRGB_Color(float r_, float g_, float b_, float a_):
-    r(r_), g(g_), b(b_), a(a_)
+    Color4f(r_, g_, b_, a_)
 {}
 static float linear_to_srgb(float in)
 {
@@ -106,10 +111,7 @@ static float linear_to_srgb(float in)
         return 1.055 * std::pow(in, 1.0 / 2.4) - 0.055;
 }
 SRGB_Color::SRGB_Color(const LinearColor &color):
-    r(linear_to_srgb(color.r)),
-    g(linear_to_srgb(color.g)),
-    b(linear_to_srgb(color.b)),
-    a(color.a)
+    Color4f(linear_to_srgb(color.r), linear_to_srgb(color.g), linear_to_srgb(color.b), color.a)
 {}
 
 Point::Point(float x_, float y_):
@@ -569,41 +571,6 @@ void VAO::enable_vertex_attrib_array(GLuint pos)
     glEnableVertexAttribArray(pos);
 }
 
-const Time::Delta Renderer::TEXT_TEXTURE_CACHE_TIME(1.1, Time::Length::second);
-
-Renderer::TextTextureCacheInfo::TextTextureCacheInfo(std::string_view text_, int font_id_, int size_,
-                                                     int wrap_length_,
-                                                     uint8_t r_, uint8_t g_, uint8_t b_, uint8_t a_):
-    text(text_),
-    font_id(font_id_),
-    size(size_),
-    wrap_length(wrap_length_),
-    r(r_), g(g_), b(b_), a(a_)
-{}
-bool Renderer::TextTextureCacheInfo::operator < (const TextTextureCacheInfo &other) const
-{
-    if(text != other.text)
-        return text < other.text;
-    if(font_id != other.font_id)
-        return font_id < other.font_id;
-    if(size != other.size)
-        return size < other.size;
-    if(wrap_length != other.wrap_length)
-        return wrap_length < other.wrap_length;
-    if(r != other.r)
-        return r < other.r;
-    if(g != other.g)
-        return g < other.g;
-    if(b != other.b)
-        return b < other.b;
-    return a < other.a;
-}
-
-Renderer::TextTexture::TextTexture(std::shared_ptr<Texture> text_texture_, Time time_last_used_):
-    text_texture(std::move(text_texture_)),
-    time_last_used(time_last_used_)
-{}
-
 void Renderer::GLDeleteContext::operator()(void *context) const
 {
     SDL_GL_DeleteContext(context);
@@ -615,24 +582,6 @@ void Renderer::init_shaders()
     Shaders.active_VBO_id = 0;
     Shaders.active_EBO_id = 0;
     Shaders.active_UBO_id = 0;
-
-    //triangle
-    Shaders.tri_buffer.resize(Shaders.TRI_BUFFER_SIZE);
-    Shaders.tri_buffer_ptr = Shaders.tri_buffer.begin();
-
-    auto tri_vert = make_vert_shader("kx_data/shaders/triangle.vert");
-    auto tri_frag = make_frag_shader("kx_data/shaders/triangle.frag");
-    Shaders.triangle = make_shader_program(*tri_vert, *tri_frag);
-    Shaders.triangle_vao = make_VAO();
-    Shaders.triangle_vbo = make_VBO();
-    bind_VAO(*Shaders.triangle_vao);
-    bind_VBO(*Shaders.triangle_vbo);
-    Shaders.triangle_vbo->buffer_data(nullptr, Shaders.tri_buffer.size() * sizeof(Shaders.tri_buffer[0]));
-    Shaders.triangle_vao->add_VBO(Shaders.triangle_vbo);
-    Shaders.triangle_vao->vertex_attrib_pointer_f(0, 2, 6*sizeof(float), 0*sizeof(float)); //positions
-    Shaders.triangle_vao->vertex_attrib_pointer_f(1, 4, 6*sizeof(float), 2*sizeof(float)); //colors
-    Shaders.triangle_vao->enable_vertex_attrib_array(0);
-    Shaders.triangle_vao->enable_vertex_attrib_array(1);
 
     //texture
     auto texture_vert = make_vert_shader("kx_data/shaders/texture.vert");
@@ -655,79 +604,6 @@ void Renderer::init_shaders()
     Shaders.texture_vao->enable_vertex_attrib_array(0);
     Shaders.texture_vao->enable_vertex_attrib_array(1);
     Shaders.texture_vao->enable_vertex_attrib_array(2);
-}
-void Renderer::flush_tri_buffer()
-{
-    use_shader_program(*Shaders.triangle);
-    bind_VAO(*Shaders.triangle_vao);
-    bind_VBO(*Shaders.triangle_vbo);
-
-    auto &cpu_vbo = Shaders.tri_buffer;
-    auto vbo_len = Shaders.tri_buffer_ptr - cpu_vbo.begin();
-    Shaders.triangle_vbo->buffer_sub_data(0, cpu_vbo.data(), vbo_len*sizeof(cpu_vbo[0]));
-
-    draw_arrays(DrawMode::TriangleStrip, 0, vbo_len);
-
-    Shaders.triangle_vbo->invalidate();
-
-    Shaders.tri_buffer_ptr = cpu_vbo.begin();
-}
-template<Renderer::CoordSys CS>
-void Renderer::_fill_quad(const Point &p1, const Point &p2, const Point &p3, const Point &p4)
-{
-    if(Shaders.tri_buffer.end() - Shaders.tri_buffer_ptr < 36)
-        flush_tri_buffer();
-
-    //p1
-    *Shaders.tri_buffer_ptr++ = x_to_gl_coord<CS>(p1.x);
-    *Shaders.tri_buffer_ptr++ = y_to_gl_coord<CS>(p1.y);
-
-    if(is_target_srgb()) {
-        *Shaders.tri_buffer_ptr++ = draw_color.r;
-        *Shaders.tri_buffer_ptr++ = draw_color.g;
-        *Shaders.tri_buffer_ptr++ = draw_color.b;
-        *Shaders.tri_buffer_ptr++ = draw_color.a;
-    } else {
-        LinearColor real_draw_color(draw_color);
-        *Shaders.tri_buffer_ptr++ = real_draw_color.r;
-        *Shaders.tri_buffer_ptr++ = real_draw_color.g;
-        *Shaders.tri_buffer_ptr++ = real_draw_color.b;
-        *Shaders.tri_buffer_ptr++ = real_draw_color.a;
-    }
-
-    for(int i=0; i<6; i++) {
-        *Shaders.tri_buffer_ptr = *(Shaders.tri_buffer_ptr - 6);
-        Shaders.tri_buffer_ptr++;
-    }
-
-    //p2
-    *Shaders.tri_buffer_ptr++ = x_to_gl_coord<CS>(p2.x);
-    *Shaders.tri_buffer_ptr++ = y_to_gl_coord<CS>(p2.y);
-    for(int i=0; i<4; i++) {
-        *Shaders.tri_buffer_ptr = *(Shaders.tri_buffer_ptr - 6);
-        Shaders.tri_buffer_ptr++;
-    }
-
-    //p4
-    *Shaders.tri_buffer_ptr++ = x_to_gl_coord<CS>(p4.x);
-    *Shaders.tri_buffer_ptr++ = y_to_gl_coord<CS>(p4.y);
-    for(int i=0; i<4; i++) {
-        *Shaders.tri_buffer_ptr = *(Shaders.tri_buffer_ptr - 6);
-        Shaders.tri_buffer_ptr++;
-    }
-
-    //p3
-    *Shaders.tri_buffer_ptr++ = x_to_gl_coord<CS>(p3.x);
-    *Shaders.tri_buffer_ptr++ = y_to_gl_coord<CS>(p3.y);
-    for(int i=0; i<4; i++) {
-        *Shaders.tri_buffer_ptr = *(Shaders.tri_buffer_ptr - 6);
-        Shaders.tri_buffer_ptr++;
-    }
-
-    for(int i=0; i<6; i++) {
-        *Shaders.tri_buffer_ptr = *(Shaders.tri_buffer_ptr - 6);
-        Shaders.tri_buffer_ptr++;
-    }
 }
 template<Renderer::CoordSys CS>
 void Renderer::_draw_texture(const Texture &texture, const Rect &dst, const std::optional<Rect> &src_)
@@ -782,9 +658,6 @@ void Renderer::_draw_texture(const Texture &texture, const Rect &dst, const std:
     for(int i=0; i<4; i++)
         Shaders.texture_buffer[28 + i] = Shaders.texture_buffer[4 + i];
 
-    if(Shaders.tri_buffer_ptr != Shaders.tri_buffer.begin())
-        flush_tri_buffer();
-
     use_shader_program(*Shaders.texture);
     bind_VAO(*Shaders.texture_vao);
     bind_VBO(*Shaders.texture_vbo);
@@ -837,7 +710,7 @@ void GLAPIENTRY debug_callback(GLenum source,
 {
     if(severity == GL_DEBUG_SEVERITY_NOTIFICATION)
         return;
-    if(strstr(message, "ragment shader")!=nullptr && strstr(message, "recompiled")!=nullptr)
+    if(strstr(message, "Fragment shader")!=nullptr && strstr(message, "recompiled")!=nullptr)
         return;
 
     std::call_once(gl_debug_once_flag, init_debug_callback_maps);
@@ -879,10 +752,6 @@ Renderer::Renderer(SDL_Window *window_, [[maybe_unused]] Uint32 flags):
             log_error(SDL_GetError());
         return context;
     }()),
-    current_font(nullptr),
-    show_fps_toggle(false),
-    fps_font(nullptr),
-    fps_color(gfx::Color::BLACK),
     render_target(nullptr),
     Shaders()
 {
@@ -904,272 +773,16 @@ Renderer::Renderer(SDL_Window *window_, [[maybe_unused]] Uint32 flags):
 }
 void Renderer::clean_memory()
 {
-    auto cutoff = Time::now() - TEXT_TEXTURE_CACHE_TIME;
-    for(auto i = text_time_last_used.begin(); i != text_time_last_used.end(); ) {
-        auto cached = *i;
-        if(cached.first > cutoff) { //all the remaining text textures have been in use recently
-            break;
-        } else {
-            for(const auto &cache_info: cached.second) { //clean up the old cached textures here
-                auto cached_texture = text_cache.find(cache_info);
-                k_ensures(cached_texture != text_cache.end()); //the cached texture doesn't exist somehow?
 
-                if(cached_texture != text_cache.end())
-                    text_cache.erase(cached_texture);
-            }
-            i = text_time_last_used.erase(i);
-        }
-    }
 }
 void Renderer::make_context_current()
 {
     SDL_GL_MakeCurrent(window, gl_context.get());
 }
-void Renderer::set_color(SRGB_Color c)
+void Renderer::clear(const Color4f &color)
 {
-    draw_color = c;
-}
-SRGB_Color Renderer::get_color() const
-{
-    return draw_color;
-}
-void Renderer::clear()
-{
-    glClearColor(draw_color.r, draw_color.g, draw_color.b, draw_color.a);
+    glClearColor(color.r, color.g, color.b, color.a);
     glClear(GL_COLOR_BUFFER_BIT);
-}
-
-void Renderer::fill_quad(const Point &p1, const Point &p2, const Point &p3, const Point &p4)
-{
-    _fill_quad<Renderer::CoordSys::Absolute>(p1, p2, p3, p4);
-}
-void Renderer::fill_quad_nc(const Point &p1, const Point &p2, const Point &p3, const Point &p4)
-{
-    _fill_quad<Renderer::CoordSys::NC>(p1, p2, p3, p4);
-}
-void Renderer::fill_rect(const Rect &r)
-{
-    fill_quad({r.x, r.y}, {r.x + r.w, r.y}, {r.x + r.w, r.y + r.h}, {r.x, r.y + r.h});
-}
-void Renderer::fill_rect_nc(const Rect &r)
-{
-    fill_quad_nc({r.x, r.y}, {r.x + r.w, r.y}, {r.x + r.w, r.y + r.h}, {r.x, r.y + r.h});
-}
-void Renderer::fill_rects(const std::vector<Rect> &rects)
-{
-    for(const auto &rect: rects)
-        fill_rect(rect);
-}
-void Renderer::draw_line([[maybe_unused]] const Line &l)
-{
-    k_assert(false);
-}
-void Renderer::draw_line([[maybe_unused]] Point p1, [[maybe_unused]] Point p2)
-{
-    k_assert(false);
-}
-void Renderer::draw_polyline([[maybe_unused]] const std::vector<Point> &points)
-{
-    k_assert(false);
-}
-void Renderer::draw_circle([[maybe_unused]] Circle c)
-{
-    k_assert(false);
-}
-void Renderer::fill_circle([[maybe_unused]] Circle c)
-{
-    k_assert(false);
-}
-void Renderer::fill_circles(const std::vector<Point> &centers, float r)
-{
-    for(const auto &c: centers)
-        fill_circle({c.x, c.y, r});
-}
-void Renderer::fill_decaying_circle([[maybe_unused]] Circle c)
-{
-    k_assert(false);
-}
-void Renderer::fill_decaying_circles(const std::vector<Point> &centers, float r)
-{
-    for(const auto &c: centers)
-        fill_decaying_circle({c.x, c.y, r});
-}
-
-void Renderer::invert_rect_colors([[maybe_unused]] const gfx::Rect &rect)
-{
-    k_assert(false);
-}
-
-void Renderer::set_font(std::shared_ptr<const Font> font)
-{
-    current_font = std::move(font);
-}
-const std::shared_ptr<const Font> &Renderer::get_font() const
-{
-    return current_font;
-}
-std::shared_ptr<Texture> Renderer::get_text_texture(std::string_view text, int sz, SRGB_Color c)
-{
-    k_expects(current_font != nullptr);
-
-    SDL_Color sdl_color{(Uint8)(c.r*255.99),
-                        (Uint8)(c.g*255.99),
-                        (Uint8)(c.b*255.99),
-                        (Uint8)(c.a*255.99)};
-    //unwrapped text effectively has a wrap length of numeric_limits...max()
-    TextTextureCacheInfo cache_info(text,
-                                    current_font->id,
-                                    sz,
-                                    std::numeric_limits<decltype(TextTextureCacheInfo::wrap_length)>::max(),
-                                    sdl_color.r, sdl_color.g, sdl_color.b, sdl_color.a);
-    auto current_time = Time::now();
-    auto cached = text_cache.find(cache_info);
-
-    std::shared_ptr<Texture> text_texture;
-
-    if(cached == text_cache.end()) { //the text texture doesn't exist in the cache, so create it
-        if(text.size() > 0) { //passing in a string of length 0 returns an error
-            auto desired_font = current_font->font_of_size[std::clamp(sz, 0, Font::MAX_FONT_SIZE)].get();
-
-            unique_ptr_sdl<SDL_Surface> temp_surface = TTF_RenderText_Blended(desired_font, text.data(), sdl_color);
-            if(temp_surface == nullptr)
-                log_error("TTF_RenderText_Blended returned nullptr: " + (std::string)SDL_GetError());
-            text_texture = std::shared_ptr<Texture>(new Texture(temp_surface.get(), true));
-        }
-        else //for empty strings, create a filler texture that's completely transparent
-            text_texture = make_texture_target(1, 1); //we have to make it a texture of nonzero size
-
-        text_cache.insert(std::make_pair(cache_info, TextTexture(text_texture, current_time)));
-        text_time_last_used[current_time].insert(cache_info);
-    } else {
-        k_assert(cached->second.text_texture != nullptr);
-        //the text is being used right now, so remove it from the time set where it used to be and
-        //put it in the set corresponding to the current time
-        auto prev_last_used_set = text_time_last_used.find(cached->second.time_last_used);
-        if(prev_last_used_set != text_time_last_used.end()) {
-            prev_last_used_set->second.erase(cache_info);
-        } else
-            log_warning("prev_last_used_set is nullptr (the cache isn't supposed to have cleaned it yet)");
-
-        cached->second.time_last_used = current_time;
-        text_time_last_used[current_time].insert(cache_info);
-        text_texture = cached->second.text_texture;
-    }
-    return text_texture;
-}
-std::shared_ptr<Texture> Renderer::get_text_texture_wrapped(std::string text, int sz, int wrap_length, SRGB_Color c)
-{
-    k_expects(current_font != nullptr);
-
-    SDL_Color sdl_color{(Uint8)(c.r*255.99),
-                        (Uint8)(c.g*255.99),
-                        (Uint8)(c.b*255.99),
-                        (Uint8)(c.a*255.99)};
-    TextTextureCacheInfo cache_info(text,
-                                    current_font->id,
-                                    sz,
-                                    wrap_length,
-                                    sdl_color.r, sdl_color.g, sdl_color.b, sdl_color.a);
-    auto current_time = Time::now();
-    auto cached = text_cache.find(cache_info);
-
-    std::shared_ptr<Texture> text_texture;
-
-    if(cached == text_cache.end()) { //the text texture doesn't exist in the cache, so create it
-        if(text.size() > 0) { //passing in a string of length 0 returns an error
-            std::vector<std::unique_ptr<Texture>> text_lines;
-            std::reverse(text.begin(), text.end());
-            while(text.size() > 0) {
-                std::string this_line;
-                while(text.size() > 0) {
-                    if(text.back() == '\n') {
-                        text.pop_back();
-                        break;
-                    }
-                    int w;
-                    //TODO: how fast is TTF_SizeText? Could this be a bottleneck?
-                    auto desired_font = current_font->font_of_size[std::clamp(sz, 0, Font::MAX_FONT_SIZE)].get();
-                    TTF_SizeText(desired_font, (this_line + text.back()).c_str(), &w, nullptr);
-                    if(w > wrap_length) {
-                        break;
-                    }
-                    this_line += text.back();
-                    text.pop_back();
-                }
-                if(this_line.size() == 0) {
-                    log_warning("text wrap length too small (can't find 1 character in a line)");
-                    //putting 1 character on this line is probably the easiest way to solve this problem
-                    this_line += text.back();
-                    text.pop_back();
-                }
-                auto desired_font = current_font->font_of_size[std::clamp(sz, 0, Font::MAX_FONT_SIZE)].get();
-                unique_ptr_sdl<SDL_Surface> temp_surface = TTF_RenderText_Blended(desired_font,
-                                                                                  this_line.c_str(),
-                                                                                  sdl_color);
-                if(temp_surface == nullptr)
-                    log_error("TTF_RenderText_Blended_Wrapped returned nullptr: " + (std::string)SDL_GetError());
-                text_lines.emplace_back(new Texture(temp_surface.get(), true));
-            }
-            k_ensures(text_lines.size() > 0);
-
-            int spacing = 1;
-            int texture_h = text_lines[0]->get_h();
-
-            text_texture = make_texture_target(wrap_length, spacing * texture_h * text_lines.size());
-            auto prev_target = get_target();
-            set_target(text_texture.get());
-            int cur_y = 0;
-            int first_h = -1;
-            for(const auto &t: text_lines) {
-                int w = t->get_w();
-                int h = t->get_h();
-                if(first_h == -1) {
-                    first_h = h;
-                } else
-                    k_assert(first_h == h); //all text of the same font and size should have the same height
-                Rect dst{0, (float)cur_y, (float)w, (float)h};
-                draw_texture(*t, dst);
-                cur_y += h * spacing;
-            }
-            set_target(prev_target);
-        }
-        else { //for empty strings, create a filler texture that's completely transparent
-            text_texture = make_texture_target(1, 1); //we have to make it a texture of nonzero size
-        }
-        text_cache.insert(std::make_pair(cache_info, TextTexture(text_texture, current_time)));
-        text_time_last_used[current_time].insert(cache_info);
-
-    } else {
-        k_assert(cached->second.text_texture != nullptr);
-        //the text is being used right now, so remove it from the set where it used to be and
-        //put it in the set corresponding to the current time
-        auto prev_last_used_set = text_time_last_used.find(cached->second.time_last_used);
-        if(prev_last_used_set != text_time_last_used.end()) {
-            prev_last_used_set->second.erase(cache_info);
-        } else
-            log_warning("prev_last_used_set is nullptr (the cache isn't supposed to have cleaned it yet)");
-
-        cached->second.time_last_used = current_time;
-        text_time_last_used[current_time].insert(cache_info);
-        text_texture = cached->second.text_texture;
-    }
-    return text_texture;
-}
-void Renderer::draw_text(std::string text, float x, float y, int sz, SRGB_Color c)
-{
-    auto text_texture = get_text_texture(std::move(text), sz, c);
-    int w = text_texture->get_w();
-    int h = text_texture->get_h();
-    Rect dst{x, y, (float)w, (float)h};
-    draw_texture(*text_texture, dst);
-}
-void Renderer::draw_text_wrapped(std::string text, float x, float y, int sz, int wrap_length, SRGB_Color c)
-{
-    auto text_texture = get_text_texture_wrapped(std::move(text), sz, wrap_length, c);
-    int w = text_texture->get_w();
-    int h = text_texture->get_h();
-    Rect dst{x, y, (float)w, (float)h};
-    draw_texture(*text_texture, dst);
 }
 std::unique_ptr<ASCII_Atlas> Renderer::make_ascii_atlas(Font *font, int font_size)
 {
@@ -1285,9 +898,6 @@ std::unique_ptr<ASCII_Atlas> Renderer::make_ascii_atlas(Font *font, int font_siz
 }
 void Renderer::set_target(Texture *target)
 {
-    if(Shaders.tri_buffer_ptr != Shaders.tri_buffer.begin())
-        flush_tri_buffer();
-
     if(target == nullptr) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     } else {
@@ -1362,15 +972,6 @@ std::unique_ptr<Texture> Renderer::make_texture_target(int w,
     tex->make_targetable();
     return tex;
 }
-std::unique_ptr<Texture> Renderer::create_texture_target(int w,
-                                                         int h,
-                                                         Texture::Format format,
-                                                         bool is_srgb,
-                                                         int samples,
-                                                         void *pixels) const
-{
-    return make_texture_target(w, h, format, is_srgb, samples, pixels);
-}
 void Renderer::draw_texture(const Texture &texture, const Rect &dst, const std::optional<Rect> &src_)
 {
     _draw_texture<CoordSys::Absolute>(texture, dst, src_);
@@ -1432,9 +1033,6 @@ void Renderer::draw_texture_ms(const Texture &texture, const Rect &dst, const st
     for(int i=0; i<4; i++)
         Shaders.texture_buffer[28 + i] = Shaders.texture_buffer[4 + i];
 
-    if(Shaders.tri_buffer_ptr != Shaders.tri_buffer.begin())
-        flush_tri_buffer();
-
     use_shader_program(*Shaders.texture_ms);
     bind_VAO(*Shaders.texture_vao);
     bind_VBO(*Shaders.texture_vbo);
@@ -1475,11 +1073,6 @@ void Renderer::set_blend_factors(const std::pair<BlendFactor, BlendFactor> &fact
 const std::pair<BlendFactor, BlendFactor>& Renderer::get_blend_factors() const
 {
     return blend_factors;
-}
-void Renderer::prepare_for_custom_shader()
-{
-    if(Shaders.tri_buffer_ptr != Shaders.tri_buffer.begin())
-        flush_tri_buffer();
 }
 GLuint Renderer::get_cur_program(Passkey<ShaderProgram>)
 {
@@ -1559,36 +1152,14 @@ void Renderer::bind_texture(const Texture &texture)
 {
     glBindTexture(texture.binding_point, texture.texture.id);
 }
-void Renderer::show_fps(bool toggle)
-{
-    show_fps_toggle = toggle;
-}
-int Renderer::set_fps_font(std::shared_ptr<const Font> font)
-{
-    fps_font = std::move(font);
-    return 0;
-}
-void Renderer::set_fps_color(SRGB_Color color)
-{
-    fps_color = color;
-}
 void Renderer::refresh()
 {
-    if(Shaders.tri_buffer_ptr != Shaders.tri_buffer.begin())
-        flush_tri_buffer();
-
     auto cur_time = Time::now();
     auto cutoff = cur_time - Time::Delta((int64_t)1, Time::Length::second);
     while(!frame_timestamps.empty() && frame_timestamps.front() < cutoff)
         frame_timestamps.pop();
     frame_timestamps.push(cur_time);
 
-    if(show_fps_toggle && fps_font!=nullptr) {
-        auto cur_font = get_font();
-        set_font(fps_font);
-        draw_text(to_str(frame_timestamps.size()) + " fps", 0, 0, 10, fps_color);
-        set_font(cur_font);
-    }
     SDL_GL_SwapWindow(window);
 }
 int Renderer::get_fps() const

@@ -121,14 +121,6 @@ public:
     bool is_focused() const;
     void clean_memory();
     InputQueue *get_input_queue(Passkey<GfxLibrary>);
-
-    friend class RendererAtny;
-    struct RendererAtny ///Attorney-Client idiom
-    {
-        static void show_fps(AbstractWindow *window, bool toggle);
-        static int set_fps_font(AbstractWindow *window, std::shared_ptr<const Font> font);
-        static void set_fps_color(AbstractWindow *window, SRGB_Color color);
-    };
 };
 
 /** D = "Directly Drawable". This is a basic window class. It is destroyed as soon as it goes out of scope.

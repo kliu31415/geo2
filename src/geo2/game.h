@@ -71,6 +71,7 @@ public:
 
     std::shared_ptr<kx::gfx::Texture> run(const LibraryPointers &libraries,
                                           kx::gfx::KWindowRunning *kwin_r,
+                                          GameRenderOpList *render_op_list,
                                           int render_w, int render_h);
 };
 

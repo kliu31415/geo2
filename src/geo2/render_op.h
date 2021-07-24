@@ -152,17 +152,18 @@ class RenderOpList
     std::unique_ptr<kx::gfx::ShaderProgram> text_ascii;
 
     kx::gfx::Renderer *cur_renderer;
-    std::vector<std::shared_ptr<RenderOpGroup>> op_groups;
+
     std::unique_ptr<UBO_Allocator> ubo_allocator;
 
     void render_text(kx::gfx::Renderer *rdr, const FontAtlas *font, const std::vector<float> &text_iu_data);
-protected:
-    void render_internal(kx::gfx::KWindowRunning *kwin_r, int render_w, int render_h);
 public:
     RenderOpList();
     virtual ~RenderOpList();
-    void set_op_groups(std::vector<std::shared_ptr<RenderOpGroup>> &&op_groups_);
-    void steal_op_groups_into(std::vector<std::shared_ptr<RenderOpGroup>> *op_groups_);
+
+    void render_and_clear_vec(std::vector<std::shared_ptr<RenderOpGroup>> *op_groups_vec,
+                              kx::gfx::KWindowRunning *kwin_r,
+                              int render_w,
+                              int render_h);
 };
 
 }

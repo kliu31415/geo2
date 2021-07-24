@@ -17,8 +17,6 @@ class GameGfx::Impl
     PersistentTextureTarget bloom_func_tex1;
     PersistentTextureTarget bloom_func_tex2;
 
-    std::unique_ptr<GameRenderOpList> render_op_list;
-
     std::unique_ptr<kx::gfx::ShaderProgram> bloom1;
     std::unique_ptr<kx::gfx::VAO> bloom1_vao;
 
@@ -90,10 +88,8 @@ class GameGfx::Impl
 public:
     PersistentTextureTarget render_func_return_texture;
 
-    Impl(kx::gfx::FontLibrary *font_library, kx::gfx::Renderer *rdr)
+    Impl(kx::gfx::Renderer *rdr)
     {
-        render_op_list = std::make_unique<GameRenderOpList>(font_library, rdr);
-
         auto bloom1_vert = rdr->make_vert_shader("geo2_data/shaders/bloom1_1.vert");
         auto bloom1_frag = rdr->make_frag_shader("geo2_data/shaders/bloom1_1.frag");
         bloom1 = rdr->make_shader_program(*bloom1_vert, *bloom1_frag);
@@ -178,7 +174,6 @@ public:
         tex2->set_min_filter(Texture::FilterAlgo::Linear);
         tex2->set_mag_filter(Texture::FilterAlgo::Linear);
 
-        rdr->prepare_for_custom_shader();
         rdr->set_active_texture(0);
 
         //STEP 1: extract bright colors
@@ -187,8 +182,7 @@ public:
         rdr->bind_VAO(*bloom1_vao);
         rdr->bind_texture(*texture);
         rdr->set_target(tex1.get());
-        rdr->set_color(SRGB_Color(0.0, 0.0, 0.0, 0.0));
-        rdr->clear();
+        rdr->clear(Color4f(0.0, 0.0, 0.0, 0.0));
         rdr->draw_arrays(DrawMode::TriangleStrip, 0, 4);
 
         //STEP 2: blur (horizontal, then vertical)
@@ -205,21 +199,18 @@ public:
         rdr->bind_VAO(*bloom2_vao);
         rdr->bind_texture(*tex1);
         rdr->set_target(tex2.get());
-        rdr->set_color(SRGB_Color(0.0, 0.0, 0.0, 0.0));
-        rdr->clear();
+        rdr->clear(Color4f(0.0, 0.0, 0.0, 0.0));
         rdr->draw_arrays(DrawMode::TriangleStrip, 0, 4);
 
         rdr->bind_texture(*tex2);
         rdr->set_target(tex1.get());
-        rdr->set_color(SRGB_Color(0.0, 0.0, 0.0, 0.0));
-        rdr->clear();
+        rdr->clear(Color4f(0.0, 0.0, 0.0, 0.0));
         bloom2->set_uniform1i(bloom2->get_uniform_loc("is_horizontal"), false);
         rdr->draw_arrays(DrawMode::TriangleStrip, 0, 4);
 
         //STEP 3: sum the textures
         rdr->set_target(tex2.get());
-        rdr->set_color(SRGB_Color(0.0, 0.0, 0.0, 0.0));
-        rdr->clear();
+        rdr->clear(Color4f(0.0, 0.0, 0.0, 0.0));
         rdr->set_blend_factors(BlendFactor::SrcAlpha, BlendFactor::One);
         rdr->draw_texture_nc(*texture, Rect(0, 0, 1, 1));
         rdr->draw_texture_nc(*tex1, Rect(0, 0, 1, 1));
@@ -230,6 +221,7 @@ public:
         rdr->draw_texture_nc(*tex2, Rect(0, 0, 1, 1));
     }
     std::shared_ptr<kx::gfx::Texture> render_map(kx::gfx::KWindowRunning *kwin_r,
+                                                 GameRenderOpList *render_op_list,
                                                  int map_render_w, int map_render_h,
                                                  float tile_len,
                                                  std::vector<std::shared_ptr<map_obj::MapObject>> *map_objs,
@@ -248,8 +240,7 @@ public:
                                                        1);
 
         rdr->set_target(map_texture.get());
-        rdr->set_color(Color::BLACK);
-        rdr->clear();
+        rdr->clear(Color4f(0, 0, 0, 1));
 
         //render the map and things on it
         map_obj::MapObjRenderArgs render_args;
@@ -274,10 +265,7 @@ public:
             (*map_objs)[i]->add_render_ops(render_args);
         }
 
-        render_op_list->set_op_groups(std::move(op_groups));
-        render_op_list->render(kwin_r, map_render_w, map_render_h);
-        render_op_list->steal_op_groups_into(&op_groups);
-        op_groups.clear();
+        render_op_list->render_and_clear_vec(&op_groups, kwin_r, map_render_w, map_render_h);
 
         //if we have a multisample texture, resolve it into a 1-sample texture
         if(map_texture->is_multisample()) {
@@ -287,6 +275,7 @@ public:
     }
     void render_HUD([[maybe_unused]] kx::gfx::Texture *texture,
                     kx::gfx::KWindowRunning *kwin_r,
+                    GameRenderOpList *render_op_list,
                     int render_w, int render_h,
                     map_obj::Player_Type1 *player)
     {
@@ -294,12 +283,9 @@ public:
 
         auto rdr = kwin_r->rdr();
 
-        player_resource_bars.render(render_op_list.get(), &op_groups, rdr, render_w, render_h, player);
+        player_resource_bars.render(render_op_list, &op_groups, rdr, render_w, render_h, player);
 
-        render_op_list->set_op_groups(std::move(op_groups));
-        render_op_list->render(kwin_r, render_w, render_h);
-        render_op_list->steal_op_groups_into(&op_groups);
-        op_groups.clear();
+        render_op_list->render_and_clear_vec(&op_groups, kwin_r, render_w, render_h);
     }
 };
 
@@ -308,8 +294,8 @@ GameGfx::GameGfx(kx::Passkey<Game>)
 {}
 GameGfx::~GameGfx()
 {}
-std::shared_ptr<kx::gfx::Texture> GameGfx::render(kx::gfx::FontLibrary *font_library,
-                                                  kx::gfx::KWindowRunning *kwin_r,
+std::shared_ptr<kx::gfx::Texture> GameGfx::render(kx::gfx::KWindowRunning *kwin_r,
+                                                  GameRenderOpList *render_op_list,
                                                   int render_w, int render_h,
                                                   float tile_len,
                                                   std::vector<std::shared_ptr<map_obj::MapObject>> *map_objs,
@@ -322,7 +308,7 @@ std::shared_ptr<kx::gfx::Texture> GameGfx::render(kx::gfx::FontLibrary *font_lib
     //create the texture where the map will be rendered; note that this isn't the whole screen.
     auto rdr = kwin_r->rdr();
     if(impl==nullptr) {
-        impl = std::make_unique<Impl>(font_library, rdr);
+        impl = std::make_unique<Impl>(rdr);
     }
 
     float w = render_w;
@@ -330,6 +316,7 @@ std::shared_ptr<kx::gfx::Texture> GameGfx::render(kx::gfx::FontLibrary *font_lib
     int map_render_w = w;
     int map_render_h = h;
     auto map_texture = impl->render_map(kwin_r,
+                                        render_op_list,
                                         map_render_w,
                                         map_render_h,
                                         tile_len,
@@ -350,7 +337,7 @@ std::shared_ptr<kx::gfx::Texture> GameGfx::render(kx::gfx::FontLibrary *font_lib
     rdr->set_target(return_texture.get());
     rdr->draw_texture(*map_texture, Rect(0, 0, map_render_w, map_render_h));
 
-    impl->render_HUD(return_texture.get(), kwin_r, render_w, render_h, player);
+    impl->render_HUD(return_texture.get(), kwin_r, render_op_list, render_w, render_h, player);
 
     impl->apply_bloom(rdr, return_texture.get(), 0.1*tile_len);
 

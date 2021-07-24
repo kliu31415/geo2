@@ -122,28 +122,11 @@ const FontAtlas *GameRenderOpList::Fonts::get(std::string_view name) const
     return find_result->second.get();
 }
 
-GameRenderOpList::GameRenderOpList(kx::gfx::FontLibrary *font_library, kx::gfx::Renderer *renderer):
+GameRenderOpList::GameRenderOpList(kx::gfx::FontLibrary *font_library,
+                                   kx::gfx::Renderer *renderer):
     cur_renderer(renderer)
 {
     shaders.init(cur_renderer, {});
     fonts.init(font_library, cur_renderer, {});
 }
-void GameRenderOpList::render(kx::gfx::KWindowRunning *kwin_r,
-                              int render_w,
-                              int render_h)
-{
-    //update shader global values (if any)
-    //...
-    //...code here
-    //...
-
-    //render
-    auto rdr = kwin_r->rdr();
-    if(cur_renderer != rdr) {
-        cur_renderer = rdr;
-        shaders.init(rdr, {});
-    }
-    render_internal(kwin_r, render_w, render_h);
-}
-
 }

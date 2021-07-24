@@ -123,8 +123,7 @@ KWindow::Status KWindow::run()
     }
 
     rdr()->set_target(nullptr);
-    rdr()->set_color(background_color);
-    rdr()->clear();
+    rdr()->clear(background_color);
 
     //render all the KItem buffer textures to the screen in opposite order
     for(int i=(int)item_textures.size()-1; i>=0; i--) {

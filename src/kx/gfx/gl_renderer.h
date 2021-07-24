@@ -1,17 +1,12 @@
 #pragma once
 
-#include "kx/gfx/font.h"
 #include "kx/gfx/renderer_types.h"
-#include "kx/sdl_deleter.h"
 #include "kx/util.h"
-#include "kx/time.h"
 #include "kx/kx_span.h"
+#include "kx/time.h"
 
 #include <string>
-#include <map>
 #include <memory>
-#include <set>
-#include <queue>
 
 struct SDL_Window;
 
@@ -280,26 +275,6 @@ class Renderer final
 {
     enum class CoordSys {Absolute, NC};
 
-    struct TextTextureCacheInfo final
-    {
-        const std::string text;
-        const int font_id, size;
-        const int wrap_length;
-        const uint8_t r, g, b, a;
-
-        TextTextureCacheInfo(std::string_view text_, int font_id_, int size_,
-                             int wrap_length_,
-                             uint8_t r_, uint8_t g_, uint8_t b_, uint8_t a_);
-        bool operator < (const TextTextureCacheInfo &other) const;
-    };
-
-    struct TextTexture final
-    {
-        std::shared_ptr<Texture> text_texture;
-        Time time_last_used;
-        TextTexture(std::shared_ptr<Texture> text_texture_, Time time_last_used_);
-    };
-
     struct GLDeleteContext
     {
         void operator()(void *context) const;
@@ -308,27 +283,18 @@ class Renderer final
     SDL_Window *window;
     std::unique_ptr<void, GLDeleteContext> gl_context;
 
-    std::map<TextTextureCacheInfo, TextTexture> text_cache;
-    std::map<Time, std::set<TextTextureCacheInfo> > text_time_last_used;
-    std::shared_ptr<const Font> current_font;
-
     //actually ints, but float for speed
     float renderer_w;
     float renderer_h;
     float renderer_w_div2;
     float renderer_h_div2;
 
-    bool show_fps_toggle;
-    std::shared_ptr<const Font> fps_font;
-    gfx::SRGB_Color fps_color;
     std::queue<Time> frame_timestamps; /** used for keeping track of fps
                                         *  (contains all frame timestamps in the last second)
                                         */
     Texture *render_target;
 
     std::pair<BlendFactor, BlendFactor> blend_factors;
-
-    SRGB_Color draw_color;
 
     struct _Shaders
     {
@@ -338,12 +304,6 @@ class Renderer final
         uint32_t active_VBO_id;
         uint32_t active_EBO_id;
         uint32_t active_UBO_id;
-
-        std::unique_ptr<ShaderProgram> triangle;
-        std::unique_ptr<VAO> triangle_vao;
-        std::shared_ptr<VBO> triangle_vbo;
-        std::vector<float> tri_buffer;
-        decltype(tri_buffer.begin()) tri_buffer_ptr;
 
         std::unique_ptr<ShaderProgram> texture;
         std::unique_ptr<ShaderProgram> texture_ms;
@@ -381,9 +341,6 @@ class Renderer final
     template<CoordSys CS>
     void _draw_texture(const Texture &texture, const Rect &dst, const std::optional<Rect> &src_ = {});
 public:
-    ///how long a text texture can go unused for before getting evicted (around 1s works well)
-    static const Time::Delta TEXT_TEXTURE_CACHE_TIME;
-
     Renderer(SDL_Window *window_, uint32_t flags);
 
     ///noncopyable because that's an AbstractWindow can only have one Renderer
@@ -452,53 +409,13 @@ public:
         return 1.0f - y;
     }
 
-    /** cleans up old cached text textures. It's best to not call this
-     *  directly and use the global clean_memory() function instead.
+    /** Doesn't do anything right now, but might in the future
      */
     void clean_memory();
 
     void make_context_current();
 
-    void set_color(SRGB_Color c);
-    SRGB_Color get_color() const;
-
-    void clear();
-
-    void fill_quad(const Point &p1, const Point &p2, const Point &p3, const Point &p4);
-    void fill_quad_nc(const Point &p1, const Point &p2, const Point &p3, const Point &p4);
-
-    void fill_rect(const Rect &r);
-    void fill_rect_nc(const Rect &r);
-    void fill_rects(const std::vector<Rect> &rects);
-
-    void draw_line(const Line &l);
-    void draw_line(Point p1, Point p2);
-    void draw_polyline(const std::vector<Point> &points);
-
-    void draw_circle(Circle c); ///radius has to be in (1, 9999)
-    void fill_circle(Circle c); ///radius has to be in (1, 9999)
-    void fill_circles(const std::vector<Point> &centers, float r); ///radius has to be in (1, 9999)
-
-    void fill_decaying_circle(Circle c); ///radius has to be in (1, 9999)
-    void fill_decaying_circles(const std::vector<Point> &centers, float r); ///radius has to be in (1, 9999)
-
-    void invert_rect_colors(const gfx::Rect &rect);
-
-    void set_font(std::shared_ptr<const Font> font);
-    const std::shared_ptr<const Font> &get_font() const;
-
-    std::shared_ptr<Texture> get_text_texture(std::string_view file_name,
-                                              int sz,
-                                              SRGB_Color c = Color::BLACK);
-    ///no const reference to the string because we mutate it
-    std::shared_ptr<Texture> get_text_texture_wrapped(std::string text,
-                                                      int sz,
-                                                      int wrap_length,
-                                                      SRGB_Color c = Color::BLACK);
-
-    void draw_text(std::string text, float x, float y, int sz, SRGB_Color c = Color::BLACK);
-    void draw_text_wrapped(std::string text, float x, float y, int sz, int wrap_length,
-                           SRGB_Color c = Color::BLACK);
+    void clear(const Color4f& color);
 
     std::unique_ptr<ASCII_Atlas> make_ascii_atlas(Font *font, int font_size);
 
@@ -524,14 +441,9 @@ public:
                                                  bool is_srgb = true,
                                                  int samples = 1,
                                                  void *pixels = nullptr) const;
-    [[deprecated]]
-    std::unique_ptr<Texture> create_texture_target(int w,
-                                                   int h,
-                                                   Texture::Format format = Texture::Format::RGBA8888,
-                                                   bool is_srgb = true,
-                                                   int samples = 1,
-                                                   void *pixels = nullptr) const;
 
+    /** The draw_texture_* functions rebind the shader program, VBO, and VAO.
+     */
     ///use these only for non-multisampled textures
     void draw_texture(const Texture &texture, const Rect &dst, const std::optional<Rect> &src_ = {});
     void draw_texture_nc(const Texture &texture, const Rect &dst, const std::optional<Rect> &src_ = {});
@@ -567,20 +479,6 @@ public:
     uint32_t get_active_EBO_id(Passkey<EBO>);
     uint32_t get_active_UBO_id(Passkey<UBO>);
 
-    /** If you call draw_arrays/draw_elements with a custom shader, then you must call
-     *  prepare_for_custom_shader before calling any of the opengl related
-     *  functions in the block below it. This is necessary to flush any buffers.
-     *  If you don't call this function and try to set up stuff for a custom shader,
-     *  the buffers will get flushed if they are nonempty when draw_ is called,
-     *  which involves likely undesired state changes (e.g. the VAO might be rebound
-     *  in the process of flushing buffers).
-     *
-     *  Buffers are filled by the renderer when it is commanded to do predefined
-     *  drawing commands. For example, when draw_quad is called, the renderer
-     *  puts triangles in a buffer, and the triangles will be drawn when the buffer
-     *  is flushed later.
-     */
-    void prepare_for_custom_shader();
     void bind_VAO(const VAO&);
     void bind_VBO(const VBO&);
     void bind_EBO(const EBO&);
@@ -593,9 +491,6 @@ public:
     void set_active_texture(int tex_num);
     void bind_texture(const Texture &texture);
 
-    void show_fps(bool toggle);
-    int set_fps_font(std::shared_ptr<const Font> font);
-    void set_fps_color(SRGB_Color color);
     void refresh();
     int get_fps() const;
 
