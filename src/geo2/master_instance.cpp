@@ -115,7 +115,7 @@ MasterInstance::MasterInstance(const LibraryPointers &libraries_, const kx::gfx:
     KItem(render_rect_),
     state(State::InGame),
     libraries(libraries_),
-    game(std::make_unique<Game>())
+    game(new Game({}))
 {
 
 }

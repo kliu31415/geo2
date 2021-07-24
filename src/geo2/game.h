@@ -18,7 +18,7 @@ namespace geo2 {
 
 class Game final
 {
-    std::unique_ptr<struct _gfx> gfx;
+    std::unique_ptr<class GameGfx> gfx;
 
     std::shared_ptr<map_obj::Player_Type1> player;
     std::vector<std::shared_ptr<map_obj::MapObject>> map_objs;
@@ -59,19 +59,8 @@ class Game final
                           MapCoord cursor_pos,
                           kx::gfx::mouse_state_t mouse_state,
                           kx::gfx::keyboard_state_t keyboard_state);
-
-    std::shared_ptr<kx::gfx::Texture> render_map(kx::gfx::KWindowRunning *kwin_r,
-                                                 int map_render_w, int map_render_h,
-                                                 float tile_len);
-    void render_HUD(kx::gfx::Texture *texture,
-                    kx::gfx::KWindowRunning *kwin_r,
-                    int render_w, int render_h);
-    std::shared_ptr<kx::gfx::Texture> render(kx::gfx::FontLibrary *font_library,
-                                             kx::gfx::KWindowRunning *kwin_r,
-                                             int render_w, int render_h,
-                                             float tile_len);
 public:
-    Game();
+    Game(kx::Passkey<class MasterInstance>);
     ~Game();
 
     ///noncopyable and nonmovable for safety

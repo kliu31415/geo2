@@ -1,3 +1,5 @@
+#pragma once
+
 #include "geo2/map_obj/unit_type1/unit_type1.h"
 #include "geo2/weapon/weapon.h"
 

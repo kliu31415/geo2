@@ -128,8 +128,7 @@ GameRenderOpList::GameRenderOpList(kx::gfx::FontLibrary *font_library, kx::gfx::
     shaders.init(cur_renderer, {});
     fonts.init(font_library, cur_renderer, {});
 }
-void GameRenderOpList::render([[maybe_unused]] const Game &game,
-                              kx::gfx::KWindowRunning *kwin_r,
+void GameRenderOpList::render(kx::gfx::KWindowRunning *kwin_r,
                               int render_w,
                               int render_h)
 {

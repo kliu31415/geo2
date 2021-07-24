@@ -522,7 +522,7 @@
 	<mutex>
 	<map>
 
-1627016025 d:\code\cbprojects\geo2\src\geo2\game.h
+1627108980 d:\code\cbprojects\geo2\src\geo2\game.h
 	"geo2/map_obj/unit_type1/player_type1.h"
 	"geo2/ceng1_collision.h"
 	"geo2/ceng1_data.h"
@@ -535,12 +535,12 @@
 	<vector>
 	<cstdint>
 
-1627021135 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
+1627108999 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
 	"geo2/map_obj/floor_type1/test_terrain1.h"
 	"geo2/game_render_op_list.h"
 	"geo2/game.h"
+	"geo2/game_gfx.h"
 	"geo2/map_obj/map_object.h"
-	"geo2/map_obj/map_obj_args.h"
 	"geo2/collision_engine1.h"
 	"geo2/texture_utils.h"
 	"geo2/level_gen/test2.h"
@@ -558,7 +558,7 @@
 	"geo2/library_pointers.h"
 	"kx/gfx/kwindow.h"
 
-1626842789 source:d:\code\cbprojects\geo2\src\geo2\master_instance.cpp
+1627108992 source:d:\code\cbprojects\geo2\src\geo2\master_instance.cpp
 	"geo2/master_instance.h"
 	"geo2/texture_utils.h"
 	"kx/gfx/renderer.h"
@@ -627,12 +627,12 @@
 	<memory>
 	<string>
 
-1627020466 source:d:\code\cbprojects\geo2\src\geo2\game_render_op_list.cpp
+1627108589 source:d:\code\cbprojects\geo2\src\geo2\game_render_op_list.cpp
 	"geo2/game_render_op_list.h"
 	"kx/gfx/kwindow.h"
 	"kx/gfx/renderer.h"
 
-1627021072 d:\code\cbprojects\geo2\src\geo2\game_render_op_list.h
+1627108589 d:\code\cbprojects\geo2\src\geo2\game_render_op_list.h
 	"geo2/render_op.h"
 
 1626829187 d:\code\cbprojects\geo2\src\geo2\collision_engine1.h
@@ -786,7 +786,7 @@
 1624215962 source:d:\code\cbprojects\geo2\src\geo2\map_objs\unit_type1\pig_1.cpp
 	"geo2/map_objs/unit_type1/pig_1.h"
 
-1627016175 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\player_type1.h
+1627108338 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\player_type1.h
 	"geo2/map_obj/unit_type1/unit_type1.h"
 	"geo2/weapon/weapon.h"
 
@@ -1135,4 +1135,15 @@
 
 1626937960 d:\code\cbprojects\geo2\src\kx\sfx\sfx.h
 	<optional>
+
+1627109040 d:\code\cbprojects\geo2\src\geo2\game_gfx.h
+	<memory>
+	"kx/util.h"
+
+1627109596 source:d:\code\cbprojects\geo2\src\geo2\game_gfx.cpp
+	"geo2/game_gfx.h"
+	"geo2/map_obj/map_object.h"
+	"geo2/map_obj/map_obj_args.h"
+	"geo2/map_obj/unit_type1/player_type1.h"
+	"geo2/texture_utils.h"
 

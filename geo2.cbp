@@ -52,6 +52,10 @@
 		<Unit filename="src/geo2/game.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="src/geo2/game_gfx.cpp" />
+		<Unit filename="src/geo2/game_gfx.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="src/geo2/game_render_op_list.cpp" />
 		<Unit filename="src/geo2/game_render_op_list.h">
 			<Option target="&lt;{~None~}&gt;" />
