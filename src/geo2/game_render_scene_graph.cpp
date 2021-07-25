@@ -86,6 +86,11 @@ public:
                            "hud/resource_bar",
                            204, DM::TriangleStrip, 4,
                            5);
+
+        make_shader_vf_1ub("line",
+                           "line",
+                           512, DM::Lines, 2,
+                           2);
     }
 };
 

@@ -65,7 +65,7 @@
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/geo2/level.h" />
-		<Unit filename="src/geo2/level_gen/level_generator.h">
+		<Unit filename="src/geo2/level_gen/named_level_generator.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/geo2/level_gen/test2.cpp" />

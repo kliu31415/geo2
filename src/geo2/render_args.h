@@ -5,6 +5,9 @@
 
 namespace geo2 {
 
+/** Note that ceng_data can't be accessed in RenderArgs; this is intentional,as
+ *  it kills a dependency that could possibly cause bugs.
+ */
 class RenderArgs
 {
     const kx::gfx::Renderer *rdr;

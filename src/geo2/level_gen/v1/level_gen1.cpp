@@ -2,10 +2,21 @@
 
 namespace geo2 { namespace level_gen { namespace v1 {
 
-LevelGen::LevelGen():
-    room_gen_set_id(0)
+RoomGenerator::RoomGenerator(LevelGenerator *level_generator):
+    id(level_generator->get_new_room_gen_id({}))
+{}
+room_gen_id_t RoomGenerator::get_id() const
+{
+    return id;
+}
+LevelGenerator::LevelGenerator():
+    room_gen_id_counter(0)
 {
 
+}
+room_gen_id_t LevelGenerator::get_new_room_gen_id(kx::Passkey<RoomGenerator>)
+{
+    return room_gen_id_counter++;
 }
 
 }}}

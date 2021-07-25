@@ -4,7 +4,7 @@
 
 namespace geo2 { namespace level_gen {
 
-Level LevelGenerator<LevelName::Test2>::generate([[maybe_unused]] Game *game)
+Level NamedLevelGenerator<LevelName::Test2>::generate([[maybe_unused]] Game *game)
 {
     using namespace map_obj;
 

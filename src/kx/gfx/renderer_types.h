@@ -122,21 +122,29 @@ enum class BlendFactor {
     Zero = 0,
     One = 1,
     SrcAlpha = 2,
-    OneMinusSrcAlpha = 3
+    OneMinusSrcAlpha = 3,
 };
 
 enum class DrawMode {
-    Triangles = 0,
-    TriangleFan = 1,
-    TriangleStrip = 2
+    Points = 0,
+    Lines = 1,
+    LineStrip = 2,
+    LineLoop = 3,
+    Triangles = 4,
+    TriangleFan = 5,
+    TriangleStrip = 6,
 };
 
 enum class Flip {
-    None, Horizontal, Vertical
+    None,
+    Horizontal,
+    Vertical
 };
 
 enum class _BufferType {
-    VBO, EBO, UBO
+    VBO,
+    EBO,
+    UBO
 };
 
 }}

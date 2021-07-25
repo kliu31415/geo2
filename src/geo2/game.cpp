@@ -49,10 +49,10 @@ void Game::generate_and_start_level(LevelName level_name)
         level.player_start_y = 10;
         break;
     case LevelName::Test2:
-        level = LevelGenerator<LevelName::Test2>().generate(this);
+        level = NamedLevelGenerator<LevelName::Test2>().generate(this);
         break;
     case LevelName::Test3:
-        level = LevelGenerator<LevelName::Test3>().generate(this);
+        level = NamedLevelGenerator<LevelName::Test3>().generate(this);
         break;
     default:
         kx::log_error("Game attempted to generate unknown level");
@@ -459,16 +459,22 @@ std::shared_ptr<kx::gfx::Texture> Game::run(const LibraryPointers &libraries,
     prev_mouse_y = mouse_y;
 
     //a few hundred ms (integrated GPU, 1920x1080, Test3)
-    auto ret = gfx->render(kwin_r,
-                           render_scene_graph,
-                           render_w,
-                           render_h,
-                           tile_len,
-                           &map_objs,
-                           &gfx_only_map_objs,
-                           player.get(),
-                           &rngs,
-                           cur_level_time);
+    GameGfxRenderArgs render_args;
+    render_args.flags = 0;
+    render_args.flags |= GameGfxRenderArgs::FLAG_SHOW_HITBOXES;
+    render_args.kwin_r = kwin_r;
+    render_args.render_scene_graph = render_scene_graph;
+    render_args.render_w = render_w;
+    render_args.render_h = render_h;
+    render_args.tile_len = tile_len;
+    render_args.map_objs = &map_objs;
+    render_args.gfx_only_map_objs = &gfx_only_map_objs;
+    render_args.ceng_data = &ceng_data;
+    render_args.player = player.get();
+    render_args.rngs = &rngs;
+    render_args.cur_level_time = cur_level_time;
+
+    auto ret = gfx->render(render_args);
     return ret;
 }
 }

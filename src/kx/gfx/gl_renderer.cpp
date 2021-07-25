@@ -1123,11 +1123,19 @@ void Renderer::use_shader_program(const ShaderProgram &program)
         glUseProgram(program.program.id);
     }
 }
-constexpr std::array<GLenum, 3> draw_mode_enum_convert {
+constexpr std::array<GLenum, 7> draw_mode_enum_convert {
+    GL_POINTS,
+    GL_LINES,
+    GL_LINE_STRIP,
+    GL_LINE_LOOP,
     GL_TRIANGLES,
     GL_TRIANGLE_FAN,
-    GL_TRIANGLE_STRIP
+    GL_TRIANGLE_STRIP,
 };
+static_assert(draw_mode_enum_convert[(int)DrawMode::Points] == GL_POINTS);
+static_assert(draw_mode_enum_convert[(int)DrawMode::Lines] == GL_LINES);
+static_assert(draw_mode_enum_convert[(int)DrawMode::LineStrip] == GL_LINE_STRIP);
+static_assert(draw_mode_enum_convert[(int)DrawMode::LineLoop] == GL_LINE_LOOP);
 static_assert(draw_mode_enum_convert[(int)DrawMode::Triangles] == GL_TRIANGLES);
 static_assert(draw_mode_enum_convert[(int)DrawMode::TriangleFan] == GL_TRIANGLE_FAN);
 static_assert(draw_mode_enum_convert[(int)DrawMode::TriangleStrip] == GL_TRIANGLE_STRIP);

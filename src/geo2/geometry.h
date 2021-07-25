@@ -259,13 +259,13 @@ class Polygon final
 
     Polygon(uint32_t num_sides);
     template<class T> Polygon(kx::kx_span<_MapCoord<T>> vertices);
-    uint32_t get_num_vertices() const;
     void calc_aabb();
     void translate_internal(float dx, float dy);
     void rotate_about_origin_internal(float theta);
 
     inline float *get_verts() const;
 public:
+    uint32_t get_num_vertices() const;
     static constexpr size_t offset_of_aabb()
     {
         return offsetof(Polygon, aabb);

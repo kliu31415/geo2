@@ -194,10 +194,6 @@ template<class T> Polygon::Polygon(kx::kx_span<_MapCoord<T>> vertices):
 
     calc_aabb();
 }
-uint32_t Polygon::get_num_vertices() const
-{
-    return n;
-}
 void Polygon::calc_aabb()
 {
     auto verts = get_verts();
@@ -272,6 +268,10 @@ void Polygon::rotate_about_origin_internal(float theta)
 inline float *Polygon::get_verts() const
 {
     return (float*)((uint8_t*)this + sizeof(*this));
+}
+uint32_t Polygon::get_num_vertices() const
+{
+    return n;
 }
 void Polygon::operator delete(void *ptr)
 {
