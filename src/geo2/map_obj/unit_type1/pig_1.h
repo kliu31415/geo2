@@ -2,7 +2,7 @@
 
 #include "geo2/map_obj/unit_type1/unit_type1.h"
 #include "geo2/map_obj/unit_type1/movement/algo1.h"
-#include "geo2/game_render_op_list.h"
+#include "geo2/game_render_scene_graph.h"
 
 #include <array>
 #include <functional>

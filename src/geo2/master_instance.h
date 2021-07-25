@@ -19,7 +19,7 @@ class MasterInstance final: public kx::gfx::KItem
     LibraryPointers libraries;
 
     std::unique_ptr<Game> game;
-    std::unique_ptr<class gfx_impl> gfx;
+    std::unique_ptr<class MasterInstanceGfxImpl> gfx;
 public:
     MasterInstance(const LibraryPointers &libraries_, const kx::gfx::Rect &render_rect_);
 

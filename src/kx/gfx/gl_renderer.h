@@ -264,7 +264,7 @@ struct ASCII_Atlas
     std::array<std::array<float, MAX_ASCII_CHAR+1>, MAX_ASCII_CHAR+1> kerning;
 };
 
-constexpr int NUM_SAMPLES_DEFAULT = 4;
+constexpr int NUM_SAMPLES_DEFAULT = 1;
 
 using renderer_flags_t = uint32_t;
 /** -The origin (0, 0) is at the top left.
@@ -289,9 +289,9 @@ class Renderer final
     float renderer_w_div2;
     float renderer_h_div2;
 
-    std::queue<Time> frame_timestamps; /** used for keeping track of fps
-                                        *  (contains all frame timestamps in the last second)
-                                        */
+    Time cur_frame_start_time;
+    //pair of start time of current frame, end time of current frame
+    std::deque<std::pair<Time, Time>> frame_timestamps;
     Texture *render_target;
 
     std::pair<BlendFactor, BlendFactor> blend_factors;
@@ -492,7 +492,8 @@ public:
     void bind_texture(const Texture &texture);
 
     void refresh();
-    int get_fps() const;
+    float get_fps() const;
+    //float get_estimated_program_load() const;
 
     int get_num_samples() const;
 };

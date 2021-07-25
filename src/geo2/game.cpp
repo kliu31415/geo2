@@ -1,5 +1,5 @@
 #include "geo2/map_obj/floor_type1/test_terrain1.h"
-#include "geo2/game_render_op_list.h"
+#include "geo2/game_render_scene_graph.h"
 #include "geo2/game.h"
 #include "geo2/game_gfx.h"
 #include "geo2/map_obj/map_object.h"
@@ -284,9 +284,36 @@ void Game::run3(double tick_len)
 }
 void Game::process_added_map_objs()
 {
+    using namespace map_obj;
+
+    #ifdef __GNUC__
+    //optimization: if a map object doesn't override any of a certain set of functions,
+    //then we can label it noncollidable and purely cosmetic and put it in a separate
+    //vector that will only be used during rendering. This hack is only supported by some
+    //compilers.
+    size_t new_size = 0;
+    for(size_t i=0; i<map_objs_to_add.size(); i++) {
+        const auto &this_obj = *map_objs_to_add[i];
+        //If we add run2_st and sfx as functions, then we should add those into the condition here too.
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wpedantic"
+        if((void*)(&MapObject::init) == (void*)(this_obj.*(&MapObject::init)) &&
+           (void*)(&MapObject::run1_mt) == (void*)(this_obj.*(&MapObject::run1_mt)) &&
+           (void*)(&MapObject::run3_mt) == (void*)(this_obj.*(&MapObject::run3_mt)))
+        #pragma GCC diagnostic pop
+        {
+            gfx_only_map_objs.push_back(std::move(map_objs_to_add[i]));
+        } else {
+            map_objs_to_add[new_size] = map_objs_to_add[i];
+            new_size++;
+        }
+    }
+    map_objs_to_add.resize(new_size);
+    #endif
+
     //everything in map_objs_to_add is moved to map_objs
     ceng_data.resize(map_objs.size() + map_objs_to_add.size());
-    map_obj::MapObjInitArgs args;
+    MapObjInitArgs args;
     args.set_rng(&rngs[0]);
     size_t ceng_data_idx = map_objs.size();
     for(auto &mobj: map_objs_to_add) {
@@ -396,7 +423,7 @@ inline float lerp(double a, double b, double t)
 }
 std::shared_ptr<kx::gfx::Texture> Game::run(const LibraryPointers &libraries,
                                             kx::gfx::KWindowRunning *kwin_r,
-                                            GameRenderOpList *render_op_list,
+                                            GameRenderSceneGraph *render_scene_graph,
                                             int render_w, int render_h)
 {
     constexpr int TICKS_PER_FRAME = 10;
@@ -433,11 +460,12 @@ std::shared_ptr<kx::gfx::Texture> Game::run(const LibraryPointers &libraries,
 
     //a few hundred ms (integrated GPU, 1920x1080, Test3)
     auto ret = gfx->render(kwin_r,
-                           render_op_list,
+                           render_scene_graph,
                            render_w,
                            render_h,
                            tile_len,
                            &map_objs,
+                           &gfx_only_map_objs,
                            player.get(),
                            &rngs,
                            cur_level_time);

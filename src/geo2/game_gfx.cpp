@@ -13,7 +13,7 @@ class GameGfx::Impl
     std::vector<std::shared_ptr<RenderOpGroup>> op_groups;
 
     PersistentTextureTarget render_func_map_texture;
-    PersistentTextureTarget resolve_ms_func_texture;
+    std::map<kx::gfx::Texture*, PersistentTextureTarget> resolve_ms_func_texture;
     PersistentTextureTarget bloom_func_tex1;
     PersistentTextureTarget bloom_func_tex2;
 
@@ -32,7 +32,7 @@ class GameGfx::Impl
         std::shared_ptr<RenderOpText> hp_text_op;
         kx::kx_span<float> hp_bar_iu;
     public:
-        void render(GameRenderOpList *render_op_list,
+        void render(GameRenderSceneGraph *render_scene_graph,
                     std::vector<std::shared_ptr<RenderOpGroup>> *op_groups,
                     kx::gfx::Renderer *rdr,
                     int render_w, int render_h,
@@ -47,14 +47,14 @@ class GameGfx::Impl
                 float v3y = 0.08 * render_h;
                 constexpr float BORDER_Y = 0.12;
 
-                auto hp_bar_op = std::make_unique<RenderOpShader>(*render_op_list->shaders.get("resource_bar"));
+                auto hp_bar_op = std::make_unique<RenderOpShader>(*render_scene_graph->shaders.get("resource_bar"));
                 auto iu_map = hp_bar_op->map_instance_uniform(0);
                 hp_bar_iu = {(float*)iu_map.begin(), (float*)iu_map.end()};
                 hp_op_group = std::make_shared<RenderOpGroup>(HUD_RENDER_PRIORITY);
                 hp_op_group->add_op(std::move(hp_bar_op));
 
                 hp_text_op = std::make_shared<RenderOpText>();
-                hp_text_op->set_font(render_op_list->fonts.get("black_chancery"));
+                hp_text_op->set_font(render_scene_graph->fonts.get("black_chancery"));
                 hp_text_op->set_color(LinearColor(0, 1, 1, 0.98));
                 hp_text_op->set_x(v0x + 2.0 * BORDER_Y * (v3y - v0y));
                 hp_text_op->set_y(v0y + 1.4 * BORDER_Y * (v3y - v0y));
@@ -118,12 +118,12 @@ public:
     }
     std::shared_ptr<kx::gfx::Texture> resolve_multisamples(kx::gfx::Renderer *rdr, kx::gfx::Texture *tex)
     {
-        auto no_ms_tex = resolve_ms_func_texture.get(rdr,
-                                                     tex->get_w(),
-                                                     tex->get_h(),
-                                                     tex->get_format(),
-                                                     tex->is_srgb(),
-                                                     1);
+        auto no_ms_tex = resolve_ms_func_texture[tex].get(rdr,
+                                                          tex->get_w(),
+                                                          tex->get_h(),
+                                                          tex->get_format(),
+                                                          tex->is_srgb(),
+                                                          1);
         rdr->set_target(no_ms_tex.get());
         rdr->draw_texture_ms(*tex, kx::gfx::Rect(0, 0, tex->get_w(), tex->get_h()), {});
         return no_ms_tex;
@@ -220,33 +220,28 @@ public:
         rdr->set_target(texture);
         rdr->draw_texture_nc(*tex2, Rect(0, 0, 1, 1));
     }
-    std::shared_ptr<kx::gfx::Texture> render_map(kx::gfx::KWindowRunning *kwin_r,
-                                                 GameRenderOpList *render_op_list,
-                                                 int map_render_w, int map_render_h,
-                                                 float tile_len,
-                                                 std::vector<std::shared_ptr<map_obj::MapObject>> *map_objs,
-                                                 map_obj::Player_Type1 *player,
-                                                 std::vector<StandardRNG> *rngs,
-                                                 double cur_level_time)
+    void render_map(kx::gfx::Texture *texture,
+                    kx::gfx::KWindowRunning *kwin_r,
+                    GameRenderSceneGraph *render_scene_graph,
+                    int map_render_w, int map_render_h,
+                    float tile_len,
+                    std::vector<std::shared_ptr<map_obj::MapObject>> *map_objs,
+                    std::vector<std::shared_ptr<map_obj::MapObject>> *gfx_only_map_objs,
+                    map_obj::Player_Type1 *player,
+                    std::vector<StandardRNG> *rngs,
+                    double cur_level_time)
     {
         using namespace kx::gfx;
         auto rdr = kwin_r->rdr();
 
-        auto map_texture = render_func_map_texture.get(rdr,
-                                                       map_render_w,
-                                                       map_render_h,
-                                                       Texture::Format::RGB16F,
-                                                       false,
-                                                       1);
-
-        rdr->set_target(map_texture.get());
+        rdr->set_target(texture);
         rdr->clear(Color4f(0, 0, 0, 1));
 
         //render the map and things on it
         map_obj::MapObjRenderArgs render_args;
         render_args.set_renderer(rdr);
-        render_args.shaders = &render_op_list->shaders;
-        render_args.fonts = &render_op_list->fonts;
+        render_args.shaders = &render_scene_graph->shaders;
+        render_args.fonts = &render_scene_graph->fonts;
 
         kx::gfx::Rect camera;
         camera.w = map_render_w / tile_len;
@@ -261,21 +256,18 @@ public:
 
         render_args.set_op_groups_vec(&op_groups);
 
-        for(size_t i=0; i<map_objs->size(); i++) {
-            (*map_objs)[i]->add_render_ops(render_args);
+        for(auto &map_obj: *map_objs) {
+            map_obj->add_render_ops(render_args);
+        }
+        for(auto &map_obj: *gfx_only_map_objs) {
+            map_obj->add_render_ops(render_args);
         }
 
-        render_op_list->render_and_clear_vec(&op_groups, kwin_r, map_render_w, map_render_h);
-
-        //if we have a multisample texture, resolve it into a 1-sample texture
-        if(map_texture->is_multisample()) {
-            map_texture = resolve_multisamples(rdr, map_texture.get());
-        }
-        return map_texture;
+        render_scene_graph->render_and_clear_vec(&op_groups, kwin_r, map_render_w, map_render_h);
     }
     void render_HUD([[maybe_unused]] kx::gfx::Texture *texture,
                     kx::gfx::KWindowRunning *kwin_r,
-                    GameRenderOpList *render_op_list,
+                    GameRenderSceneGraph *render_scene_graph,
                     int render_w, int render_h,
                     map_obj::Player_Type1 *player)
     {
@@ -283,9 +275,9 @@ public:
 
         auto rdr = kwin_r->rdr();
 
-        player_resource_bars.render(render_op_list, &op_groups, rdr, render_w, render_h, player);
+        player_resource_bars.render(render_scene_graph, &op_groups, rdr, render_w, render_h, player);
 
-        render_op_list->render_and_clear_vec(&op_groups, kwin_r, render_w, render_h);
+        render_scene_graph->render_and_clear_vec(&op_groups, kwin_r, render_w, render_h);
     }
 };
 
@@ -295,10 +287,11 @@ GameGfx::GameGfx(kx::Passkey<Game>)
 GameGfx::~GameGfx()
 {}
 std::shared_ptr<kx::gfx::Texture> GameGfx::render(kx::gfx::KWindowRunning *kwin_r,
-                                                  GameRenderOpList *render_op_list,
+                                                  GameRenderSceneGraph *render_scene_graph,
                                                   int render_w, int render_h,
                                                   float tile_len,
                                                   std::vector<std::shared_ptr<map_obj::MapObject>> *map_objs,
+                                                  std::vector<std::shared_ptr<map_obj::MapObject>> *gfx_only_map_objs,
                                                   map_obj::Player_Type1 *player,
                                                   std::vector<StandardRNG> *rngs,
                                                   double cur_level_time)
@@ -315,29 +308,29 @@ std::shared_ptr<kx::gfx::Texture> GameGfx::render(kx::gfx::KWindowRunning *kwin_
     float h = render_h;
     int map_render_w = w;
     int map_render_h = h;
-    auto map_texture = impl->render_map(kwin_r,
-                                        render_op_list,
-                                        map_render_w,
-                                        map_render_h,
-                                        tile_len,
-                                        map_objs,
-                                        player,
-                                        rngs,
-                                        cur_level_time);
-
-    //combine the two textures
     auto return_texture = impl->render_func_return_texture.get(rdr,
                                                                (int)w,
                                                                (int)h,
                                                                Texture::Format::RGB16F,
-                                                               false);
+                                                               false,
+                                                               1);
+    impl->render_map(return_texture.get(),
+                     kwin_r,
+                     render_scene_graph,
+                     map_render_w,
+                     map_render_h,
+                     tile_len,
+                     map_objs,
+                     gfx_only_map_objs,
+                     player,
+                     rngs,
+                     cur_level_time);
 
-    map_texture->set_min_filter(Texture::FilterAlgo::Nearest);
-    map_texture->set_mag_filter(Texture::FilterAlgo::Nearest);
-    rdr->set_target(return_texture.get());
-    rdr->draw_texture(*map_texture, Rect(0, 0, map_render_w, map_render_h));
+    impl->render_HUD(return_texture.get(), kwin_r, render_scene_graph, render_w, render_h, player);
 
-    impl->render_HUD(return_texture.get(), kwin_r, render_op_list, render_w, render_h, player);
+    if(return_texture->is_multisample()) {
+        return_texture = impl->resolve_multisamples(rdr, return_texture.get());
+    }
 
     impl->apply_bloom(rdr, return_texture.get(), 0.1*tile_len);
 

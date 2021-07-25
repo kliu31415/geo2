@@ -77,6 +77,7 @@ public:
         Delta operator / (double val) const;
         Delta operator / (int64_t val) const;
         Delta operator / (uint64_t val) const;
+        double operator / (Delta other) const;
         void operator /= (double val);
         void operator /= (int64_t val);
         void operator /= (uint64_t val);
@@ -84,7 +85,6 @@ public:
         bool is_multiple_of(Delta delta) const;
     };
 
-    static void set_now_utc_offset(Time::Delta offset);
     static int64_t to_ns(Length length);
 
     /** IMPORTANT NOTE: Time::NA() is internally stored by setting ns_since_epoch to -1.
@@ -104,9 +104,7 @@ public:
     ///TODO: Ensure (Year, month, date) (which assign to *this) work
     Time(std::string_view time_str, Format format); ///supports years in [1971, 2037]
 
-    static Time now(); ///returns UTC + the user-set timezone offset
-    static Time now_ET(); ///eastern time
-    static Time now_UTC();
+    static Time now(); ///returns UTC
 
     int64_t to_int64(Length length) const;
     double to_double(Length length) const;

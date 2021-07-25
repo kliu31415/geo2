@@ -6,7 +6,7 @@ namespace geo2 {
 
 class Game;
 
-class GameRenderOpList final: public RenderOpList
+class GameRenderSceneGraph final: public RenderSceneGraph
 {
     kx::gfx::Renderer *cur_renderer;
 public:
@@ -14,7 +14,7 @@ public:
     {
         std::map<std::string, std::unique_ptr<IShader>, std::less<>> shaders_map;
     public:
-        void init(kx::gfx::Renderer *rdr, kx::Passkey<GameRenderOpList>);
+        void init(kx::gfx::Renderer *rdr, kx::Passkey<GameRenderSceneGraph>);
         const IShader *get(std::string_view name) const;
     };
     Shaders shaders;
@@ -23,13 +23,14 @@ public:
     {
         std::map<std::string, std::unique_ptr<FontAtlas>, std::less<>> fonts_map;
     public:
-        void init(kx::gfx::FontLibrary *font_library, kx::gfx::Renderer *rdr, kx::Passkey<GameRenderOpList>);
+        void init(kx::gfx::FontLibrary *font_library, kx::gfx::Renderer *rdr, kx::Passkey<GameRenderSceneGraph>);
         const FontAtlas *get(std::string_view name) const;
     };
     Fonts fonts;
 
-    GameRenderOpList(kx::gfx::FontLibrary *font_library,
-                     kx::gfx::Renderer *renderer);
+    GameRenderSceneGraph(kx::Passkey<class MasterInstanceGfxImpl>,
+                         kx::gfx::FontLibrary *font_library,
+                         kx::gfx::Renderer *renderer);
 };
 
 }

@@ -26,10 +26,11 @@ public:
     GameGfx(kx::Passkey<class Game>);
     ~GameGfx();
     std::shared_ptr<kx::gfx::Texture> render(kx::gfx::KWindowRunning *kwin_r,
-                                             class GameRenderOpList *render_op_list,
+                                             class GameRenderSceneGraph *render_scene_graph,
                                              int render_w, int render_h,
                                              float tile_len,
                                              std::vector<std::shared_ptr<map_obj::MapObject>> *map_objs,
+                                             std::vector<std::shared_ptr<map_obj::MapObject>> *gfx_only_map_objs,
                                              map_obj::Player_Type1 *player,
                                              std::vector<Xorshift64RNG> *rngs,
                                              double cur_level_time);

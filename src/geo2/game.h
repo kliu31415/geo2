@@ -21,6 +21,7 @@ class Game final
     std::unique_ptr<class GameGfx> gfx;
 
     std::shared_ptr<map_obj::Player_Type1> player;
+    std::vector<std::shared_ptr<map_obj::MapObject>> gfx_only_map_objs;
     std::vector<std::shared_ptr<map_obj::MapObject>> map_objs;
 
     LevelName cur_level_name;
@@ -71,7 +72,7 @@ public:
 
     std::shared_ptr<kx::gfx::Texture> run(const LibraryPointers &libraries,
                                           kx::gfx::KWindowRunning *kwin_r,
-                                          GameRenderOpList *render_op_list,
+                                          GameRenderSceneGraph *render_scene_graph,
                                           int render_w, int render_h);
 };
 

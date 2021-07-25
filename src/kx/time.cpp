@@ -12,8 +12,6 @@
 
 namespace kx {
 
-static Time::Delta utc_offset(0, Time::Length::hour);
-
 //assumes a format like 2018-08-10 14:00:00
 static constexpr int LEAP_YEAR_PSUM[]{
     0, 0, 1, 1, 1, 1, 2, 2, 2, 2, //1970s
@@ -153,6 +151,10 @@ Time::Delta Time::Delta::operator / (uint64_t val) const
 {
     return Time::Delta((int64_t)(ns / val), Time::Length::ns);
 }
+double Time::Delta::operator / (Delta other) const
+{
+    return ns / (double)other.ns;
+}
 void Time::Delta::operator /= (double val)
 {
     ns /= val;
@@ -170,11 +172,6 @@ bool Time::Delta::is_multiple_of(Time::Delta delta) const
     return ns % delta.ns == 0;
 }
 
-
-void Time::set_now_utc_offset(Time::Delta offset)
-{
-    utc_offset = offset;
-}
 int64_t Time::to_ns(Length length)
 {
     switch(length)
@@ -406,22 +403,9 @@ Time Time::now()
 {
     auto t = std::chrono::high_resolution_clock::now();
     auto t_ns = std::chrono::time_point_cast<std::chrono::nanoseconds>(t);
-    return Time(t_ns.time_since_epoch().count(), Time::Length::ns) + utc_offset;
-}
-
-static const Time::Delta ET_OFFSET(-4, Time::Length::hour);
-Time Time::now_ET()
-{
-    auto t = std::chrono::high_resolution_clock::now();
-    auto t_ns = std::chrono::time_point_cast<std::chrono::nanoseconds>(t);
-    return Time(t_ns.time_since_epoch().count(), Time::Length::ns) + ET_OFFSET;
-}
-Time Time::now_UTC()
-{
-    auto t = std::chrono::high_resolution_clock::now();
-    auto t_ns = std::chrono::time_point_cast<std::chrono::nanoseconds>(t);
     return Time(t_ns.time_since_epoch().count(), Time::Length::ns);
 }
+
 int64_t Time::to_int64(Length length) const
 {
     return ns_since_epoch / to_ns(length);

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "kx/gfx/renderer.h"
-#include "geo2/game_render_op_list.h"
+#include "geo2/game_render_scene_graph.h"
 
 namespace geo2 {
 
@@ -16,8 +16,8 @@ class RenderArgs
     float cam_h_inv_times_render_h;
 public:
     float pixels_per_tile_len;
-    const GameRenderOpList::Shaders *shaders;
-    const GameRenderOpList::Fonts *fonts;
+    const GameRenderSceneGraph::Shaders *shaders;
+    const GameRenderSceneGraph::Fonts *fonts;
 
     inline void set_renderer(kx::gfx::Renderer *renderer)
     {

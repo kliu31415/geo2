@@ -3,7 +3,7 @@
 #include "kx/gfx/gfx.h"
 #include "geo2/geometry.h"
 #include "geo2/map_obj/map_object.h"
-#include "geo2/game_render_op_list.h"
+#include "geo2/game_render_scene_graph.h"
 #include "geo2/render_args.h"
 #include "geo2/rng_args.h"
 

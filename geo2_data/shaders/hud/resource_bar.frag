@@ -23,7 +23,7 @@ void main()
     if(greaterThan(max(normalized_coord, 1 - normalized_coord), data[idx+1].yz) != bvec2(0)) {
         frag_color = data[idx+4];
     } else {
-        if((normalized_coord.x - data[idx+1][1]) / (1 - 2*data[idx+1][1]) > data[idx+1][0])
+        if((normalized_coord.x - data[idx+1][1]) / (1 - 2*data[idx+1][1]) < 1 - data[idx+1][0])
             frag_color = data[idx+3];
         else
             frag_color = data[idx+2];

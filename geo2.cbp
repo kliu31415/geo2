@@ -56,8 +56,8 @@
 		<Unit filename="src/geo2/game_gfx.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="src/geo2/game_render_op_list.cpp" />
-		<Unit filename="src/geo2/game_render_op_list.h">
+		<Unit filename="src/geo2/game_render_scene_graph.cpp" />
+		<Unit filename="src/geo2/game_render_scene_graph.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/geo2/geometry.cpp" />

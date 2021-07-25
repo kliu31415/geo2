@@ -752,6 +752,7 @@ Renderer::Renderer(SDL_Window *window_, [[maybe_unused]] Uint32 flags):
             log_error(SDL_GetError());
         return context;
     }()),
+    cur_frame_start_time(Time::NA()),
     render_target(nullptr),
     Shaders()
 {
@@ -763,9 +764,10 @@ Renderer::Renderer(SDL_Window *window_, [[maybe_unused]] Uint32 flags):
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-
     set_blend_factors(BlendFactor::SrcAlpha, BlendFactor::OneMinusSrcAlpha);
-    SDL_GL_SetSwapInterval(1);
+    if(SDL_GL_SetSwapInterval(1)) {
+        log_error(SDL_GetError());
+    }
 
     set_viewport({});
 
@@ -1155,17 +1157,50 @@ void Renderer::bind_texture(const Texture &texture)
 void Renderer::refresh()
 {
     auto cur_time = Time::now();
-    auto cutoff = cur_time - Time::Delta((int64_t)1, Time::Length::second);
-    while(!frame_timestamps.empty() && frame_timestamps.front() < cutoff)
-        frame_timestamps.pop();
-    frame_timestamps.push(cur_time);
+    auto cutoff = cur_time - Time::Delta(1, Time::Length::second);
+    while(!frame_timestamps.empty() && frame_timestamps.front().second < cutoff)
+        frame_timestamps.pop_front();
+
+    if(cur_frame_start_time != Time::NA())
+        frame_timestamps.emplace_back(cur_frame_start_time, cur_time);
+    else
+        frame_timestamps.emplace_back(cur_time, cur_time);
 
     SDL_GL_SwapWindow(window);
+    cur_frame_start_time = Time::now();
 }
-int Renderer::get_fps() const
+float Renderer::get_fps() const
 {
-    return frame_timestamps.size();
+    const auto &ft = frame_timestamps;
+    float fps = (int)ft.size() - 1;
+
+    if(!ft.empty()) {
+        auto _1s_ago = ft.back().second - Time::Delta(1, Time::Length::second);
+        if(ft.front().first > _1s_ago) //oldest frame is fully within last second
+            fps++;
+        else { //otherwise, only count the fraction within the last second
+            auto oldest_frame_len = ft.front().second - ft.front().first;
+            fps += (ft.front().second - _1s_ago) / oldest_frame_len;
+        }
+    }
+    return fps;
 }
+//this is very inaccurate and varies based on GPU driver and vendor;
+//it seems that some GPU drivers block on SDL_GL_SwapWindow if vsync is on
+//and others don't.
+/*float Renderer::get_estimated_program_load() const
+{
+    const auto &ft = frame_timestamps;
+    double numerator = 0;
+    double denominator = 0;
+    for(size_t i=1; i<ft.size(); i++) {
+        numerator += (ft[i].second - ft[i].first).to_double(Time::Length::ns);
+        denominator += (ft[i].second - ft[i-1].second).to_double(Time::Length::ns);
+    }
+    if(denominator == 0)
+        return std::numeric_limits<float>::quiet_NaN();
+    return numerator / denominator;
+}*/
 int Renderer::get_num_samples() const
 {
     return NUM_SAMPLES_DEFAULT;

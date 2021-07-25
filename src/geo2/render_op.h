@@ -57,7 +57,7 @@ public:
     void render(UBO_Allocator *ubo_allocator,
                 kx::kx_span<const FSA<FSA<uint8_t>>*> instance_uniform_data,
                 kx::gfx::Renderer *rdr,
-                kx::Passkey<class RenderOpList>) const;
+                kx::Passkey<class RenderSceneGraph>) const;
 
     ///nonmovable because things hold pointers to it
     IShader(IShader&&) = delete;
@@ -77,7 +77,7 @@ public:
  */
 class RenderOpShader final: public RenderOp
 {
-    friend class RenderOpList;
+    friend class RenderSceneGraph;
     friend class RenderOpGroup;
 
     const IShader *shader;
@@ -97,7 +97,7 @@ struct FontAtlas
 
 class RenderOpText final: public RenderOp
 {
-    friend class RenderOpList;
+    friend class RenderSceneGraph;
 public:
     enum class HorizontalAlign: uint8_t {
         Left, Center, Right
@@ -128,12 +128,12 @@ public:
     void set_vertical_align(VerticalAlign align);
     void add_iu_data(std::vector<float> *iu_data,
                      const kx::gfx::Renderer *rdr,
-                     kx::Passkey<RenderOpList>) const;
+                     kx::Passkey<RenderSceneGraph>) const;
 };
 
 class RenderOpGroup final
 {
-    friend class RenderOpList;
+    friend class RenderSceneGraph;
 
     float priority;
     const IShader *op_cmp;
@@ -145,7 +145,7 @@ public:
     bool empty() const;
 };
 
-class RenderOpList
+class RenderSceneGraph
 {
     kx::gfx::UBIndex text_ascii_characters_ub_index;
     int text_ascii_atlas_loc;
@@ -157,8 +157,8 @@ class RenderOpList
 
     void render_text(kx::gfx::Renderer *rdr, const FontAtlas *font, const std::vector<float> &text_iu_data);
 public:
-    RenderOpList();
-    virtual ~RenderOpList();
+    RenderSceneGraph();
+    virtual ~RenderSceneGraph();
 
     void render_and_clear_vec(std::vector<std::shared_ptr<RenderOpGroup>> *op_groups_vec,
                               kx::gfx::KWindowRunning *kwin_r,

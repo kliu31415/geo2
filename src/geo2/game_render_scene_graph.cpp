@@ -1,4 +1,4 @@
-#include "geo2/game_render_op_list.h"
+#include "geo2/game_render_scene_graph.h"
 
 #include "kx/gfx/kwindow.h"
 #include "kx/gfx/renderer.h"
@@ -91,7 +91,7 @@ public:
 
 
 
-void GameRenderOpList::Shaders::init(kx::gfx::Renderer *rdr, kx::Passkey<GameRenderOpList>)
+void GameRenderSceneGraph::Shaders::init(kx::gfx::Renderer *rdr, kx::Passkey<GameRenderSceneGraph>)
 {
     //note that if the renderer changes, we still bug out. Why? We reload all the shaders,
     //but map objects might hold pointers to old shaders. If we want to remedy this, we
@@ -101,29 +101,30 @@ void GameRenderOpList::Shaders::init(kx::gfx::Renderer *rdr, kx::Passkey<GameRen
     ShadersLoader loader(&shaders_map, rdr);
     loader.load();
 }
-const IShader* GameRenderOpList::Shaders::get(std::string_view name) const
+const IShader* GameRenderSceneGraph::Shaders::get(std::string_view name) const
 {
     auto find_result = shaders_map.find(name);
     k_assert(find_result != shaders_map.end());
     return find_result->second.get();
 }
-void GameRenderOpList::Fonts::init(kx::gfx::FontLibrary *font_library,
+void GameRenderSceneGraph::Fonts::init(kx::gfx::FontLibrary *font_library,
                                    kx::gfx::Renderer *rdr,
-                                   kx::Passkey<GameRenderOpList>)
+                                   kx::Passkey<GameRenderSceneGraph>)
 {
     using namespace kx::gfx;
     fonts_map.emplace("black_chancery",
                       std::make_unique<FontAtlas>(rdr, font_library->get_font(FontLibrary::FONT_BLACK_CHANCERY).get()));
 }
-const FontAtlas *GameRenderOpList::Fonts::get(std::string_view name) const
+const FontAtlas *GameRenderSceneGraph::Fonts::get(std::string_view name) const
 {
     auto find_result = fonts_map.find(name);
     k_assert(find_result != fonts_map.end());
     return find_result->second.get();
 }
 
-GameRenderOpList::GameRenderOpList(kx::gfx::FontLibrary *font_library,
-                                   kx::gfx::Renderer *renderer):
+GameRenderSceneGraph::GameRenderSceneGraph(kx::Passkey<MasterInstanceGfxImpl>,
+                                           kx::gfx::FontLibrary *font_library,
+                                           kx::gfx::Renderer *renderer):
     cur_renderer(renderer)
 {
     shaders.init(cur_renderer, {});

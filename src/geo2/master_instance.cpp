@@ -1,9 +1,13 @@
 #include "geo2/master_instance.h"
 #include "geo2/texture_utils.h"
+#include "geo2/timer.h"
 
 #include "kx/gfx/renderer.h"
+#include "kx/time.h"
 
 #include <SDL2/SDL_events.h>
+
+#include <utility>
 
 namespace geo2 {
 
@@ -12,7 +16,6 @@ constexpr int SCREEN_H = 1080;
 
 void run(const LibraryPointers &libraries)
 {
-
     using namespace kx;
 
     auto instance = std::make_shared<MasterInstance>(libraries, gfx::Rect(0, 0, SCREEN_W, SCREEN_H));
@@ -37,7 +40,7 @@ void run(const LibraryPointers &libraries)
     }
 }
 
-class gfx_impl
+class MasterInstanceGfxImpl
 {
     std::unique_ptr<kx::gfx::ShaderProgram> hdr;
     std::unique_ptr<kx::gfx::VAO> hdr_vao;
@@ -49,20 +52,20 @@ class gfx_impl
     std::shared_ptr<RenderOpText> show_fps_op;
     std::shared_ptr<RenderOpGroup> show_fps_op_group;
 public:
-    std::unique_ptr<GameRenderOpList> render_op_list;
+    std::unique_ptr<GameRenderSceneGraph> render_scene_graph;
 
     int render_w;
     int render_h;
 
-    gfx_impl(kx::gfx::Renderer *rdr, kx::gfx::FontLibrary *font_library):
+    MasterInstanceGfxImpl(kx::gfx::Renderer *rdr, kx::gfx::FontLibrary *font_library):
         render_w(SCREEN_W),
         render_h(SCREEN_H)
     {
-        render_op_list = std::make_unique<GameRenderOpList>(font_library, rdr);
+        render_scene_graph = decltype(render_scene_graph)(new GameRenderSceneGraph({}, font_library, rdr));
 
         //hp text op
         show_fps_op = std::make_shared<RenderOpText>();
-        show_fps_op->set_font(render_op_list->fonts.get("black_chancery"));
+        show_fps_op->set_font(render_scene_graph->fonts.get("black_chancery"));
         show_fps_op->set_color(kx::gfx::LinearColor(0, 1, 1, 1));
         show_fps_op->set_x(0);
         show_fps_op->set_y(0);
@@ -124,10 +127,19 @@ public:
     {
         auto rdr = kwin_r->rdr();
         show_fps_op->set_font_size(20);
-        show_fps_op->set_text(kx::to_str(rdr->get_fps()) + " fps");
+        std::string text;
+        text += "fps: " + kx::to_str((int)(std::round(rdr->get_fps()))) + "\n";
+        /*
+        auto load = rdr->get_estimated_program_load();
+        std::stringstream ss;
+        ss.precision(3);
+        ss << std::fixed << load;
+        text += "load: " + ss.str();
+        */
+        show_fps_op->set_text(text);
         op_groups.push_back(show_fps_op_group);
 
-        render_op_list->render_and_clear_vec(&op_groups, kwin_r, render_w, render_h);
+        render_scene_graph->render_and_clear_vec(&op_groups, kwin_r, render_w, render_h);
     }
 };
 
@@ -146,7 +158,7 @@ std::shared_ptr<kx::gfx::Texture> MasterInstance::run(kx::gfx::KWindowRunning *k
     auto rdr = kwin_r->rdr();
 
     if(gfx == nullptr) {
-        gfx = std::make_unique<gfx_impl>(rdr, libraries.font_library);
+        gfx = std::make_unique<MasterInstanceGfxImpl>(rdr, libraries.font_library);
     }
 
     for(const auto &input: kwin_r->input_deque) {
@@ -164,7 +176,7 @@ std::shared_ptr<kx::gfx::Texture> MasterInstance::run(kx::gfx::KWindowRunning *k
     std::shared_ptr<gfx::Texture> return_texture;
     switch(state) {
     case State::InGame:
-        return_texture = game->run(libraries, kwin_r, gfx->render_op_list.get(), gfx->render_w, gfx->render_h);
+        return_texture = game->run(libraries, kwin_r, gfx->render_scene_graph.get(), gfx->render_w, gfx->render_h);
         break;
     case State::MainMenu:
         break;

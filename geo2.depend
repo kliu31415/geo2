@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1626936752 source:d:\code\cbprojects\geo2\src\main.cpp
+1627171898 source:d:\code\cbprojects\geo2\src\main.cpp
 	"geo2/test.h"
 	"geo2/master_instance.h"
 	"kx/gfx/gfx.h"
@@ -209,7 +209,7 @@
 	"kx/debug.h"
 	<cmath>
 
-1626846338 source:d:\code\cbprojects\geo2\src\kx\time.cpp
+1627172398 source:d:\code\cbprojects\geo2\src\kx\time.cpp
 	"kx/time.h"
 	"kx/util.h"
 	"kx/io.h"
@@ -326,7 +326,7 @@
 	"kx/gfx/gl_renderer.h"
 	"kx/gfx/vk_renderer.h"
 
-1627112769 source:d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.cpp
+1627198170 source:d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.cpp
 	"kx/gfx/renderer.h"
 	"kx/io.h"
 	"glad/glad.h"
@@ -367,7 +367,7 @@
 	<vector>
 	<map>
 
-1626846204 d:\code\cbprojects\geo2\src\kx\time.h
+1627172357 d:\code\cbprojects\geo2\src\kx\time.h
 	<ctime>
 	<cstdint>
 	<string>
@@ -408,7 +408,7 @@
 
 1627110172 d:\code\cbprojects\geo2\src\kx\gfx\renderer_types.h
 
-1627111606 d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.h
+1627198301 d:\code\cbprojects\geo2\src\kx\gfx\gl_renderer.h
 	"kx/gfx/renderer_types.h"
 	"kx/util.h"
 	"kx/kx_span.h"
@@ -515,7 +515,7 @@
 	<mutex>
 	<map>
 
-1627111839 d:\code\cbprojects\geo2\src\geo2\game.h
+1627198224 d:\code\cbprojects\geo2\src\geo2\game.h
 	"geo2/map_obj/unit_type1/player_type1.h"
 	"geo2/ceng1_collision.h"
 	"geo2/ceng1_data.h"
@@ -528,9 +528,9 @@
 	<vector>
 	<cstdint>
 
-1627112102 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
+1627198096 source:d:\code\cbprojects\geo2\src\geo2\game.cpp
 	"geo2/map_obj/floor_type1/test_terrain1.h"
-	"geo2/game_render_op_list.h"
+	"geo2/game_render_scene_graph.h"
 	"geo2/game.h"
 	"geo2/game_gfx.h"
 	"geo2/map_obj/map_object.h"
@@ -546,16 +546,19 @@
 	"kx/stats.h"
 	<SDL2/SDL_scancode.h>
 
-1627112203 d:\code\cbprojects\geo2\src\geo2\master_instance.h
+1627170765 d:\code\cbprojects\geo2\src\geo2\master_instance.h
 	"geo2/game.h"
 	"geo2/library_pointers.h"
 	"kx/gfx/kwindow.h"
 
-1627113229 source:d:\code\cbprojects\geo2\src\geo2\master_instance.cpp
+1627175870 source:d:\code\cbprojects\geo2\src\geo2\master_instance.cpp
 	"geo2/master_instance.h"
 	"geo2/texture_utils.h"
+	"geo2/timer.h"
 	"kx/gfx/renderer.h"
+	"kx/time.h"
 	<SDL2/SDL_events.h>
+	<utility>
 
 1623384772 d:\code\cbprojects\geo2\src\geo2\map_object.h
 	"geo2/collision_engine1.h"
@@ -602,7 +605,7 @@
 	<tuple>
 	<tuple>
 
-1627113316 source:d:\code\cbprojects\geo2\src\geo2\render_op.cpp
+1627172898 source:d:\code\cbprojects\geo2\src\geo2\render_op.cpp
 	"geo2/render_op.h"
 	"geo2/timer.h"
 	"geo2/texture_utils.h"
@@ -610,7 +613,7 @@
 	"kx/gfx/kwindow.h"
 	<cmath>
 
-1627113308 d:\code\cbprojects\geo2\src\geo2\render_op.h
+1627170622 d:\code\cbprojects\geo2\src\geo2\render_op.h
 	"kx/gfx/renderer_types.h"
 	"kx/gfx/font.h"
 	"kx/fixed_size_array.h"
@@ -811,25 +814,25 @@
 	"geo2/map_obj/floor_type1/floor_type1.h"
 	"kx/gfx/renderer_types.h"
 
-1626672697 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\pig_1.h
+1627170599 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\pig_1.h
 	"geo2/map_obj/unit_type1/unit_type1.h"
 	"geo2/map_obj/unit_type1/movement/algo1.h"
-	"geo2/game_render_op_list.h"
+	"geo2/game_render_scene_graph.h"
 	<array>
 	<functional>
 
 1624335856 source:d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\floor_type1.cpp
 	"geo2/map_obj/floor_type1/floor_type1.h"
 
-1627018055 source:d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\monochromatic_floor_1.cpp
+1627170597 source:d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\monochromatic_floor_1.cpp
 	"geo2/map_obj/floor_type1/monochromatic_floor_1.h"
 	"geo2/map_obj/map_obj_args.h"
-	"geo2/game_render_op_list.h"
+	"geo2/game_render_scene_graph.h"
 	"geo2/render_op.h"
 
-1627018063 source:d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\test_terrain1.cpp
+1627170604 source:d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\test_terrain1.cpp
 	"geo2/map_obj/floor_type1/test_terrain1.h"
-	"geo2/game_render_op_list.h"
+	"geo2/game_render_scene_graph.h"
 	"geo2/map_obj/map_obj_args.h"
 	"geo2/render_op.h"
 	"kx/gfx/renderer.h"
@@ -876,11 +879,11 @@
 	"geo2/weapon/weapon.h"
 	<array>
 
-1626835569 d:\code\cbprojects\geo2\src\geo2\weapon\weapon.h
+1627170597 d:\code\cbprojects\geo2\src\geo2\weapon\weapon.h
 	"kx/gfx/gfx.h"
 	"geo2/geometry.h"
 	"geo2/map_obj/map_object.h"
-	"geo2/game_render_op_list.h"
+	"geo2/game_render_scene_graph.h"
 	"geo2/render_args.h"
 	"geo2/rng_args.h"
 	<SDL2/SDL_mouse.h>
@@ -932,9 +935,9 @@
 	"geo2/rng_args.h"
 	"kx/fixed_size_array.h"
 
-1626590961 d:\code\cbprojects\geo2\src\geo2\render_args.h
+1627170615 d:\code\cbprojects\geo2\src\geo2\render_args.h
 	"kx/gfx/renderer.h"
-	"geo2/game_render_op_list.h"
+	"geo2/game_render_scene_graph.h"
 
 1627018114 source:d:\code\cbprojects\geo2\src\geo2\weapon\laser_1.cpp
 	"geo2/weapon/laser_1.h"
@@ -985,10 +988,10 @@
 	"geo2/map_obj/map_obj_args.h"
 	<random>
 
-1626672698 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\spotted_pig_1.h
+1627170598 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\spotted_pig_1.h
 	"geo2/map_obj/unit_type1/unit_type1.h"
 	"geo2/map_obj/unit_type1/movement/algo1.h"
-	"geo2/game_render_op_list.h"
+	"geo2/game_render_scene_graph.h"
 	<array>
 	<functional>
 
@@ -997,10 +1000,10 @@
 	"geo2/geometry.h"
 	<random>
 
-1626672697 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\hexfly_1.h
+1627170598 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\hexfly_1.h
 	"geo2/map_obj/unit_type1/unit_type1.h"
 	"geo2/map_obj/unit_type1/movement/algo1.h"
-	"geo2/game_render_op_list.h"
+	"geo2/game_render_scene_graph.h"
 	<array>
 	<functional>
 
@@ -1129,14 +1132,22 @@
 1626937960 d:\code\cbprojects\geo2\src\kx\sfx\sfx.h
 	<optional>
 
-1627112099 d:\code\cbprojects\geo2\src\geo2\game_gfx.h
+1627197877 d:\code\cbprojects\geo2\src\geo2\game_gfx.h
 	<memory>
 	"kx/util.h"
 
-1627113371 source:d:\code\cbprojects\geo2\src\geo2\game_gfx.cpp
+1627197927 source:d:\code\cbprojects\geo2\src\geo2\game_gfx.cpp
 	"geo2/game_gfx.h"
 	"geo2/map_obj/map_object.h"
 	"geo2/map_obj/map_obj_args.h"
 	"geo2/map_obj/unit_type1/player_type1.h"
 	"geo2/texture_utils.h"
+
+1627170694 d:\code\cbprojects\geo2\src\geo2\game_render_scene_graph.h
+	"geo2/render_op.h"
+
+1627170719 source:d:\code\cbprojects\geo2\src\geo2\game_render_scene_graph.cpp
+	"geo2/game_render_scene_graph.h"
+	"kx/gfx/kwindow.h"
+	"kx/gfx/renderer.h"
 

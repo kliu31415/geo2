@@ -79,7 +79,7 @@ template<class T> kx::kx_span<T> to_span(const kx::FixedSizeArray<uint8_t> &data
 void IShader::render(UBO_Allocator *ubo_allocator,
                      kx::kx_span<const ByteFSA2D*> instance_uniform_data,
                      kx::gfx::Renderer *rdr,
-                     kx::Passkey<class RenderOpList>) const
+                     kx::Passkey<class RenderSceneGraph>) const
 {
     rdr->use_shader_program(*program);
 
@@ -179,7 +179,7 @@ void RenderOpText::set_vertical_align(VerticalAlign align)
 }
 void RenderOpText::add_iu_data(std::vector<float> *iu_data,
                                const kx::gfx::Renderer *rdr,
-                               kx::Passkey<RenderOpList>) const
+                               kx::Passkey<RenderSceneGraph>) const
 {
     k_expects(font != nullptr);
 
@@ -202,7 +202,12 @@ void RenderOpText::add_iu_data(std::vector<float> *iu_data,
     double cur_w = 0;
 
     char prev = -1;
+    int num_newlines = 0;
     for(const auto &c: text) {
+        if(c == '\n') {
+            num_newlines++;
+            continue;
+        }
         k_assert(c>=0 && font->atlas->char_supported[c]);
         const auto &metrics = font->atlas->glyph_metrics[c];
 
@@ -215,6 +220,12 @@ void RenderOpText::add_iu_data(std::vector<float> *iu_data,
             cur_w += font->atlas->kerning[prev][c] * size_ratio;
         }
 
+        if(num_newlines > 0) {
+            cur_w = 0;
+            cur_x = x - size_ratio * font->atlas->glyph_metrics[c].left_offset;
+            cur_y += num_newlines * font->atlas->font->get_recommended_line_skip(font_size);
+            num_newlines = 0;
+        }
         auto next_w = cur_w + metrics.advance * size_ratio;
         if(next_w > w) {
             cur_w = 0;
@@ -271,10 +282,10 @@ bool RenderOpGroup::empty() const
     return ops.empty();
 }
 
-RenderOpList::RenderOpList():
+RenderSceneGraph::RenderSceneGraph():
     cur_renderer(nullptr)
 {}
-RenderOpList::~RenderOpList()
+RenderSceneGraph::~RenderSceneGraph()
 {}
 
 //these values should correspond to uniform block's properties in the text shader
@@ -282,7 +293,7 @@ constexpr size_t TEXT_IU_FLOATS_PER_INSTANCE = 3*4;
 constexpr size_t TEXT_MAX_INSTANCES = 341;
 constexpr auto TEXT_MAX_FLOATS_PER_BATCH = TEXT_IU_FLOATS_PER_INSTANCE * TEXT_MAX_INSTANCES;
 
-void RenderOpList::render_text(kx::gfx::Renderer *rdr,
+void RenderSceneGraph::render_text(kx::gfx::Renderer *rdr,
                                const FontAtlas *font,
                                const std::vector<float> &text_iu_data)
 {
@@ -307,7 +318,7 @@ void RenderOpList::render_text(kx::gfx::Renderer *rdr,
     }
 }
 
-void RenderOpList::render_and_clear_vec(std::vector<std::shared_ptr<RenderOpGroup>> *op_groups_vec,
+void RenderSceneGraph::render_and_clear_vec(std::vector<std::shared_ptr<RenderOpGroup>> *op_groups_vec,
                                         kx::gfx::KWindowRunning *kwin_r,
                                         [[maybe_unused]] int render_w,
                                         [[maybe_unused]] int render_h)
