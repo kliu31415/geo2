@@ -12,9 +12,16 @@ Player_Type1::Player_Type1():
     left_pressed_tick_count(0),
     right_pressed_tick_count(0),
     up_pressed_tick_count(0),
-    down_pressed_tick_count(0)
+    down_pressed_tick_count(0),
+    max_mana(20.0),
+    mana(20.0)
 {
 
+}
+void Player_Type1::start_new_level(MapCoord pos, kx::Passkey<Game>)
+{
+    current_position = pos;
+    weapons[cur_weapon_idx]->start_new_level({});
 }
 void Player_Type1::run_special(const PlayerRunSpecialArgs &args, kx::Passkey<Game>)
 {
@@ -157,7 +164,7 @@ void Player_Type1::run_special(const PlayerRunSpecialArgs &args, kx::Passkey<Gam
 
     k_expects(cur_weapon_idx < (int)weapons.size());
     weapons[cur_weapon_idx]->run(args.weapon_run_args);
-    weapon_angle = args.weapon_run_args.get_angle();
+    weapon_angle = args.weapon_run_args.angle;
 }
 void Player_Type1::init([[maybe_unused]] const MapObjInitArgs &args)
 {
@@ -208,9 +215,13 @@ void Player_Type1::run3_mt([[maybe_unused]] const MapObjRun3Args &args)
         current_position = desired_position;
     }
 }
+
+constexpr float WEAPON_OFFSET = 0.5f;
+
 using kx::gfx::LinearColor;
 const LinearColor DEFAULT_INSIDE_COLOR(0.2f, 0.3f, 0.6f, 0.9f);
 const LinearColor DEFAULT_OUTSIDE_COLOR(0.05f, 0.05f, 0.05f, 0.9f);
+
 void Player_Type1::add_render_ops(const MapObjRenderArgs &args)
 {
     if(op1 == nullptr) {
@@ -261,20 +272,34 @@ void Player_Type1::add_render_ops(const MapObjRenderArgs &args)
 
     weapon::WeaponRenderArgs weapon_render_args;
     weapon_render_args.set_render_args((RenderArgs)args);
-    weapon_render_args.set_op_group(op_group);
-    weapon_render_args.set_owner_info(weapon::WeaponOwnerInfo(current_position, WEAPON_OFFSET));
-    weapon_render_args.set_angle(weapon_angle);
-    weapon_render_args.set_render_priority(args.get_player_render_priority());
+    weapon_render_args.set_op_group(op_group.get());
+    weapon_render_args.angle = weapon_angle;
+    weapon_render_args.render_priority = args.get_player_render_priority();
 
     weapons[cur_weapon_idx]->render(weapon_render_args);
-}
-void Player_Type1::set_position(MapCoord pos, kx::Passkey<Game>)
-{
-    current_position = pos;
 }
 double Player_Type1::get_collision_damage() const
 {
     return 2.0;
+}
+weapon::WeaponOwnerInfo Player_Type1::get_weapon_owner_info()
+{
+    weapon::WeaponOwnerInfo ret;
+    ret.position = current_position;
+    ret.offset_from_center = WEAPON_OFFSET;
+    ret.set_mana_cost_multiplier(1);
+    ret.set_cooldown_speed_multiplier(1);
+    ret.set_mana(&mana);
+    ret.set_max_mana(max_mana);
+    return ret;
+}
+double Player_Type1::get_max_mana() const
+{
+    return max_mana;
+}
+double Player_Type1::get_mana() const
+{
+    return mana;
 }
 
 }}

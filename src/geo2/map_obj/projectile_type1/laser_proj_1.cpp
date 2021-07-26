@@ -19,8 +19,12 @@ LaserProj_1::LaserProj_1(const std::shared_ptr<MapObject> &owner_,
                          double lifespan_,
                          MapCoord pos_,
                          MapVec velocity_,
+                         const kx::gfx::LinearColor &inner_color_,
+                         const kx::gfx::LinearColor &outer_color_,
                          double rot):
     BasicProj_1(owner_, damage_, lifespan_, pos_, velocity_),
+    inner_color(inner_color_),
+    outer_color(outer_color_),
     base_shape([rot]()
                 {
                     auto ret = BASE_SHAPE->copy();
@@ -43,17 +47,8 @@ void LaserProj_1::add_render_ops(const MapObjRenderArgs &args)
         auto iu_map = op->map_instance_uniform(0);
         op_iu = {(float*)iu_map.begin(), (float*)iu_map.end()};
 
-        //inner color
-        op_iu[8] = 6.0f;
-        op_iu[9] = 1.5f;
-        op_iu[10] = 1.5f;
-        op_iu[11] = 1.0f;
-
-        //outer color
-        op_iu[12] = 4.0f;
-        op_iu[13] = 0.6f;
-        op_iu[14] = 0.6f;
-        op_iu[15] = 1.0f;
+        *reinterpret_cast<kx::gfx::LinearColor*>(&op_iu[8]) = inner_color;
+        *reinterpret_cast<kx::gfx::LinearColor*>(&op_iu[12]) = outer_color;
     }
 
     auto cur_shape = base_shape->copy();

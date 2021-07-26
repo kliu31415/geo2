@@ -13,32 +13,70 @@
 
 namespace geo2 { namespace weapon {
 
-struct WeaponOwnerInfo final
+class WeaponOwnerInfo final
 {
-    MapCoord pos;
-    double offset;
+    //this exists because it happens that if we're spending, say, 0.003 mana per tick,
+    //then the player will be left over with a nonzero, tiny amount of mana, which is
+    //rounded to 1 in the display. This is not aesthetically pleasing, so allow the
+    //player to spend more mana than they have if there's a small mana cost and the
+    //player has nonzero mana; the threshold for "small mana cost" is below:
+    static constexpr double SMALL_MANA_COST_THRESHOLD = 0.05;
 
-    WeaponOwnerInfo() = default;
-    WeaponOwnerInfo(MapCoord pos_, double offset_):
-        pos(pos_),
-        offset(offset_)
-    {}
+    double *mana;
+    double max_mana;
+    double mana_cost_multiplier;
+    double cooldown_speed_multipler;
+public:
+    MapCoord position;
+    double offset_from_center;
+
+    void set_mana(double *mana_)
+    {
+        mana = mana_;
+    }
+    void set_max_mana(double max_mana_)
+    {
+        max_mana = max_mana_;
+    }
+    void set_mana_cost_multiplier(double multiplier)
+    {
+        mana_cost_multiplier = multiplier;
+    }
+    void set_cooldown_speed_multiplier(double multiplier)
+    {
+        cooldown_speed_multipler = multiplier;
+    }
+    bool can_afford_mana_expenditure(double mana_cost) const
+    {
+        if(*mana > 0 && mana_cost < SMALL_MANA_COST_THRESHOLD)
+            return true;
+        return mana_cost_multiplier * mana_cost <= *mana;
+    }
+    void spend_mana(double mana_cost) const
+    {
+        k_expects(can_afford_mana_expenditure(mana_cost));
+        *mana -= mana_cost_multiplier * mana_cost;
+        *mana = std::max(*mana, 0.0);
+    }
 };
 
 class WeaponRunArgs final: public RNG_Args
 {
     std::vector<std::shared_ptr<map_obj::MapObject>> *map_objs_to_add;
-    WeaponOwnerInfo owner_info;
+public:
     MapCoord cursor_pos;
     double angle;
     kx::gfx::mouse_state_t mouse_state;
-public:
     double cur_level_time;
     double tick_len;
 
     inline bool primary_attack() const
     {
         return mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT);
+    }
+    inline bool special_attack_1() const
+    {
+        return mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT);
     }
     inline void set_map_objs_to_add(std::vector<std::shared_ptr<map_obj::MapObject>> *to_add)
     {
@@ -48,69 +86,19 @@ public:
     {
         map_objs_to_add->push_back(obj);
     }
-    inline void set_owner_info(WeaponOwnerInfo info)
-    {
-        owner_info = info;
-    }
-    inline WeaponOwnerInfo get_owner_info() const
-    {
-        return owner_info;
-    }
-    inline void set_angle(double a)
-    {
-        angle = a;
-    }
-    inline double get_angle() const
-    {
-        return angle;
-    }
-    inline void set_mouse_state(kx::gfx::mouse_state_t state)
-    {
-        mouse_state = state;
-    }
-    inline kx::gfx::mouse_state_t get_mouse_state() const
-    {
-        return mouse_state;
-    }
-    inline void set_cursor_pos(MapCoord pos)
-    {
-        cursor_pos = pos;
-    }
-    inline MapCoord get_cursor_pos() const
-    {
-        return cursor_pos;
-    }
-    inline void set_tick_len(double len)
-    {
-        tick_len = len;
-    }
-    inline double get_tick_len() const
-    {
-        return tick_len;
-    }
-    inline void set_cur_level_time(double t)
-    {
-        cur_level_time = t;
-    }
-    inline double get_cur_level_time() const
-    {
-        return cur_level_time;
-    }
 };
 
-/** Take care when rendering a weapon; you have to clear RenderOpGroup every
- *  time! This is because Weapon modifies the RenderOpGroups you give it,
- *  so you can't just cache the RenderOpGroup and keep reusing it.
- *
+/** Take care when rendering a weapon; the parent has to clear RenderOpGroup every
+ *  time! This is because Weapon modifies the RenderOpGroups you give it, so the
+ *  parent (e.g. Player_Type1) can't just cache the RenderOpGroup and keep reusing it.
  */
 class WeaponRenderArgs final: public RenderArgs
 {
-    std::shared_ptr<RenderOpGroup> op_group;
-    WeaponOwnerInfo owner_info;
-    double angle;
-    float priority;
+    RenderOpGroup *op_group;
 public:
-    inline void set_op_group(const std::shared_ptr<RenderOpGroup> &group)
+    double angle;
+    float render_priority;
+    inline void set_op_group(RenderOpGroup *group)
     {
         op_group = group;
     }
@@ -118,33 +106,9 @@ public:
     {
         op_group->add_op(op);
     }
-    inline void set_render_priority(float priority_)
-    {
-        priority = priority_;
-    }
-    inline float get_render_priority() const
-    {
-        return priority;
-    }
     inline void set_render_args(const RenderArgs &args)
     {
         *static_cast<RenderArgs*>(this) = args;
-    }
-    inline void set_owner_info(WeaponOwnerInfo info)
-    {
-        owner_info = info;
-    }
-    inline WeaponOwnerInfo get_owner_info() const
-    {
-        return owner_info;
-    }
-    inline void set_angle(double a)
-    {
-        angle = a;
-    }
-    inline double get_angle() const
-    {
-        return angle;
     }
 };
 
@@ -158,16 +122,29 @@ class WeaponSwapOutArgs final
 public:
 };
 
+class WeaponStartNewLevelArgs final
+{
+public:
+};
+
+class WeaponOwner
+{
+public:
+    ///this isn't const because the owner has to return pointers to mana and max mana
+    virtual WeaponOwnerInfo get_weapon_owner_info() = 0;
+};
+
 class Weapon
 {
 protected:
-    std::weak_ptr<map_obj::MapObject> owner;
+    std::weak_ptr<WeaponOwner> owner;
 public:
-    Weapon(const std::shared_ptr<map_obj::MapObject> &owner_);
+    Weapon(const std::shared_ptr<WeaponOwner> &owner_);
     virtual ~Weapon() = default;
 
     virtual void run(const WeaponRunArgs &args) = 0;
     virtual void render(const WeaponRenderArgs &args) = 0;
+    virtual void start_new_level(const WeaponStartNewLevelArgs &args);
     virtual void swap_in(const WeaponSwapInArgs &args);
     virtual void swap_out(const WeaponSwapOutArgs &args);
 };

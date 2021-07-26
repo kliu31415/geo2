@@ -2,9 +2,15 @@
 
 namespace geo2 { namespace weapon {
 
-Weapon::Weapon(const std::shared_ptr<map_obj::MapObject> &owner_):
+Weapon::Weapon(const std::shared_ptr<WeaponOwner> &owner_):
     owner(owner_)
-{}
+{
+    k_assert(dynamic_cast<map_obj::MapObject*>(owner_.get()) != nullptr);
+}
+void Weapon::start_new_level([[maybe_unused]] const WeaponStartNewLevelArgs &args)
+{
+
+}
 void Weapon::swap_in([[maybe_unused]] const WeaponSwapInArgs &args)
 {
 

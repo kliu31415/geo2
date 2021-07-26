@@ -31,8 +31,12 @@ class GameGfx::Impl
         std::shared_ptr<RenderOpGroup> hp_op_group;
         std::shared_ptr<RenderOpText> hp_text_op;
         kx::kx_span<float> hp_bar_iu;
-    public:
-        void add_ops(std::vector<std::shared_ptr<RenderOpGroup>> *op_groups, const GameGfxRenderArgs &args)
+
+        std::shared_ptr<RenderOpGroup> mana_op_group;
+        std::shared_ptr<RenderOpText> mana_text_op;
+        kx::kx_span<float> mana_bar_iu;
+
+        void add_hp_bar(std::vector<std::shared_ptr<RenderOpGroup>> *op_groups, const GameGfxRenderArgs &args)
         {
             using kx::gfx::LinearColor;
 
@@ -45,7 +49,8 @@ class GameGfx::Impl
                 float v3y = 0.08 * args.render_h;
                 constexpr float BORDER_Y = 0.12;
 
-                auto hp_bar_op = std::make_unique<RenderOpShader>(*args.render_scene_graph->shaders.get("resource_bar"));
+                auto shader = args.render_scene_graph->shaders.get("resource_bar");
+                auto hp_bar_op = std::make_unique<RenderOpShader>(*shader);
                 auto iu_map = hp_bar_op->map_instance_uniform(0);
                 hp_bar_iu = {(float*)iu_map.begin(), (float*)iu_map.end()};
                 hp_op_group = std::make_shared<RenderOpGroup>(HUD_RENDER_PRIORITY);
@@ -53,7 +58,7 @@ class GameGfx::Impl
 
                 hp_text_op = std::make_shared<RenderOpText>();
                 hp_text_op->set_font(args.render_scene_graph->fonts.get("black_chancery"));
-                hp_text_op->set_color(LinearColor(0, 1, 1, 0.98));
+                hp_text_op->set_color(LinearColor(0, 1, 0, 1));
                 hp_text_op->set_x(v0x + 2.0 * BORDER_Y * (v3y - v0y));
                 hp_text_op->set_y(v0y + 1.4 * BORDER_Y * (v3y - v0y));
                 hp_text_op->set_font_size(1.05 * (1 - 2.4*BORDER_Y) * (v3y - v0y));
@@ -80,6 +85,62 @@ class GameGfx::Impl
             hp_text += kx::to_str((int)args.player->get_max_health());
             hp_text_op->set_text(hp_text);
             op_groups->push_back(hp_op_group);
+        }
+        void add_mana_bar(std::vector<std::shared_ptr<RenderOpGroup>> *op_groups, const GameGfxRenderArgs &args)
+        {
+            using kx::gfx::LinearColor;
+
+            if(mana_op_group == nullptr) {
+                auto rdr = args.kwin_r->rdr();
+
+                float v0x = 0.05 * args.render_w;
+                float v0y = 0.09 * args.render_h;
+                float v3x = 0.30 * args.render_w;
+                float v3y = 0.12 * args.render_h;
+                constexpr float BORDER_Y = 0.12;
+
+                auto shader = args.render_scene_graph->shaders.get("resource_bar");
+                auto mana_bar_op = std::make_unique<RenderOpShader>(*shader);
+                auto iu_map = mana_bar_op->map_instance_uniform(0);
+                mana_bar_iu = {(float*)iu_map.begin(), (float*)iu_map.end()};
+                mana_op_group = std::make_shared<RenderOpGroup>(HUD_RENDER_PRIORITY);
+                mana_op_group->add_op(std::move(mana_bar_op));
+
+                mana_text_op = std::make_shared<RenderOpText>();
+                mana_text_op->set_font(args.render_scene_graph->fonts.get("black_chancery"));
+                mana_text_op->set_color(LinearColor(0, 1, 0, 1));
+                mana_text_op->set_x(v0x + 2.0 * BORDER_Y * (v3y - v0y));
+                mana_text_op->set_y(v0y + 1.4 * BORDER_Y * (v3y - v0y));
+                mana_text_op->set_font_size(1.05 * (1 - 2.4*BORDER_Y) * (v3y - v0y));
+                mana_op_group->add_op(mana_text_op);
+
+                mana_bar_iu[0] = rdr->x_to_ndc(v0x);
+                mana_bar_iu[1] = rdr->y_to_ndc(v0y);
+                mana_bar_iu[2] = rdr->x_to_ndc(v3x);
+                mana_bar_iu[3] = rdr->y_to_ndc(v3y);
+
+                mana_bar_iu[6] = 1 - BORDER_Y;
+                mana_bar_iu[5] = 1 - BORDER_Y * (v3y - v0y) / (v3x - v0x);
+
+                *reinterpret_cast<LinearColor*>(&mana_bar_iu[8]) =  LinearColor(0, 0, 1, 0.95);
+                *reinterpret_cast<LinearColor*>(&mana_bar_iu[12]) = LinearColor(0, 0, 0.1, 0.95);
+                *reinterpret_cast<LinearColor*>(&mana_bar_iu[16]) = LinearColor(0.05, 0.05, 0.05, 0.95);
+            }
+
+            mana_bar_iu[4] = args.player->get_mana() / args.player->get_max_mana();
+
+            std::string mana_text;
+            mana_text += kx::to_str((int)std::ceil(args.player->get_mana()));
+            mana_text += " / ";
+            mana_text += kx::to_str((int)args.player->get_max_mana());
+            mana_text_op->set_text(mana_text);
+            op_groups->push_back(mana_op_group);
+        }
+    public:
+        void add_ops(std::vector<std::shared_ptr<RenderOpGroup>> *op_groups, const GameGfxRenderArgs &args)
+        {
+            add_hp_bar(op_groups, args);
+            add_mana_bar(op_groups, args);
         }
     };
     _PlayerResourceBars player_resource_bars;

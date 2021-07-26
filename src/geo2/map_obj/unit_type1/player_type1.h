@@ -19,7 +19,10 @@ struct PlayerRunSpecialArgs final
     weapon::WeaponRunArgs weapon_run_args;
 };
 
-class Player_Type1 final: public Unit_Type1, public std::enable_shared_from_this<Player_Type1>
+class Player_Type1 final:
+    public Unit_Type1,
+    public std::enable_shared_from_this<Player_Type1>,
+    public weapon::WeaponOwner
 {
     MapCoord desired_position;
     MapVec velocity;
@@ -36,20 +39,28 @@ class Player_Type1 final: public Unit_Type1, public std::enable_shared_from_this
     kx::kx_span<float> op_iu2;
 
     double weapon_angle;
+    double max_mana;
+    double mana;
 
     std::vector<std::shared_ptr<weapon::Weapon>> weapons;
     int cur_weapon_idx;
 public:
-    static constexpr float WEAPON_OFFSET = 0.5f;
-
     Player_Type1();
+
+    void start_new_level(MapCoord pos, kx::Passkey<Game>);
     void run_special(const PlayerRunSpecialArgs &args, kx::Passkey<Game>);
+
     void init(const MapObjInitArgs &args) override;
     void run1_mt(const MapObjRun1Args &args) override;
     void run3_mt(const MapObjRun3Args &args) override;
     void add_render_ops(const MapObjRenderArgs &args) override;
-    void set_position(MapCoord pos, kx::Passkey<Game>); ///called at level start
+
     double get_collision_damage() const override;
+
+    weapon::WeaponOwnerInfo get_weapon_owner_info() override;
+
+    double get_max_mana() const;
+    double get_mana() const;
 };
 
 }}

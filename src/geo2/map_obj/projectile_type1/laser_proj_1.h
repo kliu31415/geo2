@@ -11,6 +11,9 @@ class LaserProj_1 final: public BasicProj_1
     std::shared_ptr<RenderOpShader> op;
     std::shared_ptr<RenderOpGroup> op_group;
     kx::kx_span<float> op_iu;
+    kx::gfx::LinearColor inner_color;
+    kx::gfx::LinearColor outer_color;
+
     std::unique_ptr<Polygon> base_shape;
 public:
     LaserProj_1(const std::shared_ptr<MapObject> &owner_,
@@ -18,6 +21,8 @@ public:
                 double lifespan_,
                 MapCoord pos_,
                 MapVec velocity_,
+                const kx::gfx::LinearColor &inner_color_,
+                const kx::gfx::LinearColor &outer_color_,
                 double rot);
 
     void init(const MapObjInitArgs &args) override;

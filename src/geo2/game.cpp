@@ -68,7 +68,7 @@ void Game::generate_and_start_level(LevelName level_name)
     cur_level_time = 0;
     cur_level_tick = 0;
     cur_level_name = level_name;
-    player->set_position({level.player_start_x, level.player_start_y}, {});
+    player->start_new_level({level.player_start_x, level.player_start_y}, {});
 }
 
 void Game::run_player(double tick_len,
@@ -88,12 +88,11 @@ void Game::run_player(double tick_len,
     weapon::WeaponRunArgs weapon_args;
     weapon_args.set_map_objs_to_add(&map_objs_to_add);
     auto player_pos = player->get_position();
-    weapon_args.set_owner_info(weapon::WeaponOwnerInfo(player_pos, map_obj::Player_Type1::WEAPON_OFFSET));
-    weapon_args.set_cursor_pos(cursor_pos);
+    weapon_args.cursor_pos = cursor_pos;
     weapon_args.tick_len = tick_len;
     weapon_args.cur_level_time = cur_level_time;
-    weapon_args.set_mouse_state(mouse_state);
-    weapon_args.set_angle(std::atan2(cursor_pos.y - player_pos.y, cursor_pos.x - player_pos.x));
+    weapon_args.mouse_state = mouse_state;
+    weapon_args.angle = std::atan2(cursor_pos.y - player_pos.y, cursor_pos.x - player_pos.x);
     weapon_args.set_rng(&rngs[0]);
     player_args.weapon_run_args = weapon_args;
 
@@ -461,7 +460,7 @@ std::shared_ptr<kx::gfx::Texture> Game::run(const LibraryPointers &libraries,
     //a few hundred ms (integrated GPU, 1920x1080, Test3)
     GameGfxRenderArgs render_args;
     render_args.flags = 0;
-    render_args.flags |= GameGfxRenderArgs::FLAG_SHOW_HITBOXES;
+    //render_args.flags |= GameGfxRenderArgs::FLAG_SHOW_HITBOXES;
     render_args.kwin_r = kwin_r;
     render_args.render_scene_graph = render_scene_graph;
     render_args.render_w = render_w;
