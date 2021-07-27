@@ -117,6 +117,8 @@ void GameRenderSceneGraph::Fonts::init(kx::gfx::FontLibrary *font_library,
                                    kx::Passkey<GameRenderSceneGraph>)
 {
     using namespace kx::gfx;
+    fonts_map.emplace("default",
+                      std::make_unique<FontAtlas>(rdr, font_library->get_font(FontLibrary::FONT_BLACK_CHANCERY).get()));
     fonts_map.emplace("black_chancery",
                       std::make_unique<FontAtlas>(rdr, font_library->get_font(FontLibrary::FONT_BLACK_CHANCERY).get()));
 }
@@ -125,6 +127,14 @@ const FontAtlas *GameRenderSceneGraph::Fonts::get(std::string_view name) const
     auto find_result = fonts_map.find(name);
     k_assert(find_result != fonts_map.end());
     return find_result->second.get();
+}
+const FontAtlas *GameRenderSceneGraph::Fonts::get_default() const
+{
+    return get("default");
+}
+const FontAtlas *GameRenderSceneGraph::Fonts::get_black_chancery() const
+{
+    return get("black_chancery");
 }
 
 GameRenderSceneGraph::GameRenderSceneGraph(kx::Passkey<MasterInstanceGfxImpl>,

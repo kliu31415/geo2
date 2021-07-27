@@ -551,7 +551,7 @@
 	"geo2/library_pointers.h"
 	"kx/gfx/kwindow.h"
 
-1627175870 source:d:\code\cbprojects\geo2\src\geo2\master_instance.cpp
+1627333492 source:d:\code\cbprojects\geo2\src\geo2\master_instance.cpp
 	"geo2/master_instance.h"
 	"geo2/texture_utils.h"
 	"geo2/timer.h"
@@ -605,7 +605,7 @@
 	<tuple>
 	<tuple>
 
-1627172898 source:d:\code\cbprojects\geo2\src\geo2\render_op.cpp
+1627333492 source:d:\code\cbprojects\geo2\src\geo2\render_op.cpp
 	"geo2/render_op.h"
 	"geo2/timer.h"
 	"geo2/texture_utils.h"
@@ -613,7 +613,7 @@
 	"kx/gfx/kwindow.h"
 	<cmath>
 
-1627170622 d:\code\cbprojects\geo2\src\geo2\render_op.h
+1627333492 d:\code\cbprojects\geo2\src\geo2\render_op.h
 	"kx/gfx/renderer_types.h"
 	"kx/gfx/font.h"
 	"kx/fixed_size_array.h"
@@ -782,7 +782,7 @@
 1624215962 source:d:\code\cbprojects\geo2\src\geo2\map_objs\unit_type1\pig_1.cpp
 	"geo2/map_objs/unit_type1/pig_1.h"
 
-1627277202 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\player_type1.h
+1627333492 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\player_type1.h
 	"geo2/map_obj/unit_type1/unit_type1.h"
 	"geo2/weapon/weapon.h"
 
@@ -796,25 +796,25 @@
 1626638128 d:\code\cbprojects\geo2\src\geo2\map_obj\map_object.h
 	"geo2/geometry.h"
 
-1626672698 d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\test_terrain1.h
+1627333491 d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\test_terrain1.h
 	"geo2/map_obj/floor_type1/floor_type1.h"
 	"kx/kx_span.h"
 
 1624341260 d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\floor_type1.h
 	"geo2/map_obj/map_object.h"
 
-1626672698 d:\code\cbprojects\geo2\src\geo2\map_obj\wall_type1\monochromatic_wall_1.h
+1627333492 d:\code\cbprojects\geo2\src\geo2\map_obj\wall_type1\monochromatic_wall_1.h
 	"geo2/map_obj/wall_type1/wall_type1.h"
 	"kx/gfx/renderer_types.h"
 
 1625711384 d:\code\cbprojects\geo2\src\geo2\map_obj\wall_type1\wall_type1.h
 	"geo2/map_obj/map_object.h"
 
-1626672698 d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\monochromatic_floor_1.h
+1627333491 d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\monochromatic_floor_1.h
 	"geo2/map_obj/floor_type1/floor_type1.h"
 	"kx/gfx/renderer_types.h"
 
-1627170599 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\pig_1.h
+1627333492 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\pig_1.h
 	"geo2/map_obj/unit_type1/unit_type1.h"
 	"geo2/map_obj/unit_type1/movement/algo1.h"
 	"geo2/game_render_scene_graph.h"
@@ -824,13 +824,13 @@
 1624335856 source:d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\floor_type1.cpp
 	"geo2/map_obj/floor_type1/floor_type1.h"
 
-1627170597 source:d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\monochromatic_floor_1.cpp
+1627333491 source:d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\monochromatic_floor_1.cpp
 	"geo2/map_obj/floor_type1/monochromatic_floor_1.h"
 	"geo2/map_obj/map_obj_args.h"
 	"geo2/game_render_scene_graph.h"
 	"geo2/render_op.h"
 
-1627170604 source:d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\test_terrain1.cpp
+1627333491 source:d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\test_terrain1.cpp
 	"geo2/map_obj/floor_type1/test_terrain1.h"
 	"geo2/game_render_scene_graph.h"
 	"geo2/map_obj/map_obj_args.h"
@@ -844,18 +844,18 @@
 	"kx/io.h"
 	<cmath>
 
-1627018082 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\pig_1.cpp
+1627333492 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\pig_1.cpp
 	"geo2/map_obj/unit_type1/pig_1.h"
 	"geo2/map_obj/map_obj_args.h"
 	<random>
 
-1627277221 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\player_type1.cpp
+1627333492 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\player_type1.cpp
 	"geo2/map_obj/unit_type1/player_type1.h"
 	"geo2/map_obj/map_obj_args.h"
 	"geo2/weapon/laser_1.h"
 	<iostream>
 
-1627018114 source:d:\code\cbprojects\geo2\src\geo2\map_obj\wall_type1\monochromatic_wall_1.cpp
+1627333492 source:d:\code\cbprojects\geo2\src\geo2\map_obj\wall_type1\monochromatic_wall_1.cpp
 	"geo2/map_obj/wall_type1/monochromatic_wall_1.h"
 	"geo2/map_obj/map_obj_args.h"
 
@@ -868,7 +868,7 @@
 	"geo2/map_obj/projectile_type1/projectile_type1.h"
 	"geo2/map_obj/map_obj_args.h"
 
-1627277246 source:d:\code\cbprojects\geo2\src\geo2\weapon\weapon.cpp
+1627333680 source:d:\code\cbprojects\geo2\src\geo2\weapon\weapon.cpp
 	"geo2/weapon/weapon.h"
 
 1625347737 source:d:\code\cbprojects\geo2\src\geo2\weapon\test_laser_1.cpp
@@ -879,7 +879,7 @@
 	"geo2/weapon/weapon.h"
 	<array>
 
-1627278604 d:\code\cbprojects\geo2\src\geo2\weapon\weapon.h
+1627333677 d:\code\cbprojects\geo2\src\geo2\weapon\weapon.h
 	"kx/gfx/gfx.h"
 	"geo2/geometry.h"
 	"geo2/map_obj/map_object.h"
@@ -907,14 +907,14 @@
 1625284060 d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\simple_proj_1.h
 	"geo2/map_obj/projectile_type1/projectile_type1.h"
 
-1627277656 source:d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\laser_proj_1.cpp
+1627333491 source:d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\laser_proj_1.cpp
 	"geo2/map_obj/projectile_type1/laser_proj_1.h"
 	"geo2/map_obj/map_obj_args.h"
 	"geo2/render_op.h"
 	<cmath>
 	<vector>
 
-1627277530 d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\laser_proj_1.h
+1627333491 d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\laser_proj_1.h
 	"geo2/map_obj/projectile_type1/basic_proj_1.h"
 
 1626828410 d:\code\cbprojects\geo2\src\geo2\ceng1_obj.h
@@ -939,12 +939,12 @@
 	"kx/gfx/renderer.h"
 	"geo2/game_render_scene_graph.h"
 
-1627278333 source:d:\code\cbprojects\geo2\src\geo2\weapon\laser_1.cpp
+1627333670 source:d:\code\cbprojects\geo2\src\geo2\weapon\laser_1.cpp
 	"geo2/weapon/laser_1.h"
 	"geo2/map_obj/projectile_type1/laser_proj_1.h"
 	<random>
 
-1627277307 d:\code\cbprojects\geo2\src\geo2\weapon\laser_1.h
+1627333669 d:\code\cbprojects\geo2\src\geo2\weapon\laser_1.h
 	"geo2/weapon/weapon.h"
 	<array>
 
@@ -983,12 +983,12 @@
 	<array>
 	<functional>
 
-1627018110 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\spotted_pig_1.cpp
+1627333492 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\spotted_pig_1.cpp
 	"geo2/map_obj/unit_type1/spotted_pig_1.h"
 	"geo2/map_obj/map_obj_args.h"
 	<random>
 
-1627170598 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\spotted_pig_1.h
+1627333492 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\spotted_pig_1.h
 	"geo2/map_obj/unit_type1/unit_type1.h"
 	"geo2/map_obj/unit_type1/movement/algo1.h"
 	"geo2/game_render_scene_graph.h"
@@ -1000,14 +1000,14 @@
 	"geo2/geometry.h"
 	<random>
 
-1627170598 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\hexfly_1.h
+1627333492 d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\hexfly_1.h
 	"geo2/map_obj/unit_type1/unit_type1.h"
 	"geo2/map_obj/unit_type1/movement/algo1.h"
 	"geo2/game_render_scene_graph.h"
 	<array>
 	<functional>
 
-1627018075 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\hexfly_1.cpp
+1627333492 source:d:\code\cbprojects\geo2\src\geo2\map_obj\unit_type1\hexfly_1.cpp
 	"geo2/map_obj/unit_type1/hexfly_1.h"
 	"geo2/map_obj/map_obj_args.h"
 	<cmath>
@@ -1136,17 +1136,17 @@
 	<memory>
 	"kx/util.h"
 
-1627274927 source:d:\code\cbprojects\geo2\src\geo2\game_gfx.cpp
+1627333491 source:d:\code\cbprojects\geo2\src\geo2\game_gfx.cpp
 	"geo2/game_gfx.h"
 	"geo2/map_obj/map_object.h"
 	"geo2/map_obj/map_obj_args.h"
 	"geo2/map_obj/unit_type1/player_type1.h"
 	"geo2/texture_utils.h"
 
-1627170694 d:\code\cbprojects\geo2\src\geo2\game_render_scene_graph.h
+1627364042 d:\code\cbprojects\geo2\src\geo2\game_render_scene_graph.h
 	"geo2/render_op.h"
 
-1627247226 source:d:\code\cbprojects\geo2\src\geo2\game_render_scene_graph.cpp
+1627364058 source:d:\code\cbprojects\geo2\src\geo2\game_render_scene_graph.cpp
 	"geo2/game_render_scene_graph.h"
 	"kx/gfx/kwindow.h"
 	"kx/gfx/renderer.h"

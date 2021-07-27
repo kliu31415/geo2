@@ -15,7 +15,7 @@ class TestLaser1 final: public Weapon
     std::array<std::shared_ptr<RenderOpShader>, 2> ops;
     std::array<kx::kx_span<float>, 2> op_ius;
 public:
-    TestLaser1(const std::shared_ptr<WeaponOwner> &owner_);
+    TestLaser1(const std::shared_ptr<WeaponOwner> &owner_z);
     void run(const WeaponRunArgs &args) override;
     void render(const WeaponRenderArgs &args) override;
     void start_new_level(const WeaponStartNewLevelArgs &args) override;

@@ -43,6 +43,9 @@ void TestLaser1::run(const WeaponRunArgs &args)
             owner_info.spend_mana(mana_cost);
             supercharge_counter += args.tick_len;
             supercharge_counter = std::min(supercharge_counter, MAX_SUPERCHARGE);
+        } else {
+            supercharge_counter -= SUPERCHARGE_DECAY_RATE * args.tick_len;
+            supercharge_counter = std::max(supercharge_counter, 0.0);
         }
     } else {
         supercharge_counter -= SUPERCHARGE_DECAY_RATE * args.tick_len;
