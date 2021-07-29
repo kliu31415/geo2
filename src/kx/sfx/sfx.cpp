@@ -17,7 +17,7 @@ SfxLibrary::SfxLibrary()
     if(Mix_Init(MIX_INIT_MP3 | MIX_INIT_OPUS | MIX_INIT_FLAC | MIX_INIT_OGG) != 0) {
         log_error((std::string)"Mix_GetError(): " + Mix_GetError());
     }
-    if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 512)) {
+    if(Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 512)) {
         log_error((std::string)"Mix_GetError(): " + Mix_GetError());
     }
     Mix_Volume(-1, MIX_MAX_VOLUME);

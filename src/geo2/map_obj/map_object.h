@@ -55,7 +55,7 @@ public:
     ///for the below functions, "this" handles the collision and reports its intent
     virtual HANDLE_COLLISION_FUNC_DECLARATION(CosmeticMapObj);
     virtual HANDLE_COLLISION_FUNC_DECLARATION(Wall_Type1) = 0;
-    virtual HANDLE_COLLISION_FUNC_DECLARATION(Unit_Type1) = 0;
+    virtual HANDLE_COLLISION_FUNC_DECLARATION(Unit) = 0;
     virtual HANDLE_COLLISION_FUNC_DECLARATION(Projectile_Type1) = 0;
 
     virtual void end_handle_collision_block(const EndHandleCollisionBlockArgs &args);
@@ -71,7 +71,7 @@ class CosmeticMapObj: public MapObject
 {
     void handle_collision(MapObject *other, const HandleCollisionArgs &args) override;
     HANDLE_COLLISION_FUNC_DECLARATION(Wall_Type1) override;
-    HANDLE_COLLISION_FUNC_DECLARATION(Unit_Type1) override;
+    HANDLE_COLLISION_FUNC_DECLARATION(Unit) override;
     HANDLE_COLLISION_FUNC_DECLARATION(Projectile_Type1) override;
 };
 

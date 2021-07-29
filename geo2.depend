@@ -515,8 +515,8 @@
 	<mutex>
 	<map>
 
-1627198224 d:\code\cbprojects\geo2\src\geo2\game.h
-	"geo2/map_obj/unit_type1/player_type1.h"
+1627525421 d:\code\cbprojects\geo2\src\geo2\game.h
+	"geo2/map_obj/unit/player_type1.h"
 	"geo2/ceng1_collision.h"
 	"geo2/ceng1_data.h"
 	"geo2/rng.h"
@@ -793,7 +793,7 @@
 	"kx/gfx/renderer_types.h"
 	<map>
 
-1626638128 d:\code\cbprojects\geo2\src\geo2\map_obj\map_object.h
+1627525509 d:\code\cbprojects\geo2\src\geo2\map_obj\map_object.h
 	"geo2/geometry.h"
 
 1627333491 d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\test_terrain1.h
@@ -807,7 +807,7 @@
 	"geo2/map_obj/wall_type1/wall_type1.h"
 	"kx/gfx/renderer_types.h"
 
-1625711384 d:\code\cbprojects\geo2\src\geo2\map_obj\wall_type1\wall_type1.h
+1627525509 d:\code\cbprojects\geo2\src\geo2\map_obj\wall_type1\wall_type1.h
 	"geo2/map_obj/map_object.h"
 
 1627333491 d:\code\cbprojects\geo2\src\geo2\map_obj\floor_type1\monochromatic_floor_1.h
@@ -838,7 +838,7 @@
 	"kx/gfx/renderer.h"
 	<cmath>
 
-1626638128 source:d:\code\cbprojects\geo2\src\geo2\map_obj\map_object.cpp
+1627525509 source:d:\code\cbprojects\geo2\src\geo2\map_obj\map_object.cpp
 	"geo2/map_obj/map_object.h"
 	"geo2/map_obj/map_obj_args.h"
 	"kx/io.h"
@@ -895,7 +895,7 @@
 	"geo2/map_obj/unit_type1/unit_type1.h"
 	"geo2/map_obj/map_obj_args.h"
 
-1625803726 d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\projectile_type1.h
+1627525509 d:\code\cbprojects\geo2\src\geo2\map_obj\projectile_type1\projectile_type1.h
 	"geo2/map_obj/map_object.h"
 	"geo2/map_obj/alive_status.h"
 
@@ -939,7 +939,7 @@
 	"kx/gfx/renderer.h"
 	"geo2/game_render_scene_graph.h"
 
-1627333670 source:d:\code\cbprojects\geo2\src\geo2\weapon\laser_1.cpp
+1627364116 source:d:\code\cbprojects\geo2\src\geo2\weapon\laser_1.cpp
 	"geo2/weapon/laser_1.h"
 	"geo2/map_obj/projectile_type1/laser_proj_1.h"
 	<random>
@@ -1116,13 +1116,14 @@
 	"geo2/map_obj/map_object.h"
 	"geo2/ceng1_data.h"
 
-1627199643 source:d:\code\cbprojects\geo2\src\geo2\level_gen\v1\level_gen1.cpp
+1627365029 source:d:\code\cbprojects\geo2\src\geo2\level_gen\v1\level_gen1.cpp
 	"geo2/level_gen/v1/level_gen1.h"
 
-1627252949 d:\code\cbprojects\geo2\src\geo2\level_gen\v1\level_gen1.h
+1627365324 d:\code\cbprojects\geo2\src\geo2\level_gen\v1\level_gen1.h
 	<vector>
+	"kx/fixed_size_array.h"
 
-1626937908 source:d:\code\cbprojects\geo2\src\kx\sfx\sfx.cpp
+1627364839 source:d:\code\cbprojects\geo2\src\kx\sfx\sfx.cpp
 	"kx/sfx/sfx.h"
 	"kx/debug.h"
 	<SDL2/SDL_mixer.h>
@@ -1146,11 +1147,22 @@
 1627364042 d:\code\cbprojects\geo2\src\geo2\game_render_scene_graph.h
 	"geo2/render_op.h"
 
-1627364058 source:d:\code\cbprojects\geo2\src\geo2\game_render_scene_graph.cpp
+1627525414 source:d:\code\cbprojects\geo2\src\geo2\game_render_scene_graph.cpp
 	"geo2/game_render_scene_graph.h"
 	"kx/gfx/kwindow.h"
 	"kx/gfx/renderer.h"
 
 1627199510 d:\code\cbprojects\geo2\src\geo2\level_gen\named_level_generator.h
 	"geo2/level.h"
+
+1627525509 d:\code\cbprojects\geo2\src\geo2\map_obj\unit\player_type1.h
+	"geo2/map_obj/unit/unit.h"
+	"geo2/weapon/weapon.h"
+
+1627525509 d:\code\cbprojects\geo2\src\geo2\map_obj\unit\unit.h
+	"geo2/map_obj/map_obj_args.h"
+	"geo2/map_obj/map_object.h"
+	"geo2/map_obj/alive_status.h"
+	"kx/gfx/renderer_types.h"
+	<map>
 

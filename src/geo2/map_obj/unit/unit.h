@@ -10,9 +10,9 @@
 
 namespace geo2 { namespace map_obj {
 
-class Unit_Type1: public MapObject
+class Unit: public MapObject
 {
-    std::map<Unit_Type1*, double> last_collision_damage_time;
+    std::map<Unit*, double> last_collision_damage_time;
     double last_damaged_at_time;
 protected:
     //make ctors explicit to prevent accidental implicit casts from HandleCollisionArgs
@@ -56,12 +56,12 @@ protected:
                                          double cur_level_time) const;
 
     void handle_wall_collision(Wall_Type1 *other, const HandleWallCollisionArgs &args);
-    void handle_unit_collision(Unit_Type1 *other, const HandleUnitCollisionArgs &args);
+    void handle_unit_collision(Unit *other, const HandleUnitCollisionArgs &args);
     void handle_proj_collision(Projectile_Type1 *other, const HandleProjCollisionArgs &args);
 
-    Unit_Type1(Team team_, MapCoord position_, double health);
+    Unit(Team team_, MapCoord position_, double health);
 public:
-    virtual ~Unit_Type1() = default;
+    virtual ~Unit() = default;
 
     void handle_collision(MapObject *other, const HandleCollisionArgs &args) override;
 
@@ -73,7 +73,7 @@ public:
      *  with some default values in the second argument that work well for most cases.
      */
     HANDLE_COLLISION_FUNC_DECLARATION(Wall_Type1) override;
-    HANDLE_COLLISION_FUNC_DECLARATION(Unit_Type1) override;
+    HANDLE_COLLISION_FUNC_DECLARATION(Unit) override;
     HANDLE_COLLISION_FUNC_DECLARATION(Projectile_Type1) override;
 
     void end_handle_collision_block(const EndHandleCollisionBlockArgs &args) override;

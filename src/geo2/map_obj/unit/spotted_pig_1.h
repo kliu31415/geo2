@@ -1,7 +1,7 @@
 #pragma once
 
-#include "geo2/map_obj/unit_type1/unit_type1.h"
-#include "geo2/map_obj/unit_type1/movement/algo1.h"
+#include "geo2/map_obj/unit/unit.h"
+#include "geo2/map_obj/unit/movement/algo1.h"
 #include "geo2/game_render_scene_graph.h"
 
 #include <array>
@@ -9,7 +9,7 @@
 
 namespace geo2 { namespace map_obj {
 
-class Pig_1 final: public Unit_Type1
+class Spotted_Pig_1 final: public Unit
 {
     unit_movement::Algo1 movement_algo;
 
@@ -22,13 +22,13 @@ class Pig_1 final: public Unit_Type1
     float eye_x_offset;
     float eye_y_offset;
 
-    Pig_1(MapCoord position_);
+    Spotted_Pig_1(MapCoord position_);
 public:
     template<class... Args>
     static void make_standard(const std::function<void(std::shared_ptr<MapObject>&&)> &add_func,
                               Args &&...args)
     {
-        add_func(std::shared_ptr<Pig_1>(new Pig_1(std::forward<Args>(args)...)));
+        add_func(std::shared_ptr<Spotted_Pig_1>(new Spotted_Pig_1(std::forward<Args>(args)...)));
     }
 
     void init(const MapObjInitArgs &args) override;

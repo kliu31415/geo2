@@ -1,4 +1,4 @@
-#include "geo2/map_obj/unit_type1/player_type1.h"
+#include "geo2/map_obj/unit/player_type1.h"
 #include "geo2/map_obj/map_obj_args.h"
 #include "geo2/weapon/laser_1.h"
 
@@ -7,7 +7,7 @@
 namespace geo2 { namespace map_obj {
 
 Player_Type1::Player_Type1():
-    Unit_Type1(Team::Ally, {}, 20.0),
+    Unit(Team::Ally, {}, 20.0),
     velocity(MapVec(0, 0)),
     left_pressed_tick_count(0),
     right_pressed_tick_count(0),

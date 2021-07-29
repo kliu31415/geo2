@@ -2,9 +2,9 @@
 
 #include "geo2/map_obj/floor_type1/monochromatic_floor_1.h"
 #include "geo2/map_obj/wall_type1/monochromatic_wall_1.h"
-#include "geo2/map_obj/unit_type1/pig_1.h"
-#include "geo2/map_obj/unit_type1/spotted_pig_1.h"
-#include "geo2/map_obj/unit_type1/hexfly_1.h"
+#include "geo2/map_obj/unit/pig_1.h"
+#include "geo2/map_obj/unit/spotted_pig_1.h"
+#include "geo2/map_obj/unit/hexfly_1.h"
 
 namespace geo2 { namespace level_gen {
 

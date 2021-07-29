@@ -58,7 +58,7 @@ public:
                            2);
 
         make_shader_vf_1ub("pig_1",
-                           "map_objs/unit_type1/pig_1",
+                           "map_objs/unit/pig_1",
                            204, DM::TriangleStrip, 4,
                            5);
 
@@ -73,12 +73,12 @@ public:
                            4);
 
         make_shader_vf_1ub("cow_1",
-                           "map_objs/unit_type1/cow_1",
+                           "map_objs/unit/cow_1",
                            128, DM::TriangleStrip, 4,
                            8);
 
         make_shader_vf_1ub("hexfly_1",
-                           "map_objs/unit_type1/hexfly_1",
+                           "map_objs/unit/hexfly_1",
                            170, DM::Triangles, 3,
                            6);
 

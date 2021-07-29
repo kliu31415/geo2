@@ -43,7 +43,7 @@ void CosmeticMapObj::handle_collision([[maybe_unused]] Wall_Type1 *other,
 {
 
 }
-void CosmeticMapObj::handle_collision([[maybe_unused]] Unit_Type1 *other,
+void CosmeticMapObj::handle_collision([[maybe_unused]] Unit *other,
                                       [[maybe_unused]] const HandleCollisionArgs &args)
 {
 

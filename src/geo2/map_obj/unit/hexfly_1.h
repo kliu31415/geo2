@@ -1,7 +1,7 @@
 #pragma once
 
-#include "geo2/map_obj/unit_type1/unit_type1.h"
-#include "geo2/map_obj/unit_type1/movement/algo1.h"
+#include "geo2/map_obj/unit/unit.h"
+#include "geo2/map_obj/unit/movement/algo1.h"
 #include "geo2/game_render_scene_graph.h"
 
 #include <array>
@@ -9,7 +9,7 @@
 
 namespace geo2 { namespace map_obj {
 
-class Hexfly_1 final: public Unit_Type1
+class Hexfly_1 final: public Unit
 {
     unit_movement::Algo1 movement_algo;
     std::unique_ptr<Polygon> base_shape;

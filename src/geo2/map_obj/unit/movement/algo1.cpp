@@ -1,4 +1,4 @@
-#include "geo2/map_obj/unit_type1/movement/algo1.h"
+#include "geo2/map_obj/unit/movement/algo1.h"
 #include "geo2/geometry.h"
 
 #include <random>

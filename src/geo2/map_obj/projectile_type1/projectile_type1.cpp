@@ -1,5 +1,5 @@
 #include "geo2/map_obj/projectile_type1/projectile_type1.h"
-#include "geo2/map_obj/unit_type1/unit_type1.h"
+#include "geo2/map_obj/unit/unit.h"
 #include "geo2/map_obj/map_obj_args.h"
 
 namespace geo2 { namespace map_obj {
@@ -23,7 +23,7 @@ void Projectile_Type1::handle_collision([[maybe_unused]] Wall_Type1 *other,
         args.delete_me();
     }
 }
-void Projectile_Type1::handle_collision(Unit_Type1 *other,
+void Projectile_Type1::handle_collision(Unit *other,
                                         [[maybe_unused]] const HandleCollisionArgs &args)
 {
     if(!other->is_dead() && !is_dead() && are_enemies(team, other->get_team())) {

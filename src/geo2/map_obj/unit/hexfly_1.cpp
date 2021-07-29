@@ -1,4 +1,4 @@
-#include "geo2/map_obj/unit_type1/hexfly_1.h"
+#include "geo2/map_obj/unit/hexfly_1.h"
 #include "geo2/map_obj/map_obj_args.h"
 
 #include <cmath>
@@ -11,7 +11,7 @@ namespace geo2 { namespace map_obj {
 constexpr float H_MULT = std::sqrt(3.0f) / 2.0f;
 
 Hexfly_1::Hexfly_1(MapCoord position_, float s):
-    Unit_Type1(Team::Enemy, position_, 6.0),
+    Unit(Team::Enemy, position_, 6.0),
     base_shape(Polygon::make(std::vector<float>{
          s    ,   0.0f,
          0.5f*s, -H_MULT*s,

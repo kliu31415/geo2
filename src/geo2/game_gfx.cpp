@@ -1,7 +1,7 @@
 #include "geo2/game_gfx.h"
 #include "geo2/map_obj/map_object.h"
 #include "geo2/map_obj/map_obj_args.h"
-#include "geo2/map_obj/unit_type1/player_type1.h"
+#include "geo2/map_obj/unit/player_type1.h"
 #include "geo2/texture_utils.h"
 
 namespace geo2 {

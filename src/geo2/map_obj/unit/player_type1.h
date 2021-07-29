@@ -1,6 +1,6 @@
 #pragma once
 
-#include "geo2/map_obj/unit_type1/unit_type1.h"
+#include "geo2/map_obj/unit/unit.h"
 #include "geo2/weapon/weapon.h"
 
 namespace geo2 {class RenderOpGroup; class RenderOpShader; class Game;}
@@ -20,7 +20,7 @@ struct PlayerRunSpecialArgs final
 };
 
 class Player_Type1 final:
-    public Unit_Type1,
+    public Unit,
     public std::enable_shared_from_this<Player_Type1>,
     public weapon::WeaponOwner
 {

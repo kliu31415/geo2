@@ -1,4 +1,4 @@
-#include "geo2/map_obj/unit_type1/spotted_pig_1.h"
+#include "geo2/map_obj/unit/spotted_pig_1.h"
 #include "geo2/map_obj/map_obj_args.h"
 
 #include <random>
@@ -6,7 +6,7 @@
 namespace geo2 { namespace map_obj {
 
 Spotted_Pig_1::Spotted_Pig_1(MapCoord position_):
-    Unit_Type1(Team::Enemy, position_, 7.0)
+    Unit(Team::Enemy, position_, 7.0)
 {}
 
 const kx::gfx::LinearColor DEFAULT_INNER_COLOR(1.0f, 1.0f, 1.0f, 1.0f);

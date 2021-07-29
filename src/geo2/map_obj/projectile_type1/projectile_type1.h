@@ -18,7 +18,7 @@ public:
 
     void handle_collision(MapObject *other, const HandleCollisionArgs &args) override;
     HANDLE_COLLISION_FUNC_DECLARATION(Wall_Type1) override;
-    HANDLE_COLLISION_FUNC_DECLARATION(Unit_Type1) override;
+    HANDLE_COLLISION_FUNC_DECLARATION(Unit) override;
     HANDLE_COLLISION_FUNC_DECLARATION(Projectile_Type1) override;
 
     void end_handle_collision_block(const EndHandleCollisionBlockArgs &args) override;
