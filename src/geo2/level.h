@@ -14,10 +14,9 @@ enum class LevelName {
 
 struct Level
 {
-    std::vector<std::shared_ptr<map_obj::MapObject>> to_add;
     std::vector<std::shared_ptr<map_obj::MapObject>> map_objs;
-    std::vector<CEng1Data> ceng_data;
-    double time_to_complete;
+    bool is_timed;
+    double time_limit;
     double player_start_x;
     double player_start_y;
 };

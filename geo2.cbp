@@ -113,7 +113,7 @@
 		<Unit filename="src/geo2/map_obj/unit/spotted_pig_1.h" />
 		<Unit filename="src/geo2/map_obj/unit/unit.cpp" />
 		<Unit filename="src/geo2/map_obj/unit/unit.h" />
-		<Unit filename="src/geo2/map_obj/unit/unit_placement_info.h" />
+		<Unit filename="src/geo2/map_obj/unit/unit_rect_placement_info.h" />
 		<Unit filename="src/geo2/map_obj/wall_type1/monochromatic_wall_1.cpp" />
 		<Unit filename="src/geo2/map_obj/wall_type1/monochromatic_wall_1.h" />
 		<Unit filename="src/geo2/map_obj/wall_type1/wall_type1.cpp" />

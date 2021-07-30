@@ -44,7 +44,8 @@ void Game::generate_and_start_level(LevelName level_name)
                 level.map_objs.push_back(std::make_shared<map_obj::TestTerrain1>(pos));
             }
         }
-        level.time_to_complete = 120;
+        level.is_timed = true;
+        level.time_limit = 120;
         level.player_start_x = 10;
         level.player_start_y = 10;
         break;
@@ -64,7 +65,7 @@ void Game::generate_and_start_level(LevelName level_name)
     map_objs_to_add = std::move(level.map_objs);
     map_objs_to_add.push_back(player);
     process_added_map_objs();
-    cur_level_time_left = level.time_to_complete;
+    cur_level_time_left = level.time_limit;
     cur_level_time = 0;
     cur_level_tick = 0;
     cur_level_name = level_name;

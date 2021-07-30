@@ -24,12 +24,7 @@ class Spotted_Pig_1 final: public Unit
 
     Spotted_Pig_1(MapCoord position_);
 public:
-    template<class... Args>
-    static void make_standard(const std::function<void(std::shared_ptr<MapObject>&&)> &add_func,
-                              Args &&...args)
-    {
-        add_func(std::shared_ptr<Spotted_Pig_1>(new Spotted_Pig_1(std::forward<Args>(args)...)));
-    }
+    static std::shared_ptr<Spotted_Pig_1> make_standard(MapCoord position);
 
     void init(const MapObjInitArgs &args) override;
     void run1_mt(const MapObjRun1Args &args) override;

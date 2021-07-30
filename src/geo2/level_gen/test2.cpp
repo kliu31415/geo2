@@ -20,7 +20,8 @@ Level NamedLevelGenerator<LevelName::Test2>::generate([[maybe_unused]] Game *gam
             }
         }
     }
-    level.time_to_complete = 120;
+    level.is_timed = true;
+    level.time_limit = 120;
     level.player_start_x = -1;
     level.player_start_y = -1;
     return level;

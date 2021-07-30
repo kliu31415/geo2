@@ -9,6 +9,11 @@ Spotted_Pig_1::Spotted_Pig_1(MapCoord position_):
     Unit(Team::Enemy, position_, 7.0)
 {}
 
+std::shared_ptr<Spotted_Pig_1> Spotted_Pig_1::make_standard(MapCoord position)
+{
+    return std::shared_ptr<Spotted_Pig_1>(new Spotted_Pig_1(position));
+}
+
 const kx::gfx::LinearColor DEFAULT_INNER_COLOR(1.0f, 1.0f, 1.0f, 1.0f);
 const kx::gfx::LinearColor DEFAULT_SPOT_COLOR(0.2f, 0.02f, 0.02f, 1.0f);
 const kx::gfx::LinearColor DEFAULT_BORDER_COLOR(0.0f, 0.0f, 0.0f, 1.0f);

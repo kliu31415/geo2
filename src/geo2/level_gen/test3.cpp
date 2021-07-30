@@ -36,21 +36,22 @@ Level NamedLevelGenerator<LevelName::Test3>::generate([[maybe_unused]] Game *gam
         }
     }
     auto add_func = [&level] (std::shared_ptr<MapObject> &&map_obj) -> void
-                                    {
-                                        level.map_objs.push_back(std::move(map_obj));
-                                    };
+                            {
+                                level.map_objs.push_back(std::move(map_obj));
+                            };
     for(int i=0; i<3; i++) {
         for(int j=0; j<3; j++) {
             if(i == 1)
-                Spotted_Pig_1::make_standard(add_func, MapCoord(6 + 5*i, 6 + 5*j));
+                add_func(Spotted_Pig_1::make_standard(MapCoord(6 + 5*i, 6 + 5*j)));
             else if(i == 2)
-                Pig_1::make_standard(add_func, MapCoord(6 + 5*i, 6 + 5*j));
+                add_func(Pig_1::make_standard(MapCoord(6 + 5*i, 6 + 5*j)));
             else
-                Hexfly_1::make_standard(add_func, MapCoord(6 + 5*i, 6 + 5*j));
+                add_func(Hexfly_1::make_standard(MapCoord(6 + 5*i, 6 + 5*j)));
         }
     }
 
-    level.time_to_complete = 120;
+    level.is_timed = true;
+    level.time_limit = 120;
     level.player_start_x = 4;
     level.player_start_y = 4;
     return level;

@@ -23,6 +23,11 @@ Hexfly_1::Hexfly_1(MapCoord position_, float s):
     side_len(s)
 {}
 
+std::shared_ptr<Hexfly_1> Hexfly_1::make_standard(MapCoord position)
+{
+    return std::shared_ptr<Hexfly_1>(new Hexfly_1(position, 0.8));
+}
+
 const kx::gfx::LinearColor DEFAULT_BODY_COLOR_1(0.2f, 0.4f, 0.0f, 1.0f);
 const kx::gfx::LinearColor DEFAULT_BODY_COLOR_2(0.05f, 1.0f, 0.02f, 1.0f);
 const kx::gfx::LinearColor DEFAULT_BODY_BORDER_COLOR(0.0f, 0.0f, 0.0f, 1.0f);
@@ -38,7 +43,7 @@ void Hexfly_1::init(const MapObjInitArgs &args)
 {
     args.add_current_pos_polygon_with_num_sides(6);
     args.add_desired_pos_polygon_with_num_sides(6);
-    wing_freq = std::uniform_real_distribution<double>(9.0, 9.2)(*args.get_rng());
+    wing_freq = std::uniform_real_distribution<double>(14.0, 15.0)(*args.get_rng());
 }
 
 constexpr double MAX_SPEED = 13;

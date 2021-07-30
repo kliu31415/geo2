@@ -27,12 +27,7 @@ class Hexfly_1 final: public Unit
 
     Hexfly_1(MapCoord position_, float side_len_);
 public:
-    template<class... Args>
-    static void make_standard(const std::function<void(std::shared_ptr<MapObject>&&)> &add_func,
-                              Args &&...args)
-    {
-        add_func(std::shared_ptr<Hexfly_1>(new Hexfly_1(std::forward<Args>(args)..., 0.8)));
-    }
+    static std::shared_ptr<Hexfly_1> make_standard(MapCoord position);
 
     void init(const MapObjInitArgs &args) override;
     void run1_mt(const MapObjRun1Args &args) override;

@@ -9,6 +9,25 @@ Pig_1::Pig_1(MapCoord position_):
     Unit(Team::Enemy, position_, 6.0)
 {}
 
+std::shared_ptr<Pig_1> Pig_1::make_standard(MapCoord position)
+{
+    return std::shared_ptr<Pig_1>(new Pig_1(position));
+}
+UnitRectPlacementInfo Pig_1::get_standard_pig_placement_info()
+{
+    constexpr double W = 5;
+    constexpr double H = 5;
+    UnitRectPlacementInfo ret;
+    ret.place_func = [](const std::function<void(std::shared_ptr<MapObject>&&)> &add_func, MapCoord position)
+                        {
+                            add_func(std::shared_ptr<Pig_1>(new Pig_1(position)));
+                        };
+    ret.w = W;
+    ret.h = H;
+    ret.tidi = 10.0;
+    return ret;
+}
+
 const kx::gfx::LinearColor DEFAULT_INNER_COLOR(1.0f, 0.3f, 0.3f, 1.0f);
 const kx::gfx::LinearColor DEFAULT_BORDER_COLOR(0.0f, 0.0f, 0.0f, 1.0f);
 constexpr float BORDER_THICKNESS = 0.1f;
