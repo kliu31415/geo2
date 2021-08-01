@@ -54,6 +54,10 @@ public:
     {
         return columns;
     }
+    inline void* get_grid_data_ptr()
+    {
+        return grid.data();
+    }
     inline const void* get_grid_data_ptr() const
     {
         return grid.data();
@@ -73,13 +77,18 @@ struct RoomGenGenerateArgs
     double level_difficulty; //e.g. later levels have higher difficulties
 };
 
+constexpr size_t MAX_ROOM_LEN = 256;
+
 struct RoomGenGenerateResult
 {
-    BinaryGrid<256> occupied_tiles;
+    //the maximum room length is actually MAX_ROOM_LEN - 64; there need to be 64 buffer bits
+    BinaryGrid<MAX_ROOM_LEN> occupied_tiles;
+    BinaryGrid<MAX_ROOM_LEN> connectable_tiles;
     double tidi;
 
     RoomGenGenerateResult(size_t rows, size_t columns):
-        occupied_tiles(rows, columns)
+        occupied_tiles(rows, columns),
+        connectable_tiles(rows, columns)
     {}
 };
 
@@ -129,31 +138,9 @@ struct LevelGenerationRule
     double level_time_limit;
     double level_difficulty;
     double run_difficulty_setting;
-};
 
-enum class LevelGeneratorResult {
-    Success, Failure
-};
-class LevelGenerator
-{
-    constexpr static size_t GRID_LEN = 512;
-
-    const LevelGenerationRule* level_gen_rule;
-    StandardRNG *rng;
-    Level level;
-    double tidi_used;
-    double target_tidi;
-    std::vector<std::tuple<std::unique_ptr<RoomGenerator>, RoomGenGenerateResult>> rooms;
-    kx::FixedSizeArray<int> num_occurrences;
-
-    void init();
-    void generate_rooms();
-    LevelGeneratorResult place_rooms();
-    void generate_room(size_t room_rule_idx);
-    LevelGeneratorResult place_room(BinaryGrid<GRID_LEN> *occupied_tiles, size_t room_idx);
-public:
-    LevelGenerator();
-    Level generate(const LevelGenerationRule&, StandardRNG*);
+    ///thread-safe
+    Level generate(StandardRNG*) const;
 };
 
 }}}
