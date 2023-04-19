@@ -13,13 +13,35 @@ void RectangularRoomGenerator_1::add_enemy_generation_rule(EnemyGenerationRule&&
 {
     rules.emplace_back(std::move(x));
 }
-RoomGenGenerateResult RectangularRoomGenerator_1::generate(const RoomGenGenerateArgs&)
+RoomGenGenerateResult RectangularRoomGenerator_1::generate([[maybe_unused]] const RoomGenGenerateArgs& args)
 {
-    RoomGenGenerateResult ret(125, 125);
-    ret.tidi = 100;
+    k_expects(!rules.empty());
+    RoomGenGenerateResult ret(50, 50);
+    ret.tidi = 0;
+
+    kx::FixedSizeArray<int> num_occurences(rules.size());
+    std::fill(num_occurences.begin(), num_occurences.end(), 0);
+
+    kx::FixedSizeArray<int> numbers_from_0_to_n(rules.size() + 1);
+    std::iota(numbers_from_0_to_n.begin(), numbers_from_0_to_n.end(), 0);
+    kx::FixedSizeArray<double> selection_weights(rules.size());
+
+    //min_occurrences is ignored for now
+
+    while(ret.tidi < target_tidi) {
+        for(size_t i=0; i<rules.size(); i++)
+            selection_weights[i] = rules[i].selection_weight_func(num_occurences[i]);
+        std::piecewise_constant_distribution<> distribution(numbers_from_0_to_n.begin(),
+                                                            numbers_from_0_to_n.end(),
+                                                            selection_weights.begin());
+        /*auto enemy_idx = (int)distribution(*args.rng);
+
+
+        num_occurences[enemy_idx]++;*/
+    }
     return ret;
 }
-RoomGenPlaceResult RectangularRoomGenerator_1::place(const RoomGenPlaceArgs&)
+RoomGenPlaceResult RectangularRoomGenerator_1::place([[maybe_unused]] const RoomGenPlaceArgs& args)
 {
     return RoomGenPlaceResult();
 }
@@ -57,7 +79,9 @@ class LevelGenerator
     void generate_rooms();
     LevelGeneratorResult place_rooms();
     void generate_room(size_t room_rule_idx);
-    LevelGeneratorResult put_room_on_grid(BinaryGrid<GRID_LEN> *occupied_tiles, size_t room_idx);
+    LevelGeneratorResult put_room_on_grid(BinaryGrid<GRID_LEN> *occupied_tiles,
+                                          size_t room_idx,
+                                          bool is_first_room);
 public:
     Level operator () (const LevelGenerationRule&, StandardRNG* rng);
 };
@@ -112,13 +136,65 @@ void LevelGenerator::generate_rooms()
 }
 LevelGeneratorResult LevelGenerator::place_rooms()
 {
-    std::shuffle(rooms.begin(), rooms.end(), *rng);
+    size_t min_dimension = std::numeric_limits<size_t>::max();
 
-    BinaryGrid<GRID_LEN> occupied_tiles(GRID_LEN, GRID_LEN);
-    for(size_t i=0; i<rooms.size(); i++) {
-        if(put_room_on_grid(&occupied_tiles, i) == LevelGeneratorResult::Failure)
-            return LevelGeneratorResult::Failure;
+    constexpr size_t NUM_ITER = 10;
+
+    kx::FixedSizeArray<size_t> room_indices(rooms.size());
+    std::iota(room_indices.begin(), room_indices.end(), 0);
+
+    kx::FixedSizeArray<std::pair<size_t, size_t>> best_placement(rooms.size());
+
+    for(size_t iter=0; iter<NUM_ITER; iter++) {
+        std::shuffle(room_indices.begin(), room_indices.end(), *rng);
+
+        BinaryGrid<GRID_LEN> occupied_tiles(GRID_LEN, GRID_LEN);
+        size_t i;
+        bool is_first_room = true;
+        for(i=0; i<rooms.size(); i++) {
+            if(put_room_on_grid(&occupied_tiles, room_indices[i], is_first_room) == LevelGeneratorResult::Failure)
+                break;
+            is_first_room = false;
+        }
+        if(i == rooms.size()) {
+            size_t min_x = std::numeric_limits<size_t>::max();
+            size_t min_y = std::numeric_limits<size_t>::max();
+            size_t max_x = 0;
+            size_t max_y = 0;
+            for(size_t y=0; y<GRID_LEN; y++) {
+                for(size_t x=0; x<GRID_LEN; x++) {
+                    if(occupied_tiles.get(y, x)) {
+                        min_x = std::min(min_x, x);
+                        max_x = std::max(max_x, x);
+                        min_y = std::min(min_y, y);
+                        max_y = std::max(max_y, y);
+                    }
+                }
+            }
+            auto dimension = std::max(max_x - min_x, max_y - min_y);
+            if(dimension < min_dimension) {
+                min_dimension = dimension;
+                for(size_t j=0; j<rooms.size(); j++)
+                    best_placement[j] = std::make_pair(rooms[j].x, rooms[j].y);
+            }
+        }
     }
+
+    if(min_dimension == std::numeric_limits<size_t>::max()) {
+        return LevelGeneratorResult::Failure;
+    }
+
+    for(size_t i=0; i<rooms.size(); i++) {
+        RoomGenPlaceArgs place_args;
+        place_args.x = best_placement[i].first;
+        place_args.y = best_placement[i].second;
+        place_args.add_map_obj_func = [this](std::shared_ptr<map_obj::MapObject>&& map_obj) -> void
+                                        {
+                                            level.map_objs.push_back(std::move(map_obj));
+                                        };
+        rooms[i].generator->place(place_args);
+    }
+
     return LevelGeneratorResult::Success;
 }
 void LevelGenerator::generate_room(size_t room_rule_idx)
@@ -224,7 +300,9 @@ BinaryGrid<LEN_DST> add_smeared_tiles(const BinaryGrid<LEN_DST>& dst_tiles,
     }
     return smeared_dst;
 }
-LevelGeneratorResult LevelGenerator::put_room_on_grid(BinaryGrid<GRID_LEN>* global_tiles, size_t room_idx)
+LevelGeneratorResult LevelGenerator::put_room_on_grid(BinaryGrid<GRID_LEN>* global_tiles,
+                                                      size_t room_idx,
+                                                      bool is_first_room)
 {
     constexpr auto MIN_SPACE_BETWEEN_ROOMS = 5;
 
@@ -237,7 +315,7 @@ LevelGeneratorResult LevelGenerator::put_room_on_grid(BinaryGrid<GRID_LEN>* glob
     auto MAX_ROW = GRID_LEN - 64;
     auto MAX_COLUMN = GRID_LEN - 64;
 
-    if(room_idx == 0) {
+    if(is_first_room) {
         auto r = (MAX_ROW - room_rows) / 2;
         auto c = (MAX_COLUMN - room_columns) / 2;
         add_smeared_tiles(*global_tiles, room_tiles, r, c, MIN_SPACE_BETWEEN_ROOMS);
@@ -272,10 +350,21 @@ LevelGeneratorResult LevelGenerator::put_room_on_grid(BinaryGrid<GRID_LEN>* glob
         }
     }
 
+    //We can place another room between (MIN, MAX] away from an existing room
+    constexpr auto MAX_SPACE_BETWEEN_ROOMS = 11;
+    static_assert(MAX_SPACE_BETWEEN_ROOMS > MIN_SPACE_BETWEEN_ROOMS);
+
+    auto cant_place_smeared = add_smeared_tiles(BinaryGrid<GRID_LEN>(512, 512),
+                                                cant_place,
+                                                0,
+                                                0,
+                                                MAX_SPACE_BETWEEN_ROOMS - MIN_SPACE_BETWEEN_ROOMS);
+
     size_t num_candidates = 0;
     for(size_t r=0; r<MAX_ROW; r++) {
         for(size_t c=0; c<MAX_COLUMN; c++) {
-            num_candidates += (!cant_place.get(r, c));
+            if(cant_place_smeared.get(r, c) && !cant_place.get(r, c))
+                num_candidates++;
         }
     }
 
@@ -286,7 +375,7 @@ LevelGeneratorResult LevelGenerator::put_room_on_grid(BinaryGrid<GRID_LEN>* glob
 
     for(size_t r=0; r<MAX_ROW; r++) {
         for(size_t c=0; c<MAX_COLUMN; c++) {
-            if(!cant_place.get(r, c)) {
+            if(cant_place_smeared.get(r, c) && !cant_place.get(r, c)) {
                 if(candidate_select == 0) {
                     add_smeared_tiles(*global_tiles, room_tiles, r, c, MIN_SPACE_BETWEEN_ROOMS);
                     rooms[room_idx].x = c;
@@ -298,17 +387,6 @@ LevelGeneratorResult LevelGenerator::put_room_on_grid(BinaryGrid<GRID_LEN>* glob
         }
     }
 
-    /*
-    RoomGenPlaceArgs place_args;
-    place_args.x = //x;
-    place_args.y = //y;
-    place_args.add_map_obj_func = [this](std::shared_ptr<map_obj::MapObject>&& map_obj) -> void
-                                    {
-                                        level.map_objs.push_back(std::move(map_obj));
-                                    };
-    std::get<0>(rooms[room_idx])->place(place_args);
-    return LevelGeneratorResult::Success;
-    */
     return LevelGeneratorResult::Success;
 }
 Level LevelGenerationRule::generate(StandardRNG* rng) const

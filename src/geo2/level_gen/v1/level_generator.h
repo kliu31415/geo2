@@ -114,8 +114,8 @@ public:
 
 class RectangularRoomGenerator_1 final: public RoomGenerator
 {
-    double target_tidi;
     std::vector<EnemyGenerationRule> rules;
+    double target_tidi;
 public:
     void set_target_tidi(double);
     void add_enemy_generation_rule(EnemyGenerationRule&&);

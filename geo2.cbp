@@ -76,8 +76,8 @@
 		<Unit filename="src/geo2/level_gen/test3.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="src/geo2/level_gen/v1/level_gen1.cpp" />
-		<Unit filename="src/geo2/level_gen/v1/level_gen1.h" />
+		<Unit filename="src/geo2/level_gen/v1/level_generator.cpp" />
+		<Unit filename="src/geo2/level_gen/v1/level_generator.h" />
 		<Unit filename="src/geo2/library_pointers.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>

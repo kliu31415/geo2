@@ -194,7 +194,7 @@ int64_t Time::to_ns(Length length)
     case Length::day:
         return 864e11;
     case Length::week:
-        return 432e12;
+        return 6048e11;
     default:
         //shouldn't reach here
         k_assert(false);
